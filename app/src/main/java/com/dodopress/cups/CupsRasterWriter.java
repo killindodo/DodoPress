@@ -6,18 +6,17 @@ import java.nio.charset.StandardCharsets;
 
 public class CupsRasterWriter {
     public static final int CUPS_RASTER_SYNC_V3 = 0x52615333; // "RaS3"
-    public static final int COLOR_SPACE_GRAY = 0;
-    public static final int COLOR_SPACE_RGB = 1;
+    public static final int COLOR_SPACE_K = 3; // CUPS_CSPACE_K (Black)
 
     public static void writeFileHeader(OutputStream out) throws IOException {
         writeInt(out, CUPS_RASTER_SYNC_V3);
     }
 
-    public static void writePageHeader(OutputStream out, int width, int height, int dpi, int colorSpace, int pageWidthPts, int pageHeightPts) throws IOException {
-        int bitsPerColor = 8;
-        int numColors = (colorSpace == COLOR_SPACE_RGB) ? 3 : 1;
-        int bitsPerPixel = bitsPerColor * numColors;
-        int bytesPerLine = width * numColors;
+    public static void writePageHeader(OutputStream out, int width, int height, int dpi, int pageWidthPts, int pageHeightPts) throws IOException {
+        int bitsPerColor = 1;
+        int numColors = 1;
+        int bitsPerPixel = 1;
+        int bytesPerLine = width / 8; // width is guaranteed multiple of 32
 
         int paperCode = 9; // A4 default
         String pageSizeName = "A4";
@@ -65,16 +64,16 @@ public class CupsRasterWriter {
         writeInt(out, width); // cupsWidth
         writeInt(out, height); // cupsHeight
         writeInt(out, 0); // cupsMediaType
-        writeInt(out, bitsPerColor); // cupsBitsPerColor
-        writeInt(out, bitsPerPixel); // cupsBitsPerPixel
-        writeInt(out, bytesPerLine); // cupsBytesPerLine
+        writeInt(out, bitsPerColor); // cupsBitsPerColor (1)
+        writeInt(out, bitsPerPixel); // cupsBitsPerPixel (1)
+        writeInt(out, bytesPerLine); // cupsBytesPerLine (width / 8)
         writeInt(out, 0); // cupsColorOrder (0 = chunky)
-        writeInt(out, colorSpace); // cupsColorSpace (1 = RGB, 0 = Gray)
+        writeInt(out, COLOR_SPACE_K); // cupsColorSpace (3 = CUPS_CSPACE_K)
         writeInt(out, 0); // cupsCompression
-        writeInt(out, 1); // cupsRowCount
+        writeInt(out, 1); // cupsRowCount (1)
         writeInt(out, 0); // cupsRowFeed
-        writeInt(out, 2); // cupsRowStep
-        writeInt(out, numColors); // cupsNumColors
+        writeInt(out, 2); // cupsRowStep (2)
+        writeInt(out, numColors); // cupsNumColors (1)
         writeFloat(out, 1.0f); // cupsBorderlessScalingFactor
         writeFloat(out, (float) pageWidthPts); // cupsPageSize[0]
         writeFloat(out, (float) pageHeightPts); // cupsPageSize[1]

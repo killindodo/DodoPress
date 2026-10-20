@@ -88,7 +88,7 @@ public class PrintEngine {
                     "android", // User
                     "DodoPress", // Title
                     "1", // Copies per page header
-                    "PageSize=A4 Resolution=" + dpi + "dpi"
+                    "PageSize=A4 OutputMode=Normal Resolution=" + dpi + "dpi"
                 };
                 // env array MUST be alternating (key, value) pairs for setenv(key, val, 1)
                 String[] env = new String[] {
@@ -191,8 +191,9 @@ public class PrintEngine {
                         PdfRenderer.Page page = renderer.openPage(pageIdx);
                         int pagePtsW = page.getWidth();
                         int pagePtsH = page.getHeight();
-                        int pixelW = (int) Math.round((pagePtsW / 72.0) * dpi);
-                        int pixelH = (int) Math.round((pagePtsH / 72.0) * dpi);
+                        int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
+                        int pixelW = (targetW + 31) & ~31; // Align to 32 pixels for JBIG word alignment
+                        int pixelH = ((int) Math.round((pagePtsH / 72.0) * dpi)) & ~1; // Even line count
 
                         Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
                         pageBitmap.eraseColor(0xFFFFFFFF);
@@ -206,9 +207,9 @@ public class PrintEngine {
                             if (listener != null) {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
-                            CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, CupsRasterWriter.COLOR_SPACE_RGB, pagePtsW, pagePtsH);
+                            CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, pagePtsW, pagePtsH);
                             filterIn.flush();
-                            ToneEngine.streamBitmapToRaster(pageBitmap, darkness, filterIn);
+                            ToneEngine.streamBitmapTo1BitRaster(pageBitmap, darkness, filterIn);
                         }
                         pageBitmap.recycle();
                         System.gc();
@@ -276,18 +277,19 @@ public class PrintEngine {
         PdfRenderer.Page page = renderer.openPage(pageIdx);
         int pagePtsW = page.getWidth();
         int pagePtsH = page.getHeight();
-        int pixelW = (int) Math.round((pagePtsW / 72.0) * dpi);
-        int pixelH = (int) Math.round((pagePtsH / 72.0) * dpi);
+        int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
+        int pixelW = (targetW + 31) & ~31; // Align to 32 pixels for JBIG word alignment
+        int pixelH = ((int) Math.round((pagePtsH / 72.0) * dpi)) & ~1; // Even line count
 
         Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
         pageBitmap.eraseColor(0xFFFFFFFF);
         page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
         page.close();
 
-        CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, CupsRasterWriter.COLOR_SPACE_RGB, pagePtsW, pagePtsH);
+        CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, pagePtsW, pagePtsH);
         filterIn.flush();
 
-        ToneEngine.streamBitmapToRaster(pageBitmap, darkness, filterIn);
+        ToneEngine.streamBitmapTo1BitRaster(pageBitmap, darkness, filterIn);
         pageBitmap.recycle();
         System.gc();
     }
