@@ -1,6 +1,7 @@
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/engine/ToneEngine.java
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/engine/PrintEngine.java
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/usb/UsbPrinterConnection.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/ui/ThemeManager.java
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/ui/MainActivity.java
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/ui/ZoomableImageView.java
 /mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/cups/CupsRasterWriter.java

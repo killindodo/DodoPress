@@ -23,17 +23,19 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.dodopress.engine.PrintEngine;
 import com.dodopress.engine.ToneEngine;
 import com.dodopress.usb.UsbPrinterConnection;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -47,12 +49,48 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends Activity {
+
     private static final int REQUEST_PICK_PDF = 2001;
 
     private UsbPrinterConnection usbPrinterConnection;
     private PrintEngine printEngine;
     private BroadcastReceiver usbHotplugReceiver;
 
+    // Theming views
+    private ScrollView rootScrollView;
+    private View layoutXpTitlebar;
+    private View layoutModernHeader;
+
+    private Button btnThemeXp;
+    private Button btnThemeMidnight;
+    private Button btnThemeStudio;
+    private Button btnThemeCyber;
+    private Button btnThemeWarm;
+
+    private View cardDocPreview;
+    private View cardTonerDensity;
+    private View cardPageConfig;
+    private View cardFooter;
+
+    private TextView tvXpGroupDoc;
+    private TextView tvXpGroupDensity;
+    private TextView tvXpGroupPages;
+
+    private TextView tvAppTitle;
+    private TextView tvProBadge;
+    private TextView tvThemeLabel;
+    private TextView tvDensityTitle;
+    private TextView tvDensityDesc;
+    private TextView tvCopiesTitle;
+    private TextView tvPagesTitle;
+    private TextView tvEngineInfo;
+    private TextView tvEngineTag;
+    private View layoutEngineBadge;
+    private View layoutPageSummaryBadge;
+    private TextView tvFooterBranding;
+    private TextView tvFooterSub;
+
+    // Controls
     private TextView tvPrinterStatus;
     private Button btnPickFile;
     private TextView tvFileInfo;
@@ -104,6 +142,8 @@ public class MainActivity extends Activity {
     private Bitmap rawPageBitmap;
     private int copies = 1;
 
+    private ThemeManager.AppTheme currentTheme = ThemeManager.AppTheme.WINDOWS_XP;
+
     // Background thread for real-time darkness rendering
     private final ExecutorService previewExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -120,6 +160,9 @@ public class MainActivity extends Activity {
         initViews();
         setupListeners();
         registerUsbHotplugReceiver();
+
+        currentTheme = ThemeManager.getTheme(this);
+        applyAppTheme(currentTheme);
 
         handleIncomingIntent(getIntent());
     }
@@ -160,6 +203,39 @@ public class MainActivity extends Activity {
     }
 
     private void initViews() {
+        rootScrollView = findViewById(com.dodopress.R.id.root_scroll_view);
+        layoutXpTitlebar = findViewById(com.dodopress.R.id.layout_xp_titlebar);
+        layoutModernHeader = findViewById(com.dodopress.R.id.layout_modern_header);
+
+        btnThemeXp = findViewById(com.dodopress.R.id.btn_theme_xp);
+        btnThemeMidnight = findViewById(com.dodopress.R.id.btn_theme_midnight);
+        btnThemeStudio = findViewById(com.dodopress.R.id.btn_theme_studio);
+        btnThemeCyber = findViewById(com.dodopress.R.id.btn_theme_cyber);
+        btnThemeWarm = findViewById(com.dodopress.R.id.btn_theme_warm);
+
+        cardDocPreview = findViewById(com.dodopress.R.id.card_doc_preview);
+        cardTonerDensity = findViewById(com.dodopress.R.id.card_toner_density);
+        cardPageConfig = findViewById(com.dodopress.R.id.card_page_config);
+        cardFooter = findViewById(com.dodopress.R.id.card_footer);
+
+        tvXpGroupDoc = findViewById(com.dodopress.R.id.tv_xp_group_doc);
+        tvXpGroupDensity = findViewById(com.dodopress.R.id.tv_xp_group_density);
+        tvXpGroupPages = findViewById(com.dodopress.R.id.tv_xp_group_pages);
+
+        tvAppTitle = findViewById(com.dodopress.R.id.tv_app_title);
+        tvProBadge = findViewById(com.dodopress.R.id.tv_pro_badge);
+        tvThemeLabel = findViewById(com.dodopress.R.id.tv_theme_label);
+        tvDensityTitle = findViewById(com.dodopress.R.id.tv_density_title);
+        tvDensityDesc = findViewById(com.dodopress.R.id.tv_density_desc);
+        tvCopiesTitle = findViewById(com.dodopress.R.id.tv_copies_title);
+        tvPagesTitle = findViewById(com.dodopress.R.id.tv_pages_title);
+        tvEngineInfo = findViewById(com.dodopress.R.id.tv_engine_info);
+        tvEngineTag = findViewById(com.dodopress.R.id.tv_engine_tag);
+        layoutEngineBadge = findViewById(com.dodopress.R.id.layout_engine_badge);
+        layoutPageSummaryBadge = findViewById(com.dodopress.R.id.layout_page_summary_badge);
+        tvFooterBranding = findViewById(com.dodopress.R.id.tv_footer_branding);
+        tvFooterSub = findViewById(com.dodopress.R.id.tv_footer_sub);
+
         tvPrinterStatus = findViewById(com.dodopress.R.id.tv_printer_status);
         btnPickFile = findViewById(com.dodopress.R.id.btn_pick_file);
         tvFileInfo = findViewById(com.dodopress.R.id.tv_file_info);
@@ -202,6 +278,12 @@ public class MainActivity extends Activity {
     }
 
     private void setupListeners() {
+        btnThemeXp.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.WINDOWS_XP));
+        btnThemeMidnight.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.MIDNIGHT));
+        btnThemeStudio.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.STUDIO));
+        btnThemeCyber.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.CYBER));
+        btnThemeWarm.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.WARM));
+
         btnPickFile.setOnClickListener(v -> pickPdf());
 
         btnTogglePreviewMode.setOnClickListener(v -> {
@@ -267,7 +349,6 @@ public class MainActivity extends Activity {
             if (copies > 1) {
                 copies--;
                 tvCopiesCount.setText(String.valueOf(copies));
-                cbCollate.setEnabled(copies > 1);
                 updatePageSummary();
             }
         });
@@ -276,7 +357,6 @@ public class MainActivity extends Activity {
             if (copies < 99) {
                 copies++;
                 tvCopiesCount.setText(String.valueOf(copies));
-                cbCollate.setEnabled(copies > 1);
                 updatePageSummary();
             }
         });
@@ -284,9 +364,6 @@ public class MainActivity extends Activity {
         rgPages.setOnCheckedChangeListener((group, checkedId) -> {
             boolean isCustom = (checkedId == com.dodopress.R.id.rb_pages_custom);
             layoutCustomRange.setVisibility(isCustom ? View.VISIBLE : View.GONE);
-            if (isCustom) {
-                etCustomPages.requestFocus();
-            }
             updatePageSummary();
         });
 
@@ -295,7 +372,7 @@ public class MainActivity extends Activity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int count, int after) {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 updatePageSummary();
             }
 
@@ -309,16 +386,162 @@ public class MainActivity extends Activity {
         btnPrintNow.setOnClickListener(v -> startPrinting());
     }
 
+    private void applyAppTheme(ThemeManager.AppTheme theme) {
+        currentTheme = theme;
+        ThemeManager.saveTheme(this, theme);
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(theme);
+
+        // 1. Root background
+        rootScrollView.setBackgroundColor(p.bgColor);
+
+        // 2. XP titlebar vs Modern header
+        if (p.isXp) {
+            layoutXpTitlebar.setVisibility(View.VISIBLE);
+            layoutModernHeader.setVisibility(View.GONE);
+            tvXpGroupDoc.setVisibility(View.VISIBLE);
+            tvXpGroupDensity.setVisibility(View.VISIBLE);
+            tvXpGroupPages.setVisibility(View.VISIBLE);
+
+            cardDocPreview.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
+            cardTonerDensity.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
+            cardPageConfig.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
+
+            btnPickFile.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnPickFile.setTextColor(Color.parseColor("#000000"));
+
+            btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp_primary);
+            btnPrintNow.setTextColor(Color.parseColor("#000000"));
+            btnPrintNow.setText("OK (Print Document)");
+
+            btnCopiesMinus.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnCopiesMinus.setTextColor(Color.parseColor("#000000"));
+            btnCopiesPlus.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnCopiesPlus.setTextColor(Color.parseColor("#000000"));
+
+            btnPrevPage.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnPrevPage.setTextColor(Color.parseColor("#000000"));
+            btnNextPage.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnNextPage.setTextColor(Color.parseColor("#000000"));
+
+            btnTogglePreviewMode.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnTogglePreviewMode.setTextColor(Color.parseColor("#000000"));
+            btnQuickZoom.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnQuickZoom.setTextColor(Color.parseColor("#000000"));
+
+            tvAppTitle.setTextColor(Color.parseColor("#000000"));
+            tvThemeLabel.setTextColor(Color.parseColor("#333333"));
+            tvDensityTitle.setTextColor(Color.parseColor("#000000"));
+            tvDensityDesc.setTextColor(Color.parseColor("#444444"));
+            tvCopiesTitle.setTextColor(Color.parseColor("#000000"));
+            tvPagesTitle.setTextColor(Color.parseColor("#000000"));
+
+            rbPagesAll.setTextColor(Color.parseColor("#000000"));
+            rbPagesCurrent.setTextColor(Color.parseColor("#000000"));
+            rbPagesOdd.setTextColor(Color.parseColor("#000000"));
+            rbPagesEven.setTextColor(Color.parseColor("#000000"));
+            rbPagesCustom.setTextColor(Color.parseColor("#000000"));
+            cbCollate.setTextColor(Color.parseColor("#333333"));
+            cbReverseOrder.setTextColor(Color.parseColor("#333333"));
+
+            tvFooterBranding.setTextColor(Color.parseColor("#003399"));
+            tvFooterSub.setTextColor(Color.parseColor("#555555"));
+        } else {
+            layoutXpTitlebar.setVisibility(View.GONE);
+            layoutModernHeader.setVisibility(View.VISIBLE);
+            tvXpGroupDoc.setVisibility(View.GONE);
+            tvXpGroupDensity.setVisibility(View.GONE);
+            tvXpGroupPages.setVisibility(View.GONE);
+
+            cardDocPreview.setBackgroundResource(p.cardDrawableRes);
+            cardTonerDensity.setBackgroundResource(p.cardDrawableRes);
+            cardPageConfig.setBackgroundResource(p.cardDrawableRes);
+
+            btnPickFile.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
+            btnPickFile.setTextColor(Color.parseColor("#FFFFFF"));
+
+            btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
+            btnPrintNow.setTextColor(Color.parseColor("#FFFFFF"));
+            btnPrintNow.setText("START PRINTING");
+
+            btnCopiesMinus.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
+            btnCopiesMinus.setTextColor(p.textHighColor);
+            btnCopiesPlus.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
+            btnCopiesPlus.setTextColor(p.textHighColor);
+
+            btnPrevPage.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
+            btnPrevPage.setTextColor(p.textHighColor);
+            btnNextPage.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
+            btnNextPage.setTextColor(p.textHighColor);
+
+            btnTogglePreviewMode.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
+            btnTogglePreviewMode.setTextColor(p.textHighColor);
+            btnQuickZoom.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
+            btnQuickZoom.setTextColor(p.brandPrimaryColor);
+
+            tvAppTitle.setTextColor(p.textHighColor);
+            tvThemeLabel.setTextColor(p.textMedColor);
+            tvDensityTitle.setTextColor(p.textHighColor);
+            tvDensityDesc.setTextColor(p.textMedColor);
+            tvCopiesTitle.setTextColor(p.textHighColor);
+            tvPagesTitle.setTextColor(p.textHighColor);
+
+            rbPagesAll.setTextColor(p.textHighColor);
+            rbPagesCurrent.setTextColor(p.textHighColor);
+            rbPagesOdd.setTextColor(p.textHighColor);
+            rbPagesEven.setTextColor(p.textHighColor);
+            rbPagesCustom.setTextColor(p.textHighColor);
+            cbCollate.setTextColor(p.textMedColor);
+            cbReverseOrder.setTextColor(p.textHighColor);
+
+            tvFooterBranding.setTextColor(p.brandPrimaryColor);
+            tvFooterSub.setTextColor(p.textMedColor);
+        }
+
+        // Highlight active theme chip
+        btnThemeXp.setBackgroundResource(theme == ThemeManager.AppTheme.WINDOWS_XP ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+        btnThemeMidnight.setBackgroundResource(theme == ThemeManager.AppTheme.MIDNIGHT ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+        btnThemeStudio.setBackgroundResource(theme == ThemeManager.AppTheme.STUDIO ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+        btnThemeCyber.setBackgroundResource(theme == ThemeManager.AppTheme.CYBER ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+        btnThemeWarm.setBackgroundResource(theme == ThemeManager.AppTheme.WARM ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+
+        btnThemeXp.setTextColor(theme == ThemeManager.AppTheme.WINDOWS_XP ? Color.WHITE : Color.parseColor("#94A3B8"));
+        btnThemeMidnight.setTextColor(theme == ThemeManager.AppTheme.MIDNIGHT ? Color.WHITE : Color.parseColor("#94A3B8"));
+        btnThemeStudio.setTextColor(theme == ThemeManager.AppTheme.STUDIO ? Color.WHITE : Color.parseColor("#94A3B8"));
+        btnThemeCyber.setTextColor(theme == ThemeManager.AppTheme.CYBER ? Color.WHITE : Color.parseColor("#94A3B8"));
+        btnThemeWarm.setTextColor(theme == ThemeManager.AppTheme.WARM ? Color.WHITE : Color.parseColor("#94A3B8"));
+
+        updatePresetChipHighlight(seekDarkness.getProgress());
+        updatePageSummary();
+    }
+
     private void setDarkness(int value) {
         seekDarkness.setProgress(value);
         updatePresetChipHighlight(value);
     }
 
     private void updatePresetChipHighlight(int progress) {
-        btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        if (p.isXp) {
+            btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
+            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
+            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
+            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
+
+            btnPresetDraft.setTextColor(Color.parseColor("#000000"));
+            btnPresetNormal.setTextColor(Color.parseColor("#000000"));
+            btnPresetDeep.setTextColor(Color.parseColor("#000000"));
+            btnPresetUltra.setTextColor(Color.parseColor("#000000"));
+        } else {
+            btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+
+            btnPresetDraft.setTextColor(progress == ToneEngine.PRESET_DRAFT ? Color.WHITE : p.textMedColor);
+            btnPresetNormal.setTextColor(progress == ToneEngine.PRESET_NORMAL ? Color.WHITE : p.textMedColor);
+            btnPresetDeep.setTextColor(progress == ToneEngine.PRESET_DEEP ? Color.WHITE : p.textMedColor);
+            btnPresetUltra.setTextColor(progress == ToneEngine.PRESET_ULTRA ? Color.WHITE : p.textMedColor);
+        }
     }
 
     private void scheduleDarknessPreview(int progress) {
@@ -504,12 +727,10 @@ public class MainActivity extends Activity {
         } else if (checkedId == com.dodopress.R.id.rb_pages_current) {
             pages.add(currentPageIndex);
         } else if (checkedId == com.dodopress.R.id.rb_pages_odd) {
-            // User page 1, 3, 5... (0-based indices 0, 2, 4...)
             for (int i = 0; i < totalPages; i += 2) {
                 pages.add(i);
             }
         } else if (checkedId == com.dodopress.R.id.rb_pages_even) {
-            // User page 2, 4, 6... (0-based indices 1, 3, 5...)
             for (int i = 1; i < totalPages; i += 2) {
                 pages.add(i);
             }
@@ -539,38 +760,28 @@ public class MainActivity extends Activity {
                 String s2 = part.substring(dash + 1).trim();
                 int start = 1;
                 int end = total;
-                boolean valid = false;
-                if (!s1.isEmpty()) {
-                    try { start = Integer.parseInt(s1); valid = true; } catch (NumberFormatException ignored) {}
-                } else {
-                    valid = true;
+                try {
+                    if (!s1.isEmpty()) start = Integer.parseInt(s1);
+                    if (!s2.isEmpty()) end = Integer.parseInt(s2);
+                } catch (NumberFormatException ignored) {
+                    continue;
                 }
-                if (!s2.isEmpty()) {
-                    try { end = Integer.parseInt(s2); valid = true; } catch (NumberFormatException ignored) {}
-                } else if (!s1.isEmpty()) {
-                    valid = true;
-                }
-                if (!valid) continue;
-
                 start = Math.max(1, Math.min(start, total));
                 end = Math.max(1, Math.min(end, total));
                 int step = (start <= end) ? 1 : -1;
-                for (int p = start; ; p += step) {
-                    int zeroIdx = p - 1;
-                    if (!seen.contains(zeroIdx)) {
-                        seen.add(zeroIdx);
-                        result.add(zeroIdx);
+                for (int p = start; (step > 0 ? p <= end : p >= end); p += step) {
+                    int idx = p - 1;
+                    if (seen.add(idx)) {
+                        result.add(idx);
                     }
-                    if (p == end) break;
                 }
             } else {
                 try {
                     int p = Integer.parseInt(part);
                     if (p >= 1 && p <= total) {
-                        int zeroIdx = p - 1;
-                        if (!seen.contains(zeroIdx)) {
-                            seen.add(zeroIdx);
-                            result.add(zeroIdx);
+                        int idx = p - 1;
+                        if (seen.add(idx)) {
+                            result.add(idx);
                         }
                     }
                 } catch (NumberFormatException ignored) {}
@@ -596,7 +807,8 @@ public class MainActivity extends Activity {
             return;
         }
 
-        tvPageSummary.setTextColor(Color.parseColor("#38BDF8"));
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        tvPageSummary.setTextColor(p.brandPrimaryColor);
 
         StringBuilder sb = new StringBuilder("📄 Ready: ");
         sb.append(count).append(count == 1 ? " page" : " pages");

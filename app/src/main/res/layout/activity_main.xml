@@ -1,23 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_scroll_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
     android:background="@color/bg_dark">
 
     <LinearLayout
+        android:id="@+id/root_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <!-- Top Header & Live Printer Status -->
+        <!-- 1. Authentic Windows XP Luna Blue Title Bar (Active in Windows XP theme) -->
         <LinearLayout
+            android:id="@+id/layout_xp_titlebar"
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/theme_titlebar_xp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                android:src="@drawable/ic_printer"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Print - HP LaserJet M1005 MFP"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:shadowColor="#00185A"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="1"/>
+
+            <!-- XP Window Buttons -->
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:gravity="center"
+                android:background="@drawable/theme_btn_xp"
+                android:text="_"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:layout_marginRight="3dp"/>
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:gravity="center"
+                android:background="@drawable/theme_btn_xp"
+                android:text="□"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#000000"
+                android:layout_marginRight="3dp"/>
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:gravity="center"
+                android:background="#D84234"
+                android:text="✕"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginRight="4dp"/>
+        </LinearLayout>
+
+        <!-- 2. Modern Top Header & USB Status (Active in Modern Themes) -->
+        <LinearLayout
+            android:id="@+id/layout_modern_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="12dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -27,6 +96,7 @@
                 android:gravity="center_vertical">
 
                 <TextView
+                    android:id="@+id/tv_app_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DodoPress"
@@ -35,6 +105,7 @@
                     android:textColor="@color/text_high"/>
 
                 <TextView
+                    android:id="@+id/tv_pro_badge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="8dp"
@@ -64,19 +135,112 @@
                 android:textColor="@color/status_waiting_text"/>
         </LinearLayout>
 
-        <!-- Card 1: Document Selection & Interactive Preview -->
+        <!-- 3. Interactive Theme Switcher Bar (5 Themes) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_theme_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎨 Visual Theme:"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_med"
+                android:layout_marginBottom="6dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <Button
+                        android:id="@+id/btn_theme_xp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="🪟 Windows XP"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_midnight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="🌙 Midnight"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_studio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="☀️ Studio"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_cyber"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="⚡ Cyber"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_warm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="📜 Vintage"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"/>
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- Card 1: Document Selection & Interactive Preview -->
+        <LinearLayout
+            android:id="@+id/card_doc_preview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:background="@drawable/card_bg"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_xp_group_doc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="── Document &amp; Live Preview ──"
+                android:textColor="#003399"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:layout_marginBottom="6dp"/>
 
             <Button
                 android:id="@+id/btn_pick_file"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="46dp"
                 android:background="@drawable/btn_primary"
                 android:text="@string/btn_select_document"
                 android:textColor="#FFFFFF"
@@ -147,6 +311,7 @@
 
                 <!-- High-Resolution Paper Sheet Frame -->
                 <FrameLayout
+                    android:id="@+id/frame_paper_preview"
                     android:layout_width="match_parent"
                     android:layout_height="320dp"
                     android:background="#0A0F1D"
@@ -160,6 +325,7 @@
                 </FrameLayout>
 
                 <TextView
+                    android:id="@+id/tv_zoom_hint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -205,14 +371,26 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Card 2: Ink Darkness / Tone Curve Lab -->
+        <!-- Card 2: Toner Density / PC Match Engine -->
         <LinearLayout
+            android:id="@+id/card_toner_density"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/card_bg"
-            android:padding="16dp"
-            android:layout_marginBottom="14dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_xp_group_density"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="── Print Density &amp; Toner Quality ──"
+                android:textColor="#003399"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:layout_marginBottom="6dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -221,11 +399,12 @@
                 android:gravity="center_vertical">
 
                 <TextView
+                    android:id="@+id/tv_density_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/ink_density_title"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_high"/>
 
@@ -234,19 +413,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="75%"
-                    android:textSize="15sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/brand_primary"/>
             </LinearLayout>
 
             <TextView
+                android:id="@+id/tv_density_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/ink_density_desc"
                 android:textSize="12sp"
                 android:textColor="@color/text_med"
                 android:layout_marginTop="2dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="10dp"/>
 
             <SeekBar
                 android:id="@+id/seek_darkness"
@@ -260,12 +440,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="75% — Deep Black (PC Match)"
-                android:textSize="13sp"
+                android:text="75% — Deep Black (PC Match — Locked Default)"
+                android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="@color/brand_primary"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="10dp"/>
 
             <!-- Quick-Preset Buttons -->
             <LinearLayout
@@ -321,52 +501,60 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Card 3: Print Hardware Configuration -->
+        <!-- Card 3: Print Range & Hardware Configuration -->
         <LinearLayout
+            android:id="@+id/card_page_config"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/card_bg"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp">
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_xp_group_pages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="── Print Range &amp; Copies ──"
+                android:textColor="#003399"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:layout_marginBottom="6dp"/>
 
             <!-- Hardware Laser Engine Info -->
             <LinearLayout
+                android:id="@+id/layout_engine_badge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:background="@drawable/status_badge_connected"
-                android:paddingLeft="12dp"
-                android:paddingTop="8dp"
-                android:paddingRight="12dp"
-                android:paddingBottom="8dp"
-                android:layout_marginBottom="12dp">
+                android:paddingLeft="10dp"
+                android:paddingTop="6dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="6dp"
+                android:layout_marginBottom="10dp">
 
                 <TextView
+                    android:id="@+id/tv_engine_info"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="⚡ 300 DPI Native Laser Engine"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     android:textColor="@color/status_connected_text"/>
 
                 <TextView
+                    android:id="@+id/tv_engine_tag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="FAST &amp; SOLID TONER"
+                    android:text="SOLID TONER"
                     android:textSize="10sp"
                     android:textStyle="bold"
                     android:textColor="@color/status_connected_text"/>
             </LinearLayout>
-
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/surface_card_border"
-                android:layout_marginBottom="12dp"/>
 
             <!-- Copies Section with Collation Option -->
             <LinearLayout
@@ -374,7 +562,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="10dp">
 
                 <!-- Copies Stepper -->
                 <LinearLayout
@@ -383,6 +571,7 @@
                     android:orientation="vertical">
 
                     <TextView
+                        android:id="@+id/tv_copies_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/copies_title"
@@ -395,12 +584,12 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="6dp">
+                        android:layout_marginTop="4dp">
 
                         <Button
                             android:id="@+id/btn_copies_minus"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/btn_secondary"
                             android:textColor="@color/text_high"
                             android:text="−"
@@ -408,7 +597,7 @@
 
                         <TextView
                             android:id="@+id/tv_copies_count"
-                            android:layout_width="40dp"
+                            android:layout_width="38dp"
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:text="1"
@@ -418,8 +607,8 @@
 
                         <Button
                             android:id="@+id/btn_copies_plus"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
                             android:background="@drawable/btn_secondary"
                             android:textColor="@color/text_high"
                             android:text="+"
@@ -442,15 +631,9 @@
                     android:textColor="@color/text_med"/>
             </LinearLayout>
 
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/surface_card_border"
-                android:layout_marginBottom="12dp"/>
-
             <!-- Page Selection (Windows Style) -->
             <TextView
+                android:id="@+id/tv_pages_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pages_title"
@@ -463,14 +646,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="6dp">
+                android:layout_marginTop="4dp">
 
                 <RadioButton
                     android:id="@+id/rb_pages_all"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_high"
                     android:text="@string/pages_all"/>
 
@@ -478,7 +661,7 @@
                     android:id="@+id/rb_pages_current"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_high"
                     android:text="@string/pages_current"/>
 
@@ -486,7 +669,7 @@
                     android:id="@+id/rb_pages_odd"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_high"
                     android:text="@string/pages_odd"/>
 
@@ -494,7 +677,7 @@
                     android:id="@+id/rb_pages_even"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_high"
                     android:text="@string/pages_even"/>
 
@@ -502,7 +685,7 @@
                     android:id="@+id/rb_pages_custom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_high"
                     android:text="@string/pages_custom"/>
             </RadioGroup>
@@ -514,7 +697,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="gone"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:layout_marginLeft="28dp">
 
                 <EditText
@@ -543,7 +726,7 @@
                 android:id="@+id/cb_reverse_order"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:text="@string/order_reverse"
                 android:checked="false"
                 android:textSize="12sp"
@@ -551,11 +734,12 @@
 
             <!-- Real-time Live Page Summary Badge -->
             <LinearLayout
+                android:id="@+id/layout_page_summary_badge"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:background="@drawable/badge_info"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical">
 
                 <TextView
@@ -589,19 +773,48 @@
             android:text="Preparing print..."
             android:textColor="@color/brand_primary"
             android:textSize="13sp"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="10dp"/>
 
         <!-- Primary Action Button -->
         <Button
             android:id="@+id/btn_print_now"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="52dp"
             android:background="@drawable/btn_primary"
             android:text="@string/btn_print_now"
             android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:elevation="4dp"/>
+
+        <!-- 4. Proper Branding Footer -->
+        <LinearLayout
+            android:id="@+id/card_footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/tv_footer_branding"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Made by killindodo with love ❤️"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/brand_primary"/>
+
+            <TextView
+                android:id="@+id/tv_footer_sub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DodoPress Pro • Free &amp; Ad-Free Offline Printing"
+                android:textSize="11sp"
+                android:textColor="@color/text_muted"
+                android:layout_marginTop="2dp"/>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

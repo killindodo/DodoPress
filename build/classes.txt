@@ -1,5 +1,6 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$drawable.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$xml.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$mipmap.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/PrintEngine.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/PrintEngine$PrintProgressListener.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/ToneEngine.class
@@ -11,6 +12,7 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/usb/UsbPrinterConnection.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/usb/UsbPrinterConnection$BulkOutputStream.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/usb/UsbPrinterConnection$PermissionReceiver.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ThemeManager$AppTheme.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$3.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView$ScaleListener.class
@@ -18,7 +20,9 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$2.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$4.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ThemeManager$ThemePalette.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$1.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ThemeManager.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$string.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/cups/CupsRasterWriter.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dynamixsoftware/drv/DrvRuntime.class
