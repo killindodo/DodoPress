@@ -489,10 +489,15 @@ public class MainActivity extends Activity {
         floatingActionDock.setVisibility((index == 0 || index == 1) ? View.VISIBLE : View.GONE);
 
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
-        tabPrintStudio.setTextColor(index == 0 ? p.brandPrimaryColor : p.textMedColor);
-        tabIdCopier.setTextColor(index == 1 ? p.brandPrimaryColor : p.textMedColor);
-        tabSpoolQueue.setTextColor(index == 2 ? p.brandPrimaryColor : p.textMedColor);
-        tabDeveloper.setTextColor(index == 3 ? p.brandPrimaryColor : p.textMedColor);
+        tabPrintStudio.setTextColor(index == 0 ? p.brandPrimaryColor : p.textMutedColor);
+        tabIdCopier.setTextColor(index == 1 ? p.brandPrimaryColor : p.textMutedColor);
+        tabSpoolQueue.setTextColor(index == 2 ? p.brandPrimaryColor : p.textMutedColor);
+        tabDeveloper.setTextColor(index == 3 ? p.brandPrimaryColor : p.textMutedColor);
+
+        tabPrintStudio.setTypeface(null, index == 0 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        tabIdCopier.setTypeface(null, index == 1 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        tabSpoolQueue.setTypeface(null, index == 2 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        tabDeveloper.setTypeface(null, index == 3 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
 
         if (index == 2) {
             renderSpoolQueue();
