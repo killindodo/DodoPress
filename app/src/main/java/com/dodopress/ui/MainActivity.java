@@ -3,6 +3,7 @@ package com.dodopress.ui;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -15,9 +16,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.pdf.PdfDocument;
 import android.graphics.pdf.PdfRenderer;
+import android.animation.ValueAnimator;
+import android.view.Gravity;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.net.Uri;
@@ -33,6 +39,7 @@ import android.text.TextWatcher;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -44,12 +51,16 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.dodopress.engine.AiAssistantEngine;
 import com.dodopress.engine.DocumentScannerEngine;
 import com.dodopress.engine.IdCardEngine;
+import com.dodopress.engine.ImagePrintEngine;
 import com.dodopress.engine.PrintEngine;
+import com.dodopress.engine.QrPrintEngine;
 import com.dodopress.engine.SheetGeometry;
 import com.dodopress.engine.SpoolManager;
 import com.dodopress.engine.ToneEngine;
@@ -57,7 +68,9 @@ import com.dodopress.usb.UsbPrinterConnection;
 import com.dodopress.util.DodoFileProvider;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,17 +98,38 @@ public class MainActivity extends Activity {
     private File tempScanFile;
     private PrinterCutawayView.PrinterState currentPrinterCutawayState = PrinterCutawayView.PrinterState.OFFLINE;
 
-    // Multi-page navigation tabs
+    // Multi-page navigation tabs (Material 3 PlayStore Style)
     private View pagePrintStudio;
     private View pageIdCopier;
     private View pageSpoolQueue;
     private View pageDeveloper;
 
-    private Button tabPrintStudio;
-    private Button tabIdCopier;
-    private Button tabSpoolQueue;
-    private Button tabDeveloper;
+    private View tabPrintStudio;
+    private View tabIdCopier;
+    private View tabSpoolQueue;
+    private View tabDeveloper;
+
+    private View pillPrintStudio;
+    private View pillIdCopier;
+    private View pillSpoolQueue;
+    private View pillDeveloper;
+
+    private ImageView iconPrintStudio;
+    private ImageView iconIdCopier;
+    private ImageView iconSpoolQueue;
+    private ImageView iconDeveloper;
+
+    private TextView labelPrintStudio;
+    private TextView labelIdCopier;
+    private TextView labelSpoolQueue;
+    private TextView labelDeveloper;
+
+    private View[] pillViews;
+    private ImageView[] iconViews;
+    private TextView[] labelViews;
+
     private int activePageIndex = 0;
+    private int previousPageIndex = -1;
 
     // Floating Frosted Glass Action Dock
     private View floatingActionDock;
@@ -113,11 +147,29 @@ public class MainActivity extends Activity {
     private PulsingBeaconView viewBeacon;
     private LaserScanView laserScanView;
 
-    private Button btnThemeXp;
-    private Button btnThemeCyber;
-    private Button btnThemeSlate;
-    private Button btnThemeMatrix;
-    private Button btnThemeStudio;
+    private View btnThemeMenu;
+
+    // Retractable Sliding Options Panel
+    private View layoutSlidingPanel;
+    private TextView tvPanelHandle;
+    private Button btnTogglePanel;
+    private Button btnTabTone;
+    private Button btnTabGeometry;
+    private Button btnTabMargins;
+    private Button btnTabPages;
+    private Button btnTabWatermark;
+    private ScrollView scrollOptions;
+    private View cardMargins;
+    private View cardWatermark;
+
+    // Watermark Presets
+    private Button btnWmConfidential;
+    private Button btnWmDraft;
+    private Button btnWmPaid;
+    private Button btnWmOriginal;
+    private Button btnWmClear;
+
+    private boolean isPanelCollapsed = false;
 
     // Recent Prints Shelf
     private View cardRecents;
@@ -131,15 +183,9 @@ public class MainActivity extends Activity {
     private View cardGeometry;
     private View cardPageConfig;
 
-    private TextView tvXpGroupDoc;
-    private TextView tvXpGroupDensity;
-    private TextView tvXpGroupGeometry;
-    private TextView tvXpGroupPages;
-
     private TextView tvAppTitle;
     private TextView tvAppSubtitle;
     private TextView tvProBadge;
-    private TextView tvThemeLabel;
     private TextView tvDensityTitle;
     private TextView tvDensityDesc;
     private TextView tvGeometryTitle;
@@ -153,6 +199,14 @@ public class MainActivity extends Activity {
     private Button btnPaperLetter;
     private Button btnPaperLegal;
     private Button btnPaperA5;
+
+    // N-Up Multi-Page Tiling Controls
+    private Button btnTile1Up;
+    private Button btnTile2Up;
+    private Button btnTile4Up;
+    private TextView tvTilingLabel;
+    private SheetGeometry.TilingMode currentTilingMode = SheetGeometry.TilingMode.ONE_UP;
+
     private SheetGeometrySelectorView viewSheetGeometry;
     private Button btnPlaceFull;
     private Button btnPlaceTopHalf;
@@ -179,6 +233,8 @@ public class MainActivity extends Activity {
     private TextView tvPrinterStatus;
     private Button btnPickFile;
     private Button btnScanDocument;
+    private Button btnQrLabel;
+    private Button btnAiAssistant;
     private TextView tvFileInfo;
     private LinearLayout layoutPreviewContainer;
     private ZoomableImageView ivPagePreview;
@@ -250,9 +306,17 @@ public class MainActivity extends Activity {
     private TextView tvDevName;
     private TextView tvUpiId;
     private Button btnCopyUpi;
+    private Button btnPrintUpiQr;
     private Button btnFeedbackRequest;
     private CheckBox cbSoundEffects;
     private int devAvatarTapCount = 0;
+
+    // BYOK AI Assistant Views
+    private View cardAiByok;
+    private EditText etGeminiApiKey;
+    private Button btnSaveAiKey;
+    private Button btnTestAiKey;
+    private TextView tvAiKeyStatus;
 
     private File currentPdfFile;
     private PdfRenderer pdfRenderer;
@@ -262,7 +326,7 @@ public class MainActivity extends Activity {
     private Bitmap rawPageBitmap;
     private int copies = 1;
 
-    private ThemeManager.AppTheme currentTheme = ThemeManager.AppTheme.WINDOWS_XP;
+    private ThemeManager.AppTheme currentTheme = ThemeManager.AppTheme.MATRIX_CRT;
 
     // Background thread for real-time darkness rendering & debounced preview rasterization
     private final ExecutorService previewExecutor = Executors.newSingleThreadExecutor();
@@ -322,7 +386,7 @@ public class MainActivity extends Activity {
             if (uri != null) {
                 DiagnosticLogManager.log("INTENT", "Opened via external Share/View intent: " + uri);
                 showPage(0);
-                loadPdfFromUri(uri);
+                processIncomingDocumentUri(uri);
             }
         }
     }
@@ -355,11 +419,30 @@ public class MainActivity extends Activity {
         pageSpoolQueue = findViewById(com.dodopress.R.id.page_spool_queue);
         pageDeveloper = findViewById(com.dodopress.R.id.page_developer);
 
-        // Tabs
+        // Tabs (Material 3 PlayStore Navigation Structure)
         tabPrintStudio = findViewById(com.dodopress.R.id.tab_print_studio);
         tabIdCopier = findViewById(com.dodopress.R.id.tab_id_copier);
         tabSpoolQueue = findViewById(com.dodopress.R.id.tab_spool_queue);
         tabDeveloper = findViewById(com.dodopress.R.id.tab_developer);
+
+        pillPrintStudio = findViewById(com.dodopress.R.id.pill_print_studio);
+        pillIdCopier = findViewById(com.dodopress.R.id.pill_id_copier);
+        pillSpoolQueue = findViewById(com.dodopress.R.id.pill_spool_queue);
+        pillDeveloper = findViewById(com.dodopress.R.id.pill_developer);
+
+        iconPrintStudio = findViewById(com.dodopress.R.id.icon_print_studio);
+        iconIdCopier = findViewById(com.dodopress.R.id.icon_id_copier);
+        iconSpoolQueue = findViewById(com.dodopress.R.id.icon_spool_queue);
+        iconDeveloper = findViewById(com.dodopress.R.id.icon_developer);
+
+        labelPrintStudio = findViewById(com.dodopress.R.id.label_print_studio);
+        labelIdCopier = findViewById(com.dodopress.R.id.label_id_copier);
+        labelSpoolQueue = findViewById(com.dodopress.R.id.label_spool_queue);
+        labelDeveloper = findViewById(com.dodopress.R.id.label_developer);
+
+        pillViews = new View[]{pillPrintStudio, pillIdCopier, pillSpoolQueue, pillDeveloper};
+        iconViews = new ImageView[]{iconPrintStudio, iconIdCopier, iconSpoolQueue, iconDeveloper};
+        labelViews = new TextView[]{labelPrintStudio, labelIdCopier, labelSpoolQueue, labelDeveloper};
 
         // Floating Action Dock
         floatingActionDock = findViewById(com.dodopress.R.id.floating_action_dock);
@@ -373,12 +456,19 @@ public class MainActivity extends Activity {
         viewBeacon = findViewById(com.dodopress.R.id.view_beacon);
         laserScanView = findViewById(com.dodopress.R.id.laser_scan_view);
 
-        // Theme Chips
-        btnThemeXp = findViewById(com.dodopress.R.id.btn_theme_xp);
-        btnThemeCyber = findViewById(com.dodopress.R.id.btn_theme_cyber);
-        btnThemeSlate = findViewById(com.dodopress.R.id.btn_theme_slate);
-        btnThemeMatrix = findViewById(com.dodopress.R.id.btn_theme_matrix);
-        btnThemeStudio = findViewById(com.dodopress.R.id.btn_theme_studio);
+        // Theme Studio Menu
+        btnThemeMenu = findViewById(com.dodopress.R.id.btn_theme_menu);
+
+        // Retractable Sliding Panel
+        layoutSlidingPanel = findViewById(com.dodopress.R.id.layout_sliding_panel);
+        tvPanelHandle = findViewById(com.dodopress.R.id.tv_panel_handle);
+        btnTogglePanel = findViewById(com.dodopress.R.id.btn_toggle_panel);
+        btnTabTone = findViewById(com.dodopress.R.id.btn_tab_tone);
+        btnTabGeometry = findViewById(com.dodopress.R.id.btn_tab_geometry);
+        btnTabMargins = findViewById(com.dodopress.R.id.btn_tab_margins);
+        btnTabPages = findViewById(com.dodopress.R.id.btn_tab_pages);
+        btnTabWatermark = findViewById(com.dodopress.R.id.btn_tab_watermark);
+        scrollOptions = findViewById(com.dodopress.R.id.scroll_options);
 
         // Recents
         cardRecents = findViewById(com.dodopress.R.id.card_recents);
@@ -390,17 +480,20 @@ public class MainActivity extends Activity {
         cardDocPreview = findViewById(com.dodopress.R.id.card_doc_preview);
         cardTonerDensity = findViewById(com.dodopress.R.id.card_toner_density);
         cardGeometry = findViewById(com.dodopress.R.id.card_geometry);
+        cardMargins = findViewById(com.dodopress.R.id.card_margins);
         cardPageConfig = findViewById(com.dodopress.R.id.card_page_config);
+        cardWatermark = findViewById(com.dodopress.R.id.card_watermark);
 
-        tvXpGroupDoc = findViewById(com.dodopress.R.id.tv_xp_group_doc);
-        tvXpGroupDensity = findViewById(com.dodopress.R.id.tv_xp_group_density);
-        tvXpGroupGeometry = findViewById(com.dodopress.R.id.tv_xp_group_geometry);
-        tvXpGroupPages = findViewById(com.dodopress.R.id.tv_xp_group_pages);
+        // Watermark Preset Chips
+        btnWmConfidential = findViewById(com.dodopress.R.id.btn_wm_confidential);
+        btnWmDraft = findViewById(com.dodopress.R.id.btn_wm_draft);
+        btnWmPaid = findViewById(com.dodopress.R.id.btn_wm_paid);
+        btnWmOriginal = findViewById(com.dodopress.R.id.btn_wm_original);
+        btnWmClear = findViewById(com.dodopress.R.id.btn_wm_clear);
 
         tvAppTitle = findViewById(com.dodopress.R.id.tv_app_title);
         tvAppSubtitle = findViewById(com.dodopress.R.id.tv_app_subtitle);
         tvProBadge = findViewById(com.dodopress.R.id.tv_pro_badge);
-        tvThemeLabel = findViewById(com.dodopress.R.id.tv_theme_label);
         tvDensityTitle = findViewById(com.dodopress.R.id.tv_density_title);
         tvDensityDesc = findViewById(com.dodopress.R.id.tv_density_desc);
         tvGeometryTitle = findViewById(com.dodopress.R.id.tv_geometry_title);
@@ -414,6 +507,13 @@ public class MainActivity extends Activity {
         btnPaperLetter = findViewById(com.dodopress.R.id.btn_paper_letter);
         btnPaperLegal = findViewById(com.dodopress.R.id.btn_paper_legal);
         btnPaperA5 = findViewById(com.dodopress.R.id.btn_paper_a5);
+
+        // N-Up Tiling Views
+        btnTile1Up = findViewById(com.dodopress.R.id.btn_tile_1up);
+        btnTile2Up = findViewById(com.dodopress.R.id.btn_tile_2up);
+        btnTile4Up = findViewById(com.dodopress.R.id.btn_tile_4up);
+        tvTilingLabel = findViewById(com.dodopress.R.id.tv_tiling_label);
+
         viewSheetGeometry = findViewById(com.dodopress.R.id.view_sheet_geometry);
         btnPlaceFull = findViewById(com.dodopress.R.id.btn_place_full);
         btnPlaceTopHalf = findViewById(com.dodopress.R.id.btn_place_top_half);
@@ -435,6 +535,8 @@ public class MainActivity extends Activity {
         tvPrinterStatus = findViewById(com.dodopress.R.id.tv_printer_status);
         btnPickFile = findViewById(com.dodopress.R.id.btn_pick_file);
         btnScanDocument = findViewById(com.dodopress.R.id.btn_scan_document);
+        btnQrLabel = findViewById(com.dodopress.R.id.btn_qr_label);
+        btnAiAssistant = findViewById(com.dodopress.R.id.btn_ai_assistant);
         tvFileInfo = findViewById(com.dodopress.R.id.tv_file_info);
         layoutPreviewContainer = findViewById(com.dodopress.R.id.layout_preview_container);
         ivPagePreview = findViewById(com.dodopress.R.id.iv_page_preview);
@@ -498,8 +600,16 @@ public class MainActivity extends Activity {
         tvDevName = findViewById(com.dodopress.R.id.tv_dev_name);
         tvUpiId = findViewById(com.dodopress.R.id.tv_upi_id);
         btnCopyUpi = findViewById(com.dodopress.R.id.btn_copy_upi);
+        btnPrintUpiQr = findViewById(com.dodopress.R.id.btn_print_upi_qr);
         btnFeedbackRequest = findViewById(com.dodopress.R.id.btn_feedback_request);
         cbSoundEffects = findViewById(com.dodopress.R.id.cb_sound_effects);
+
+        // BYOK AI Views
+        cardAiByok = findViewById(com.dodopress.R.id.card_ai_byok);
+        etGeminiApiKey = findViewById(com.dodopress.R.id.et_gemini_api_key);
+        btnSaveAiKey = findViewById(com.dodopress.R.id.btn_save_ai_key);
+        btnTestAiKey = findViewById(com.dodopress.R.id.btn_test_ai_key);
+        tvAiKeyStatus = findViewById(com.dodopress.R.id.tv_ai_key_status);
     }
 
     private void showPage(int index) {
@@ -512,23 +622,108 @@ public class MainActivity extends Activity {
         floatingActionDock.setVisibility((index == 0 || index == 1) ? View.VISIBLE : View.GONE);
 
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
-        tabPrintStudio.setTextColor(index == 0 ? p.brandPrimaryColor : p.textMutedColor);
-        tabIdCopier.setTextColor(index == 1 ? p.brandPrimaryColor : p.textMutedColor);
-        tabSpoolQueue.setTextColor(index == 2 ? p.brandPrimaryColor : p.textMutedColor);
-        tabDeveloper.setTextColor(index == 3 ? p.brandPrimaryColor : p.textMutedColor);
+        int activeColor = p.brandPrimaryColor;
+        int inactiveColor = Color.parseColor("#94A3B8");
 
-        tabPrintStudio.setTypeface(null, index == 0 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-        tabIdCopier.setTypeface(null, index == 1 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-        tabSpoolQueue.setTypeface(null, index == 2 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
-        tabDeveloper.setTypeface(null, index == 3 ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        boolean isInitial = (previousPageIndex == -1);
+
+        for (int i = 0; i < 4; i++) {
+            final boolean isActive = (i == index);
+            final View pill = pillViews[i];
+            final ImageView icon = iconViews[i];
+            final TextView label = labelViews[i];
+
+            if (isActive) {
+                label.setTypeface(null, android.graphics.Typeface.BOLD);
+                pill.setBackgroundResource(com.dodopress.R.drawable.bg_nav_pill_active);
+
+                // Apply elastic bounce scale animation to the active tab pill/icon
+                pill.animate().cancel();
+                pill.setScaleX(1.0f);
+                pill.setScaleY(1.0f);
+                pill.animate()
+                    .scaleX(1.15f)
+                    .scaleY(1.15f)
+                    .setDuration(120)
+                    .setInterpolator(new DecelerateInterpolator())
+                    .withEndAction(() -> {
+                        pill.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(160)
+                            .setInterpolator(new OvershootInterpolator(2.2f))
+                            .start();
+                    })
+                    .start();
+
+                if (!isInitial && previousPageIndex != index) {
+                    // Animate active pill alpha and color tinting between active brand primary and inactive muted slate (#94A3B8)
+                    pill.setAlpha(0.2f);
+                    pill.animate().alpha(1.0f).setDuration(180).start();
+
+                    ValueAnimator colorAnim = ValueAnimator.ofArgb(inactiveColor, activeColor);
+                    colorAnim.setDuration(180);
+                    colorAnim.addUpdateListener(anim -> {
+                        int c = (int) anim.getAnimatedValue();
+                        icon.setColorFilter(c, PorterDuff.Mode.SRC_IN);
+                        label.setTextColor(c);
+                    });
+                    colorAnim.start();
+                } else {
+                    pill.setAlpha(1.0f);
+                    icon.setColorFilter(activeColor, PorterDuff.Mode.SRC_IN);
+                    label.setTextColor(activeColor);
+                }
+            } else {
+                label.setTypeface(null, android.graphics.Typeface.NORMAL);
+
+                if (!isInitial && previousPageIndex == i && previousPageIndex != index) {
+                    // Previously active tab transitioning to inactive
+                    pill.animate().cancel();
+                    pill.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .alpha(0.0f)
+                        .setDuration(120)
+                        .withEndAction(() -> {
+                            pill.setBackgroundResource(com.dodopress.R.drawable.bg_nav_pill_inactive);
+                            pill.setAlpha(1.0f);
+                        })
+                        .start();
+
+                    ValueAnimator colorAnim = ValueAnimator.ofArgb(activeColor, inactiveColor);
+                    colorAnim.setDuration(180);
+                    colorAnim.addUpdateListener(anim -> {
+                        int c = (int) anim.getAnimatedValue();
+                        icon.setColorFilter(c, PorterDuff.Mode.SRC_IN);
+                        label.setTextColor(c);
+                    });
+                    colorAnim.start();
+                } else {
+                    // Inactive tab static reset
+                    pill.animate().cancel();
+                    pill.setScaleX(1.0f);
+                    pill.setScaleY(1.0f);
+                    pill.setAlpha(1.0f);
+                    pill.setBackgroundResource(com.dodopress.R.drawable.bg_nav_pill_inactive);
+                    icon.setColorFilter(inactiveColor, PorterDuff.Mode.SRC_IN);
+                    label.setTextColor(inactiveColor);
+                }
+            }
+        }
+
+        previousPageIndex = index;
 
         if (index == 2) {
             renderSpoolQueue();
+        } else if (index == 3) {
+            updateAiKeyDisplay();
         }
     }
 
     private void setupListeners() {
-        // Tab Clicks
+        // Tab Clicks & Tactile Micro-Interactions
+        TouchFeedback.applyAll(tabPrintStudio, tabIdCopier, tabSpoolQueue, tabDeveloper);
         tabPrintStudio.setOnClickListener(v -> {
             v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
             showPage(0);
@@ -564,18 +759,55 @@ public class MainActivity extends Activity {
             renderRecentsShelf();
         });
 
-        // 5 Themes Switching
-        btnThemeXp.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.WINDOWS_XP); });
-        btnThemeCyber.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.CYBERPUNK); });
-        btnThemeSlate.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.DEEP_SLATE); });
-        btnThemeMatrix.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.MATRIX); });
-        btnThemeStudio.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.STUDIO_LIGHT); });
+        // Theme Studio
+        if (btnThemeMenu != null) {
+            btnThemeMenu.setOnClickListener(v -> {
+                SoundManager.playClick();
+                showThemeSelectionDialog();
+            });
+        }
+
+        // Sliding Panel Expand/Retract
+        if (btnTogglePanel != null) {
+            btnTogglePanel.setOnClickListener(v -> toggleOptionsPanel());
+        }
+        if (tvPanelHandle != null) {
+            tvPanelHandle.setOnClickListener(v -> toggleOptionsPanel());
+        }
+
+        // Category Fast-Scroll Tabs
+        if (btnTabTone != null) btnTabTone.setOnClickListener(v -> scrollToCard(cardTonerDensity, btnTabTone));
+        if (btnTabGeometry != null) btnTabGeometry.setOnClickListener(v -> scrollToCard(cardGeometry, btnTabGeometry));
+        if (btnTabMargins != null) btnTabMargins.setOnClickListener(v -> scrollToCard(cardMargins, btnTabMargins));
+        if (btnTabPages != null) btnTabPages.setOnClickListener(v -> scrollToCard(cardPageConfig, btnTabPages));
+        if (btnTabWatermark != null) btnTabWatermark.setOnClickListener(v -> scrollToCard(cardWatermark, btnTabWatermark));
+
+        // Watermark live update & presets
+        if (etWatermark != null) {
+            etWatermark.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void afterTextChanged(Editable s) {
+                    renderPageThumb();
+                }
+            });
+        }
+        if (btnWmConfidential != null) btnWmConfidential.setOnClickListener(v -> setWatermarkPreset("CONFIDENTIAL"));
+        if (btnWmDraft != null) btnWmDraft.setOnClickListener(v -> setWatermarkPreset("DRAFT"));
+        if (btnWmPaid != null) btnWmPaid.setOnClickListener(v -> setWatermarkPreset("PAID / VERIFIED"));
+        if (btnWmOriginal != null) btnWmOriginal.setOnClickListener(v -> setWatermarkPreset("ORIGINAL"));
+        if (btnWmClear != null) btnWmClear.setOnClickListener(v -> setWatermarkPreset(""));
 
         // Paper Size Selection
         btnPaperA4.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.A4); });
         btnPaperLetter.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.LETTER); });
         btnPaperLegal.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.LEGAL); });
         btnPaperA5.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.A5); });
+
+        // Multi-Page Sheet Tiling Selection
+        btnTile1Up.setOnClickListener(v -> { SoundManager.playClick(); setTilingMode(SheetGeometry.TilingMode.ONE_UP); });
+        btnTile2Up.setOnClickListener(v -> { SoundManager.playClick(); setTilingMode(SheetGeometry.TilingMode.TWO_UP); });
+        btnTile4Up.setOnClickListener(v -> { SoundManager.playClick(); setTilingMode(SheetGeometry.TilingMode.FOUR_UP); });
 
         // Placement Region Selection
         btnPlaceFull.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.FULL_PAGE); });
@@ -623,6 +855,21 @@ public class MainActivity extends Activity {
             launchCameraScanner(false);
         });
 
+        if (btnQrLabel != null) {
+            btnQrLabel.setOnClickListener(v -> {
+                SoundManager.playClick();
+                showQrGeneratorDialog();
+            });
+        }
+
+        if (btnAiAssistant != null) {
+            btnAiAssistant.setOnClickListener(v -> {
+                SoundManager.playClick();
+                v.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
+                showAiAssistantDialog();
+            });
+        }
+
         // 1-Tap 90° Page Rotation
         btnRotatePage.setOnClickListener(v -> {
             SoundManager.playClick();
@@ -668,15 +915,20 @@ public class MainActivity extends Activity {
         });
 
         btnPrevPage.setOnClickListener(v -> {
-            if (currentPageIndex > 0) {
-                currentPageIndex--;
+            int nUp = (currentTilingMode != null) ? currentTilingMode.pagesPerSheet : 1;
+            int currentSheet = currentPageIndex / nUp;
+            if (currentSheet > 0) {
+                currentPageIndex = (currentSheet - 1) * nUp;
                 renderPageThumb();
             }
         });
 
         btnNextPage.setOnClickListener(v -> {
-            if (currentPageIndex < totalPages - 1) {
-                currentPageIndex++;
+            int nUp = (currentTilingMode != null) ? currentTilingMode.pagesPerSheet : 1;
+            int totalSheets = (totalPages + nUp - 1) / nUp;
+            int currentSheet = currentPageIndex / nUp;
+            if (currentSheet < totalSheets - 1) {
+                currentPageIndex = (currentSheet + 1) * nUp;
                 renderPageThumb();
             }
         });
@@ -786,6 +1038,27 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "UPI ID copied! Thank you for supporting DodoPress ❤️", Toast.LENGTH_LONG).show();
         });
 
+        if (btnPrintUpiQr != null) {
+            btnPrintUpiQr.setOnClickListener(v -> {
+                SoundManager.playClick();
+                generateAndLoadUpiQr();
+            });
+        }
+
+        if (btnSaveAiKey != null) {
+            btnSaveAiKey.setOnClickListener(v -> {
+                SoundManager.playClick();
+                saveAiKey();
+            });
+        }
+
+        if (btnTestAiKey != null) {
+            btnTestAiKey.setOnClickListener(v -> {
+                SoundManager.playClick();
+                testAiKey();
+            });
+        }
+
         btnFeedbackRequest.setOnClickListener(v -> {
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto:support@dodopress.org"));
@@ -823,15 +1096,17 @@ public class MainActivity extends Activity {
 
         // Universal Tactile Spring Micro-Interactions
         TouchFeedback.applyAll(
-            btnPickFile, btnScanDocument, btnPrintNow, dockBtnPrint, btnDiagnostics,
+            btnPickFile, btnScanDocument, btnQrLabel, btnAiAssistant, btnPrintNow, dockBtnPrint, btnDiagnostics,
             btnTogglePreviewMode, btnQuickZoom, btnRotatePage, btnPrevPage, btnNextPage,
             btnPresetDraft, btnPresetNormal, btnPresetDeep, btnPresetUltra,
             btnCopiesMinus, btnCopiesPlus, btnQueueJob,
-            btnThemeXp, btnThemeCyber, btnThemeSlate, btnThemeMatrix, btnThemeStudio,
+            btnThemeMenu, btnTogglePanel, btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark,
+            btnWmConfidential, btnWmDraft, btnWmPaid, btnWmOriginal, btnWmClear,
             btnPaperA4, btnPaperLetter, btnPaperLegal, btnPaperA5,
+            btnTile1Up, btnTile2Up, btnTile4Up,
             btnPlaceFull, btnPlaceTopHalf, btnPlaceBottomHalf, btnPlaceLeftHalf, btnPlaceRightHalf, btnPlaceQuadTl,
             btnMarginZero, btnMarginNarrow, btnMarginNormal, btnMarginWide,
-            btnIdPickFront, btnIdPickBack, btnIdPrintNow, btnCopyUpi, btnFeedbackRequest
+            btnIdPickFront, btnIdPickBack, btnIdPrintNow, btnCopyUpi, btnPrintUpiQr, btnSaveAiKey, btnTestAiKey, btnFeedbackRequest
         );
     }
 
@@ -950,18 +1225,67 @@ public class MainActivity extends Activity {
         this.currentPaperSize = size;
         viewSheetGeometry.setPaperSize(size);
         updatePaperSizeHighlight(size);
-        tvGeometryBadge.setText(size.name() + " • " + currentPlacementRegion.title);
+        updateGeometryBadge();
         updatePageSummary();
         renderPageThumb();
     }
 
     private void setPlacementRegion(SheetGeometry.PlacementRegion region) {
         this.currentPlacementRegion = region;
+        this.currentTilingMode = SheetGeometry.TilingMode.ONE_UP;
+        updateTilingHighlight(currentTilingMode);
+        if (tvTilingLabel != null) {
+            tvTilingLabel.setText(currentTilingMode.title);
+        }
+        viewSheetGeometry.setTilingMode(SheetGeometry.TilingMode.ONE_UP);
         viewSheetGeometry.setPlacementRegion(region);
         updatePlacementPresetHighlight(region);
-        tvGeometryBadge.setText(currentPaperSize.name() + " • " + region.title);
+        updateGeometryBadge();
         updatePageSummary();
         renderPageThumb();
+    }
+
+    private void setTilingMode(SheetGeometry.TilingMode mode) {
+        this.currentTilingMode = mode;
+        if (mode != SheetGeometry.TilingMode.ONE_UP) {
+            this.currentPlacementRegion = SheetGeometry.PlacementRegion.FULL_PAGE;
+            viewSheetGeometry.setPlacementRegion(SheetGeometry.PlacementRegion.FULL_PAGE);
+            updatePlacementPresetHighlight(SheetGeometry.PlacementRegion.FULL_PAGE);
+        }
+        viewSheetGeometry.setTilingMode(mode);
+        updateTilingHighlight(mode);
+        if (tvTilingLabel != null) {
+            tvTilingLabel.setText(mode.title);
+        }
+        updateGeometryBadge();
+        updatePageSummary();
+        renderPageThumb();
+    }
+
+    private void updateGeometryBadge() {
+        if (tvGeometryBadge == null) return;
+        String modeDesc = (currentTilingMode != SheetGeometry.TilingMode.ONE_UP)
+            ? currentTilingMode.title
+            : currentPlacementRegion.title;
+        tvGeometryBadge.setText(currentPaperSize.name() + " • " + modeDesc);
+    }
+
+    private void updateTilingHighlight(SheetGeometry.TilingMode mode) {
+        int activeBg = com.dodopress.R.drawable.btn_primary;
+        int normalBg = com.dodopress.R.drawable.btn_chip;
+
+        if (btnTile1Up != null) {
+            btnTile1Up.setBackgroundResource(mode == SheetGeometry.TilingMode.ONE_UP ? activeBg : normalBg);
+            btnTile1Up.setTextColor(mode == SheetGeometry.TilingMode.ONE_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+        }
+        if (btnTile2Up != null) {
+            btnTile2Up.setBackgroundResource(mode == SheetGeometry.TilingMode.TWO_UP ? activeBg : normalBg);
+            btnTile2Up.setTextColor(mode == SheetGeometry.TilingMode.TWO_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+        }
+        if (btnTile4Up != null) {
+            btnTile4Up.setBackgroundResource(mode == SheetGeometry.TilingMode.FOUR_UP ? activeBg : normalBg);
+            btnTile4Up.setTextColor(mode == SheetGeometry.TilingMode.FOUR_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+        }
     }
 
     private void renderRecentsShelf() {
@@ -1023,7 +1347,9 @@ public class MainActivity extends Activity {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(theme);
 
         // 1. Root background
-        rootMainContainer.setBackgroundColor(p.bgColor);
+        if (rootMainContainer != null) {
+            rootMainContainer.setBackgroundColor(p.bgColor);
+        }
 
         if (laserScanView != null) {
             laserScanView.setLaserColor(p.laserColor);
@@ -1034,147 +1360,265 @@ public class MainActivity extends Activity {
         if (viewSheetGeometry != null) {
             viewSheetGeometry.setThemeColors(p.brandPrimaryColor, p.accentColor);
         }
-
-        // 2. XP titlebar vs Modern header
-        if (p.isXp) {
-            layoutXpTitlebar.setVisibility(View.VISIBLE);
-            layoutModernHeader.setVisibility(View.GONE);
-            tvXpGroupDoc.setVisibility(View.VISIBLE);
-            tvXpGroupDensity.setVisibility(View.VISIBLE);
-            tvXpGroupGeometry.setVisibility(View.VISIBLE);
-            tvXpGroupPages.setVisibility(View.VISIBLE);
-
-            cardDocPreview.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
-            cardTonerDensity.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
-            cardGeometry.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
-            cardPageConfig.setBackgroundResource(com.dodopress.R.drawable.theme_card_xp);
-
-            btnPickFile.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnPickFile.setTextColor(Color.parseColor("#000000"));
-            btnScanDocument.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnScanDocument.setTextColor(Color.parseColor("#000000"));
-
-            btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp_primary);
-            btnPrintNow.setTextColor(Color.parseColor("#000000"));
-            dockBtnPrint.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp_primary);
-            dockBtnPrint.setTextColor(Color.parseColor("#000000"));
-
-            btnCopiesMinus.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnCopiesMinus.setTextColor(Color.parseColor("#000000"));
-            btnCopiesPlus.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnCopiesPlus.setTextColor(Color.parseColor("#000000"));
-
-            btnPrevPage.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnPrevPage.setTextColor(Color.parseColor("#000000"));
-            btnNextPage.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnNextPage.setTextColor(Color.parseColor("#000000"));
-
-            btnTogglePreviewMode.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnTogglePreviewMode.setTextColor(Color.parseColor("#000000"));
-            btnRotatePage.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnRotatePage.setTextColor(Color.parseColor("#000000"));
-            btnQuickZoom.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
-            btnQuickZoom.setTextColor(Color.parseColor("#000000"));
-
-            tvAppTitle.setTextColor(Color.parseColor("#000000"));
-            tvThemeLabel.setTextColor(Color.parseColor("#333333"));
-            tvDensityTitle.setTextColor(Color.parseColor("#000000"));
-            tvDensityDesc.setTextColor(Color.parseColor("#444444"));
-            tvGeometryTitle.setTextColor(Color.parseColor("#000000"));
-            tvGeometryDesc.setTextColor(Color.parseColor("#444444"));
-            if (tvMarginTitle != null) tvMarginTitle.setTextColor(Color.parseColor("#000000"));
-            if (tvMarginDesc != null) tvMarginDesc.setTextColor(Color.parseColor("#444444"));
-            tvCopiesTitle.setTextColor(Color.parseColor("#000000"));
-            tvPagesTitle.setTextColor(Color.parseColor("#000000"));
-
-            rbPagesAll.setTextColor(Color.parseColor("#000000"));
-            rbPagesCurrent.setTextColor(Color.parseColor("#000000"));
-            rbPagesOdd.setTextColor(Color.parseColor("#000000"));
-            rbPagesEven.setTextColor(Color.parseColor("#000000"));
-            rbPagesCustom.setTextColor(Color.parseColor("#000000"));
-            cbCollate.setTextColor(Color.parseColor("#333333"));
-            cbReverseOrder.setTextColor(Color.parseColor("#333333"));
-            cbInvertDark.setTextColor(Color.parseColor("#333333"));
-        } else {
-            layoutXpTitlebar.setVisibility(View.GONE);
-            layoutModernHeader.setVisibility(View.VISIBLE);
-            tvXpGroupDoc.setVisibility(View.GONE);
-            tvXpGroupDensity.setVisibility(View.GONE);
-            tvXpGroupGeometry.setVisibility(View.GONE);
-            tvXpGroupPages.setVisibility(View.GONE);
-
-            cardDocPreview.setBackgroundResource(p.cardDrawableRes);
-            cardTonerDensity.setBackgroundResource(p.cardDrawableRes);
-            cardGeometry.setBackgroundResource(p.cardDrawableRes);
-            cardPageConfig.setBackgroundResource(p.cardDrawableRes);
-
-            btnPickFile.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
-            btnPickFile.setTextColor(Color.parseColor("#FFFFFF"));
-            btnScanDocument.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
-            btnScanDocument.setTextColor(p.textHighColor);
-
-            btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
-            btnPrintNow.setTextColor(Color.parseColor("#FFFFFF"));
-            dockBtnPrint.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
-            dockBtnPrint.setTextColor(Color.parseColor("#FFFFFF"));
-
-            btnCopiesMinus.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
-            btnCopiesMinus.setTextColor(p.textHighColor);
-            btnCopiesPlus.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
-            btnCopiesPlus.setTextColor(p.textHighColor);
-
-            btnPrevPage.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
-            btnPrevPage.setTextColor(p.textHighColor);
-            btnNextPage.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
-            btnNextPage.setTextColor(p.textHighColor);
-
-            btnTogglePreviewMode.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
-            btnTogglePreviewMode.setTextColor(p.textHighColor);
-            btnRotatePage.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
-            btnRotatePage.setTextColor(p.textHighColor);
-            btnQuickZoom.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
-            btnQuickZoom.setTextColor(p.brandPrimaryColor);
-
-            tvAppTitle.setTextColor(p.textHighColor);
-            tvThemeLabel.setTextColor(p.textMedColor);
-            tvDensityTitle.setTextColor(p.textHighColor);
-            tvDensityDesc.setTextColor(p.textMedColor);
-            tvGeometryTitle.setTextColor(p.textHighColor);
-            tvGeometryDesc.setTextColor(p.textMedColor);
-            if (tvMarginTitle != null) tvMarginTitle.setTextColor(p.textHighColor);
-            if (tvMarginDesc != null) tvMarginDesc.setTextColor(p.textMedColor);
-            tvCopiesTitle.setTextColor(p.textHighColor);
-            tvPagesTitle.setTextColor(p.textHighColor);
-
-            rbPagesAll.setTextColor(p.textHighColor);
-            rbPagesCurrent.setTextColor(p.textHighColor);
-            rbPagesOdd.setTextColor(p.textHighColor);
-            rbPagesEven.setTextColor(p.textHighColor);
-            rbPagesCustom.setTextColor(p.textHighColor);
-            cbCollate.setTextColor(p.textMedColor);
-            cbReverseOrder.setTextColor(p.textHighColor);
-            cbInvertDark.setTextColor(p.textHighColor);
+        if (viewBeacon != null) {
+            viewBeacon.setBeaconColor(p.beaconColor);
         }
 
-        // Highlight active theme chip
-        btnThemeXp.setBackgroundResource(theme == ThemeManager.AppTheme.WINDOWS_XP ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
-        btnThemeCyber.setBackgroundResource(theme == ThemeManager.AppTheme.CYBERPUNK ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
-        btnThemeSlate.setBackgroundResource(theme == ThemeManager.AppTheme.DEEP_SLATE ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
-        btnThemeMatrix.setBackgroundResource(theme == ThemeManager.AppTheme.MATRIX ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
-        btnThemeStudio.setBackgroundResource(theme == ThemeManager.AppTheme.STUDIO_LIGHT ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_theme_chip);
+        // Cards background
+        if (cardDocPreview != null) cardDocPreview.setBackgroundResource(p.cardDrawableRes);
+        if (cardTonerDensity != null) cardTonerDensity.setBackgroundResource(p.cardDrawableRes);
+        if (cardGeometry != null) cardGeometry.setBackgroundResource(p.cardDrawableRes);
+        if (cardMargins != null) cardMargins.setBackgroundResource(p.cardDrawableRes);
+        if (cardPageConfig != null) cardPageConfig.setBackgroundResource(p.cardDrawableRes);
+        if (cardWatermark != null) cardWatermark.setBackgroundResource(p.cardDrawableRes);
+        if (cardRecents != null) cardRecents.setBackgroundResource(p.cardDrawableRes);
 
-        btnThemeXp.setTextColor(theme == ThemeManager.AppTheme.WINDOWS_XP ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnThemeCyber.setTextColor(theme == ThemeManager.AppTheme.CYBERPUNK ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnThemeSlate.setTextColor(theme == ThemeManager.AppTheme.DEEP_SLATE ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnThemeMatrix.setTextColor(theme == ThemeManager.AppTheme.MATRIX ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnThemeStudio.setTextColor(theme == ThemeManager.AppTheme.STUDIO_LIGHT ? Color.WHITE : Color.parseColor("#94A3B8"));
+        // Primary Buttons
+        int primaryBg = com.dodopress.R.drawable.btn_primary;
+        int secondaryBg = com.dodopress.R.drawable.btn_secondary;
+        int chipBg = com.dodopress.R.drawable.btn_chip;
 
+        if (btnPickFile != null) {
+            btnPickFile.setBackgroundResource(primaryBg);
+            btnPickFile.setTextColor(Color.WHITE);
+        }
+        if (btnScanDocument != null) {
+            btnScanDocument.setBackgroundResource(secondaryBg);
+            btnScanDocument.setTextColor(p.textHighColor);
+        }
+        if (btnQrLabel != null) {
+            btnQrLabel.setBackgroundResource(secondaryBg);
+            btnQrLabel.setTextColor(p.textHighColor);
+        }
+        if (btnAiAssistant != null) {
+            btnAiAssistant.setBackgroundResource(secondaryBg);
+            btnAiAssistant.setTextColor(p.textHighColor);
+        }
+        if (btnPrintNow != null) {
+            btnPrintNow.setBackgroundResource(primaryBg);
+            btnPrintNow.setTextColor(Color.WHITE);
+        }
+        if (dockBtnPrint != null) {
+            dockBtnPrint.setBackgroundResource(primaryBg);
+            dockBtnPrint.setTextColor(Color.WHITE);
+        }
+        if (btnCopiesMinus != null) {
+            btnCopiesMinus.setBackgroundResource(secondaryBg);
+            btnCopiesMinus.setTextColor(p.textHighColor);
+        }
+        if (btnCopiesPlus != null) {
+            btnCopiesPlus.setBackgroundResource(secondaryBg);
+            btnCopiesPlus.setTextColor(p.textHighColor);
+        }
+        if (btnPrevPage != null) {
+            btnPrevPage.setBackgroundResource(secondaryBg);
+            btnPrevPage.setTextColor(p.textHighColor);
+        }
+        if (btnNextPage != null) {
+            btnNextPage.setBackgroundResource(secondaryBg);
+            btnNextPage.setTextColor(p.textHighColor);
+        }
+        if (btnTogglePreviewMode != null) {
+            btnTogglePreviewMode.setBackgroundResource(chipBg);
+            btnTogglePreviewMode.setTextColor(p.textHighColor);
+        }
+        if (btnRotatePage != null) {
+            btnRotatePage.setBackgroundResource(chipBg);
+            btnRotatePage.setTextColor(p.textHighColor);
+        }
+        if (btnQuickZoom != null) {
+            btnQuickZoom.setBackgroundResource(chipBg);
+            btnQuickZoom.setTextColor(p.brandPrimaryColor);
+        }
+
+        // Text Colors
+        if (tvAppTitle != null) tvAppTitle.setTextColor(p.textHighColor);
+        if (tvDensityTitle != null) tvDensityTitle.setTextColor(p.textHighColor);
+        if (tvDensityDesc != null) tvDensityDesc.setTextColor(p.textMedColor);
+        if (tvGeometryTitle != null) tvGeometryTitle.setTextColor(p.textHighColor);
+        if (tvGeometryDesc != null) tvGeometryDesc.setTextColor(p.textMedColor);
+        if (tvMarginTitle != null) tvMarginTitle.setTextColor(p.textHighColor);
+        if (tvMarginDesc != null) tvMarginDesc.setTextColor(p.textMedColor);
+        if (tvCopiesTitle != null) tvCopiesTitle.setTextColor(p.textHighColor);
+        if (tvPagesTitle != null) tvPagesTitle.setTextColor(p.textHighColor);
+
+        if (rbPagesAll != null) rbPagesAll.setTextColor(p.textHighColor);
+        if (rbPagesCurrent != null) rbPagesCurrent.setTextColor(p.textHighColor);
+        if (rbPagesOdd != null) rbPagesOdd.setTextColor(p.textHighColor);
+        if (rbPagesEven != null) rbPagesEven.setTextColor(p.textHighColor);
+        if (rbPagesCustom != null) rbPagesCustom.setTextColor(p.textHighColor);
+        if (cbCollate != null) cbCollate.setTextColor(p.textMedColor);
+        if (cbReverseOrder != null) cbReverseOrder.setTextColor(p.textHighColor);
+        if (cbInvertDark != null) cbInvertDark.setTextColor(p.textHighColor);
+
+        // Highlight active sub-controls
         updatePaperSizeHighlight(currentPaperSize);
         updatePlacementPresetHighlight(currentPlacementRegion);
-        updatePresetChipHighlight(seekDarkness.getProgress());
+        updateTilingHighlight(currentTilingMode);
+        if (seekDarkness != null) {
+            updatePresetChipHighlight(seekDarkness.getProgress());
+        }
         updateMarginButtonsHighlight(currentMarginMm);
+        updateTabHighlight(btnTabTone);
         updatePageSummary();
         showPage(activePageIndex);
+    }
+
+    private void toggleOptionsPanel() {
+        SoundManager.playClick();
+        if (scrollOptions == null || btnTogglePanel == null) return;
+        isPanelCollapsed = !isPanelCollapsed;
+        if (isPanelCollapsed) {
+            scrollOptions.setVisibility(View.GONE);
+            btnTogglePanel.setText("▲ EXPAND");
+        } else {
+            scrollOptions.setVisibility(View.VISIBLE);
+            btnTogglePanel.setText("▼ RETRACT");
+        }
+    }
+
+    private void scrollToCard(View card, Button activeTab) {
+        SoundManager.playClick();
+        if (card == null || scrollOptions == null) return;
+        if (isPanelCollapsed) {
+            toggleOptionsPanel();
+        }
+        scrollOptions.smoothScrollTo(0, card.getTop());
+        updateTabHighlight(activeTab);
+    }
+
+    private void updateTabHighlight(Button activeTab) {
+        Button[] tabs = {btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark};
+        for (Button b : tabs) {
+            if (b == null) continue;
+            boolean isAct = (b == activeTab);
+            b.setTextColor(isAct ? Color.WHITE : Color.parseColor("#94A3B8"));
+            b.setBackgroundResource(isAct ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+        }
+    }
+
+    private void setWatermarkPreset(String text) {
+        SoundManager.playClick();
+        if (etWatermark != null) {
+            etWatermark.setText(text);
+            etWatermark.setSelection(text.length());
+        }
+        renderPageThumb();
+    }
+
+    private void showThemeSelectionDialog() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.parseColor("#080D1A"));
+        int pad = (int) (18 * getResources().getDisplayMetrics().density);
+        root.setPadding(pad, pad, pad, pad);
+
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText("🎨 HARDWARE THEME STUDIO");
+        tvTitle.setTextSize(16);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setTextColor(Color.WHITE);
+        root.addView(tvTitle);
+
+        TextView tvSub = new TextView(this);
+        tvSub.setText("Select high-contrast phosphor or precision engineering palette");
+        tvSub.setTextSize(11);
+        tvSub.setTextColor(Color.parseColor("#94A3B8"));
+        tvSub.setPadding(0, 4, 0, (int) (14 * getResources().getDisplayMetrics().density));
+        root.addView(tvSub);
+
+        final android.app.AlertDialog dialog = builder.setView(root).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        for (final ThemeManager.AppTheme t : ThemeManager.AppTheme.values()) {
+            final boolean isActive = (t == currentTheme);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            int rowPadH = (int) (12 * getResources().getDisplayMetrics().density);
+            int rowPadV = (int) (10 * getResources().getDisplayMetrics().density);
+            row.setPadding(rowPadH, rowPadV, rowPadH, rowPadV);
+
+            android.graphics.drawable.GradientDrawable rowBg = new android.graphics.drawable.GradientDrawable();
+            rowBg.setCornerRadius(10 * getResources().getDisplayMetrics().density);
+            if (isActive) {
+                rowBg.setColor(Color.parseColor("#172554"));
+                rowBg.setStroke((int) (1.5f * getResources().getDisplayMetrics().density), Color.parseColor(t.previewAccentHex));
+            } else {
+                rowBg.setColor(Color.parseColor("#0F172A"));
+                rowBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#1E293B"));
+            }
+            row.setBackground(rowBg);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density);
+            row.setLayoutParams(lp);
+
+            View swatch = new View(this);
+            int swatchSize = (int) (22 * getResources().getDisplayMetrics().density);
+            LinearLayout.LayoutParams swatchLp = new LinearLayout.LayoutParams(swatchSize, swatchSize);
+            swatchLp.rightMargin = (int) (12 * getResources().getDisplayMetrics().density);
+            swatch.setLayoutParams(swatchLp);
+            android.graphics.drawable.GradientDrawable swatchBg = new android.graphics.drawable.GradientDrawable();
+            swatchBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            swatchBg.setColor(Color.parseColor(t.previewAccentHex));
+            swatch.setBackground(swatchBg);
+            row.addView(swatch);
+
+            LinearLayout textCol = new LinearLayout(this);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+            textCol.setLayoutParams(colLp);
+
+            TextView tvItemTitle = new TextView(this);
+            tvItemTitle.setText(t.title);
+            tvItemTitle.setTextSize(13);
+            tvItemTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+            tvItemTitle.setTextColor(isActive ? Color.parseColor(t.previewAccentHex) : Color.WHITE);
+            textCol.addView(tvItemTitle);
+
+            TextView tvItemSub = new TextView(this);
+            tvItemSub.setText(t.subtitle);
+            tvItemSub.setTextSize(10);
+            tvItemSub.setTextColor(Color.parseColor("#94A3B8"));
+            textCol.addView(tvItemSub);
+            row.addView(textCol);
+
+            if (isActive) {
+                TextView activeBadge = new TextView(this);
+                activeBadge.setText("ACTIVE");
+                activeBadge.setTextSize(9);
+                activeBadge.setTypeface(null, android.graphics.Typeface.BOLD);
+                activeBadge.setTextColor(Color.parseColor(t.previewAccentHex));
+                activeBadge.setPadding((int) (8 * getResources().getDisplayMetrics().density),
+                    (int) (3 * getResources().getDisplayMetrics().density),
+                    (int) (8 * getResources().getDisplayMetrics().density),
+                    (int) (3 * getResources().getDisplayMetrics().density));
+                android.graphics.drawable.GradientDrawable badgeBg = new android.graphics.drawable.GradientDrawable();
+                badgeBg.setCornerRadius(6 * getResources().getDisplayMetrics().density);
+                badgeBg.setColor(Color.parseColor("#0F172A"));
+                badgeBg.setStroke(1, Color.parseColor(t.previewAccentHex));
+                activeBadge.setBackground(badgeBg);
+                row.addView(activeBadge);
+            }
+
+            row.setOnClickListener(v -> {
+                SoundManager.playClick();
+                row.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                applyAppTheme(t);
+                dialog.dismiss();
+                Toast.makeText(MainActivity.this, "Theme activated: " + t.title, Toast.LENGTH_SHORT).show();
+            });
+
+            root.addView(row);
+        }
+
+        dialog.show();
     }
 
     private void updatePaperSizeHighlight(SheetGeometry.PaperSize size) {
@@ -1232,10 +1676,10 @@ public class MainActivity extends Activity {
 
     private void updateMarginButtonsHighlight(int mm) {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
-        int activeBg = p.isXp ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.btn_primary;
-        int normalBg = p.isXp ? com.dodopress.R.drawable.theme_btn_xp : com.dodopress.R.drawable.btn_chip;
-        int activeText = p.isXp ? Color.parseColor("#000000") : Color.WHITE;
-        int normalText = p.isXp ? Color.parseColor("#000000") : p.textMedColor;
+        int activeBg = com.dodopress.R.drawable.btn_primary;
+        int normalBg = com.dodopress.R.drawable.btn_chip;
+        int activeText = Color.WHITE;
+        int normalText = p.textMedColor;
 
         if (btnMarginZero != null) {
             btnMarginZero.setBackgroundResource(mm == 0 ? activeBg : normalBg);
@@ -1262,25 +1706,20 @@ public class MainActivity extends Activity {
 
     private void updatePresetChipHighlight(int progress) {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
-        if (p.isXp) {
-            btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
-            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
-            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
-            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.theme_btn_xp_primary : com.dodopress.R.drawable.theme_btn_xp);
-
-            btnPresetDraft.setTextColor(Color.parseColor("#000000"));
-            btnPresetNormal.setTextColor(Color.parseColor("#000000"));
-            btnPresetDeep.setTextColor(Color.parseColor("#000000"));
-            btnPresetUltra.setTextColor(Color.parseColor("#000000"));
-        } else {
+        if (btnPresetDraft != null) {
             btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-
             btnPresetDraft.setTextColor(progress == ToneEngine.PRESET_DRAFT ? Color.WHITE : p.textMedColor);
+        }
+        if (btnPresetNormal != null) {
+            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
             btnPresetNormal.setTextColor(progress == ToneEngine.PRESET_NORMAL ? Color.WHITE : p.textMedColor);
+        }
+        if (btnPresetDeep != null) {
+            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
             btnPresetDeep.setTextColor(progress == ToneEngine.PRESET_DEEP ? Color.WHITE : p.textMedColor);
+        }
+        if (btnPresetUltra != null) {
+            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
             btnPresetUltra.setTextColor(progress == ToneEngine.PRESET_ULTRA ? Color.WHITE : p.textMedColor);
         }
     }
@@ -1404,7 +1843,8 @@ public class MainActivity extends Activity {
     private void pickPdf() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/pdf");
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/pdf", "image/*"});
         startActivityForResult(intent, REQUEST_PICK_PDF);
     }
 
@@ -1498,7 +1938,7 @@ public class MainActivity extends Activity {
         if (requestCode == REQUEST_PICK_PDF) {
             Uri uri = data.getData();
             if (uri != null) {
-                loadPdfFromUri(uri);
+                processIncomingDocumentUri(uri);
             }
         } else if (requestCode == REQUEST_PICK_ID_FRONT) {
             Uri uri = data.getData();
@@ -1521,23 +1961,110 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void loadPdfFromUri(Uri uri) {
-        closeCurrentPdf();
-
-        String displayName = "document.pdf";
-        long fileSize = 0;
-        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                int sizeIdx = cursor.getColumnIndex(OpenableColumns.SIZE);
-                if (nameIdx >= 0) displayName = cursor.getString(nameIdx);
-                if (sizeIdx >= 0) fileSize = cursor.getLong(sizeIdx);
+    private boolean isImageUri(Uri uri) {
+        if (uri == null) return false;
+        try {
+            String mime = getContentResolver().getType(uri);
+            if (mime != null) {
+                if (mime.startsWith("image/")) return true;
+                if (mime.equalsIgnoreCase("application/pdf")) return false;
             }
         } catch (Exception ignored) {}
 
+        String name = getDisplayName(uri).toLowerCase();
+        return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") ||
+               name.endsWith(".webp") || name.endsWith(".bmp") || name.endsWith(".heic") ||
+               name.endsWith(".heif") || name.endsWith(".gif");
+    }
+
+    private String getDisplayName(Uri uri) {
+        if (uri == null) return "document";
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (nameIdx >= 0) {
+                    String name = cursor.getString(nameIdx);
+                    if (name != null) return name;
+                }
+            }
+        } catch (Exception ignored) {}
+        String path = uri.getPath();
+        if (path != null) {
+            int lastSlash = path.lastIndexOf('/');
+            if (lastSlash >= 0 && lastSlash < path.length() - 1) {
+                return path.substring(lastSlash + 1);
+            }
+            return path;
+        }
+        return "document";
+    }
+
+    private void processIncomingDocumentUri(Uri uri) {
+        if (uri == null) return;
+        if (isImageUri(uri)) {
+            String originalName = getDisplayName(uri);
+            Toast.makeText(this, "Converting image to print-ready PDF...", Toast.LENGTH_SHORT).show();
+            new Thread(() -> {
+                try {
+                    File pdf = ImagePrintEngine.convertImageToPdf(this, uri, currentPaperSize);
+                    runOnUiThread(() -> {
+                        loadPdfFromFile(pdf, originalName + " (Image)");
+                        Toast.makeText(this, "Photo converted! Ready to print.", Toast.LENGTH_SHORT).show();
+                    });
+                } catch (Exception e) {
+                    DiagnosticLogManager.logError("IMAGE_INGEST", "Failed to convert image to PDF", e);
+                    runOnUiThread(() -> {
+                        Toast.makeText(this, "Failed to load image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+                }
+            }).start();
+        } else {
+            loadPdfFromUri(uri);
+        }
+    }
+
+    private void loadPdfFromFile(File pdfFile, String displayName) {
+        if (pdfFile == null || !pdfFile.exists()) return;
+        loadPdfFromUri(Uri.fromFile(pdfFile), displayName);
+    }
+
+    private InputStream openUriInputStream(Uri uri) throws IOException {
+        if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
+            return new FileInputStream(new File(uri.getPath()));
+        }
+        return getContentResolver().openInputStream(uri);
+    }
+
+    private void loadPdfFromUri(Uri uri) {
+        loadPdfFromUri(uri, null);
+    }
+
+    private void loadPdfFromUri(Uri uri, String customDisplayName) {
+        closeCurrentPdf();
+
+        String displayName = (customDisplayName != null && !customDisplayName.isEmpty()) ? customDisplayName : "document.pdf";
+        long fileSize = 0;
+
+        if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
+            File f = new File(uri.getPath());
+            if (f.exists()) {
+                if (customDisplayName == null) displayName = f.getName();
+                fileSize = f.length();
+            }
+        } else {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    int sizeIdx = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (nameIdx >= 0 && customDisplayName == null) displayName = cursor.getString(nameIdx);
+                    if (sizeIdx >= 0) fileSize = cursor.getLong(sizeIdx);
+                }
+            } catch (Exception ignored) {}
+        }
+
         try {
             File cacheFile = new File(getCacheDir(), "print_job_" + System.currentTimeMillis() + ".pdf");
-            try (InputStream in = getContentResolver().openInputStream(uri);
+            try (InputStream in = openUriInputStream(uri);
                  FileOutputStream out = new FileOutputStream(cacheFile)) {
                 byte[] buf = new byte[16384];
                 int len;
@@ -1574,12 +2101,209 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void generateAndLoadUpiQr() {
+        try {
+            String upiString = QrPrintEngine.formatUpi("killindodo@upi", "killindodo", null, "Support DodoPress Developer");
+            File qrPdf = QrPrintEngine.renderQrToPdfFile(this, upiString, "☕ SUPPORT THE DEVELOPER",
+                                                        "UPI ID: killindodo@upi • Offline Printing Champion",
+                                                        currentPaperSize, QrPrintEngine.LabelLayout.SINGLE_CARD);
+            showPage(0);
+            loadPdfFromFile(qrPdf, "Support_killindodo_UPI.pdf");
+            Toast.makeText(this, "UPI QR placard ready to print!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to generate UPI QR: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showQrGeneratorDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🏁 Native QR Code & Label Studio");
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(36, 24, 36, 24);
+
+        // QR Type Selection
+        TextView tvType = new TextView(this);
+        tvType.setText("Select QR Type:");
+        tvType.setTextSize(14f);
+        tvType.setTextColor(Color.WHITE);
+        tvType.setPadding(0, 0, 0, 8);
+        layout.addView(tvType);
+
+        RadioGroup rgType = new RadioGroup(this);
+        rgType.setOrientation(RadioGroup.HORIZONTAL);
+        RadioButton rbWifi = new RadioButton(this);
+        rbWifi.setText("📶 Wi-Fi");
+        rbWifi.setTextColor(Color.WHITE);
+        rbWifi.setId(View.generateViewId());
+
+        RadioButton rbUrl = new RadioButton(this);
+        rbUrl.setText("🔗 URL");
+        rbUrl.setTextColor(Color.WHITE);
+        rbUrl.setId(View.generateViewId());
+
+        RadioButton rbText = new RadioButton(this);
+        rbText.setText("📝 Text");
+        rbText.setTextColor(Color.WHITE);
+        rbText.setId(View.generateViewId());
+
+        RadioButton rbUpi = new RadioButton(this);
+        rbUpi.setText("⚡ UPI");
+        rbUpi.setTextColor(Color.WHITE);
+        rbUpi.setId(View.generateViewId());
+
+        rgType.addView(rbWifi);
+        rgType.addView(rbUrl);
+        rgType.addView(rbText);
+        rgType.addView(rbUpi);
+        layout.addView(rgType);
+
+        // Inputs
+        EditText etTitle = new EditText(this);
+        etTitle.setHint("Placard Title (e.g. GUEST WI-FI)");
+        etTitle.setTextColor(Color.WHITE);
+        etTitle.setHintTextColor(0xFF888888);
+        layout.addView(etTitle);
+
+        EditText etPrimary = new EditText(this);
+        etPrimary.setHint("Wi-Fi Network Name (SSID)");
+        etPrimary.setTextColor(Color.WHITE);
+        etPrimary.setHintTextColor(0xFF888888);
+        layout.addView(etPrimary);
+
+        EditText etSecondary = new EditText(this);
+        etSecondary.setHint("Wi-Fi Password");
+        etSecondary.setTextColor(Color.WHITE);
+        etSecondary.setHintTextColor(0xFF888888);
+        layout.addView(etSecondary);
+
+        // Layout Selection
+        TextView tvLayout = new TextView(this);
+        tvLayout.setText("Sheet Layout:");
+        tvLayout.setTextSize(14f);
+        tvLayout.setTextColor(Color.WHITE);
+        tvLayout.setPadding(0, 16, 0, 8);
+        layout.addView(tvLayout);
+
+        RadioGroup rgLayout = new RadioGroup(this);
+        RadioButton rbSingle = new RadioButton(this);
+        rbSingle.setText("Single Sign / Placard (1 per sheet)");
+        rbSingle.setTextColor(Color.WHITE);
+        rbSingle.setChecked(true);
+
+        RadioButton rbGrid2 = new RadioButton(this);
+        rbGrid2.setText("Quad Label Sheet (4 per sheet - 2×2)");
+        rbGrid2.setTextColor(Color.WHITE);
+
+        RadioButton rbGrid3 = new RadioButton(this);
+        rbGrid3.setText("Sticker Sheet Medium (9 per sheet - 3×3)");
+        rbGrid3.setTextColor(Color.WHITE);
+
+        RadioButton rbGrid4 = new RadioButton(this);
+        rbGrid4.setText("Mini Stickers (16 per sheet - 4×4)");
+        rbGrid4.setTextColor(Color.WHITE);
+
+        rgLayout.addView(rbSingle);
+        rgLayout.addView(rbGrid2);
+        rgLayout.addView(rbGrid3);
+        rgLayout.addView(rbGrid4);
+        layout.addView(rgLayout);
+
+        scrollView.addView(layout);
+        builder.setView(scrollView);
+
+        // Toggle hints when radio changes
+        rgType.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == rbWifi.getId()) {
+                etTitle.setText("📶 GUEST WI-FI ACCESS");
+                etPrimary.setHint("Wi-Fi SSID");
+                etSecondary.setVisibility(View.VISIBLE);
+                etSecondary.setHint("Wi-Fi Password (leave empty if open)");
+            } else if (checkedId == rbUrl.getId()) {
+                etTitle.setText("🔗 SCAN TO VISIT WEBSITE");
+                etPrimary.setHint("https://your-website.com");
+                etSecondary.setVisibility(View.VISIBLE);
+                etSecondary.setHint("Subtitle / Description");
+            } else if (checkedId == rbUpi.getId()) {
+                etTitle.setText("⚡ SCAN TO PAY VIA UPI");
+                etPrimary.setHint("UPI VPA (e.g. username@upi)");
+                etSecondary.setVisibility(View.VISIBLE);
+                etSecondary.setHint("Payee Name / Note");
+            } else {
+                etTitle.setText("SCAN QR CODE");
+                etPrimary.setHint("Text payload / message");
+                etSecondary.setVisibility(View.VISIBLE);
+                etSecondary.setHint("Subtitle / Description");
+            }
+        });
+        rbWifi.setChecked(true);
+
+        builder.setPositiveButton("⚡ Generate & Preview", (dialog, which) -> {
+            String title = etTitle.getText().toString().trim();
+            String p1 = etPrimary.getText().toString().trim();
+            String p2 = etSecondary.getText().toString().trim();
+
+            if (p1.isEmpty()) {
+                Toast.makeText(this, "Please enter content for the QR code.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String content;
+            String subtitle;
+            int checkedType = rgType.getCheckedRadioButtonId();
+            if (checkedType == rbWifi.getId()) {
+                content = QrPrintEngine.formatWifi(p1, p2, p2.isEmpty() ? "nopass" : "WPA", false);
+                subtitle = "Network: " + p1 + (p2.isEmpty() ? " • Open" : " • Password: " + p2);
+            } else if (checkedType == rbUpi.getId()) {
+                content = QrPrintEngine.formatUpi(p1, p2, null, "DodoPress QR Payment");
+                subtitle = "Payee: " + (p2.isEmpty() ? p1 : p2) + " • UPI: " + p1;
+            } else {
+                content = p1;
+                subtitle = p2;
+            }
+
+            QrPrintEngine.LabelLayout selectedLayout = QrPrintEngine.LabelLayout.SINGLE_CARD;
+            if (rbGrid2.isChecked()) selectedLayout = QrPrintEngine.LabelLayout.GRID_2X2;
+            else if (rbGrid3.isChecked()) selectedLayout = QrPrintEngine.LabelLayout.GRID_3X3;
+            else if (rbGrid4.isChecked()) selectedLayout = QrPrintEngine.LabelLayout.GRID_4X4;
+
+            try {
+                File qrPdf = QrPrintEngine.renderQrToPdfFile(this, content, title, subtitle, currentPaperSize, selectedLayout);
+                showPage(0);
+                loadPdfFromFile(qrPdf, "QR_" + (title.isEmpty() ? "Label" : title.replace(" ", "_")) + ".pdf");
+                Toast.makeText(this, "QR Sheet generated! Ready to print.", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "QR generation failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
     private void renderPageThumb() {
         if (totalPages <= 0) return;
 
-        tvPageIndicator.setText("Page " + (currentPageIndex + 1) + " of " + totalPages);
-        btnPrevPage.setEnabled(currentPageIndex > 0);
-        btnNextPage.setEnabled(currentPageIndex < totalPages - 1);
+        final SheetGeometry.TilingMode targetTiling = (currentTilingMode != null) ? currentTilingMode : SheetGeometry.TilingMode.ONE_UP;
+        int nUp = targetTiling.pagesPerSheet;
+        int totalSheets = (totalPages + nUp - 1) / nUp;
+        int currentSheet = currentPageIndex / nUp;
+
+        if (targetTiling == SheetGeometry.TilingMode.ONE_UP) {
+            tvPageIndicator.setText("Page " + (currentPageIndex + 1) + " of " + totalPages);
+        } else {
+            int startP = currentSheet * nUp + 1;
+            int endP = Math.min((currentSheet + 1) * nUp, totalPages);
+            if (startP == endP) {
+                tvPageIndicator.setText("Sheet " + (currentSheet + 1) + " of " + totalSheets + " (Page " + startP + ")");
+            } else {
+                tvPageIndicator.setText("Sheet " + (currentSheet + 1) + " of " + totalSheets + " (Pages " + startP + "–" + endP + ")");
+            }
+        }
+        btnPrevPage.setEnabled(currentSheet > 0);
+        btnNextPage.setEnabled(currentSheet < totalSheets - 1);
         btnQuickZoom.setText("🔍 Zoom");
         updatePageRangeLabels();
         updatePageSummary();
@@ -1589,6 +2313,7 @@ public class MainActivity extends Activity {
         final int targetMarginMm = currentMarginMm;
         final SheetGeometry.PaperSize targetPaper = (currentPaperSize != null) ? currentPaperSize : SheetGeometry.PaperSize.A4;
         final SheetGeometry.PlacementRegion targetRegion = currentPlacementRegion;
+        final SheetGeometry.TilingMode targetTilingMode = currentTilingMode;
         final float targetRotation = currentPageRotation;
         final boolean targetInvertDark = (cbInvertDark != null && cbInvertDark.isChecked());
         final int targetDarkness = (seekDarkness != null) ? seekDarkness.getProgress() : 75;
@@ -1602,32 +2327,51 @@ public class MainActivity extends Activity {
                     return;
                 }
                 try {
-                    PdfRenderer.Page page = pdfRenderer.openPage(targetPageIndex);
-                    int pw = page.getWidth();
-                    int ph = page.getHeight();
-
                     int sheetPreviewW = 800;
                     int sheetPreviewH = (int) (800.0f * (targetPaper.heightPts / (float) targetPaper.widthPts));
                     int marginPx = (targetMarginMm > 0) ? (int) Math.round((targetMarginMm / 210.0f) * sheetPreviewW) : 0;
 
-                    if (targetRegion == null || targetRegion == SheetGeometry.PlacementRegion.FULL_PAGE) {
-                        if (targetMarginMm <= 0) {
-                            // Full-bleed borderless
-                            float scale = 800.0f / (float) pw;
-                            int previewW = 800;
-                            int previewH = (int) (ph * scale);
+                    if (targetTilingMode == null || targetTilingMode == SheetGeometry.TilingMode.ONE_UP) {
+                        PdfRenderer.Page page = pdfRenderer.openPage(targetPageIndex);
+                        int pw = page.getWidth();
+                        int ph = page.getHeight();
 
-                            baseBm = Bitmap.createBitmap(previewW, previewH, Bitmap.Config.ARGB_8888);
-                            baseBm.eraseColor(0xFFFFFFFF);
-                            page.render(baseBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                            page.close();
+                        if (targetRegion == null || targetRegion == SheetGeometry.PlacementRegion.FULL_PAGE) {
+                            if (targetMarginMm <= 0) {
+                                // Full-bleed borderless
+                                float scale = 800.0f / (float) pw;
+                                int previewW = 800;
+                                int previewH = (int) (ph * scale);
+
+                                baseBm = Bitmap.createBitmap(previewW, previewH, Bitmap.Config.ARGB_8888);
+                                baseBm.eraseColor(0xFFFFFFFF);
+                                page.render(baseBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                                page.close();
+                            } else {
+                                // Full page with margin padding
+                                baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
+                                baseBm.eraseColor(0xFFFFFFFF);
+
+                                Rect targetBox = new Rect(0, 0, sheetPreviewW, sheetPreviewH);
+                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, marginPx);
+
+                                Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                                docBm.eraseColor(0xFFFFFFFF);
+                                page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                                page.close();
+
+                                Canvas canvas = new Canvas(baseBm);
+                                canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
+                                docBm.recycle();
+                            }
                         } else {
-                            // Full page with margin padding
+                            // Partial-page placement (top half, bottom half, quadrant...)
                             baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
                             baseBm.eraseColor(0xFFFFFFFF);
 
-                            Rect targetBox = new Rect(0, 0, sheetPreviewW, sheetPreviewH);
-                            Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, marginPx);
+                            Rect targetBox = SheetGeometry.getTargetBox(targetRegion, sheetPreviewW, sheetPreviewH);
+                            int effectiveMargin = Math.max(marginPx, 16);
+                            Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, effectiveMargin);
 
                             Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
                             docBm.eraseColor(0xFFFFFFFF);
@@ -1639,22 +2383,42 @@ public class MainActivity extends Activity {
                             docBm.recycle();
                         }
                     } else {
-                        // Partial-page placement (top half, bottom half, quadrant...)
+                        // Tiled Multi-Page Preview (2-Up or 4-Up)
                         baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
                         baseBm.eraseColor(0xFFFFFFFF);
-
-                        Rect targetBox = SheetGeometry.getTargetBox(targetRegion, sheetPreviewW, sheetPreviewH);
-                        int effectiveMargin = Math.max(marginPx, 16);
-                        Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, effectiveMargin);
-
-                        Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
-                        docBm.eraseColor(0xFFFFFFFF);
-                        page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                        page.close();
-
                         Canvas canvas = new Canvas(baseBm);
-                        canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
-                        docBm.recycle();
+
+                        Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(targetTilingMode, sheetPreviewW, sheetPreviewH, marginPx);
+                        int tileNUp = targetTilingMode.pagesPerSheet;
+                        int startPage = (targetPageIndex / tileNUp) * tileNUp;
+
+                        android.graphics.Paint borderPaint = new android.graphics.Paint();
+                        borderPaint.setStyle(android.graphics.Paint.Style.STROKE);
+                        borderPaint.setColor(0x22000000);
+                        borderPaint.setStrokeWidth(1.5f);
+
+                        for (int i = 0; i < tileNUp; i++) {
+                            int pIdx = startPage + i;
+                            if (pIdx < totalPages && i < tileBoxes.length) {
+                                PdfRenderer.Page page = pdfRenderer.openPage(pIdx);
+                                int pw = page.getWidth();
+                                int ph = page.getHeight();
+
+                                Rect tileBox = tileBoxes[i];
+                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, tileBox, 0);
+
+                                if (destRect.width() > 0 && destRect.height() > 0) {
+                                    Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                                    docBm.eraseColor(0xFFFFFFFF);
+                                    page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+
+                                    canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
+                                    canvas.drawRect(destRect, borderPaint);
+                                    docBm.recycle();
+                                }
+                                page.close();
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     DiagnosticLogManager.logError("PREVIEW", "Page render error", e);
@@ -1692,6 +2456,21 @@ public class MainActivity extends Activity {
                     baseBm.recycle();
                     baseBm = inv;
                 }
+            }
+
+            if (token != previewRenderToken.get()) {
+                baseBm.recycle();
+                return;
+            }
+
+            // 2.5 Watermark Real-Time Overlay
+            String wmText = (etWatermark != null && etWatermark.getText() != null) ? etWatermark.getText().toString().trim() : "";
+            if (!wmText.isEmpty()) {
+                Bitmap wmBm = baseBm.copy(Bitmap.Config.ARGB_8888, true);
+                baseBm.recycle();
+                baseBm = wmBm;
+                Canvas wmCanvas = new Canvas(baseBm);
+                ToneEngine.applyWatermark(wmCanvas, baseBm.getWidth(), baseBm.getHeight(), wmText);
             }
 
             if (token != previewRenderToken.get()) {
@@ -1866,6 +2645,10 @@ public class MainActivity extends Activity {
         StringBuilder sb = new StringBuilder("📄 Ready: ");
         sb.append(count).append(count == 1 ? " page" : " pages");
 
+        int nUp = (currentTilingMode != null) ? currentTilingMode.pagesPerSheet : 1;
+        int physicalSheetsPerCopy = (count + nUp - 1) / nUp;
+        int totalPhysicalSheets = physicalSheetsPerCopy * copies;
+
         if (copies > 1) {
             sb.append(" • ").append(copies).append(" copies");
             if (cbCollate.isChecked()) {
@@ -1873,13 +2656,24 @@ public class MainActivity extends Activity {
             } else {
                 sb.append(" (Grouped)");
             }
-            sb.append(" • Total ").append(count * copies).append(" sheets");
+            sb.append(" • Total ").append(totalPhysicalSheets).append(totalPhysicalSheets == 1 ? " sheet" : " sheets");
         } else {
             sb.append(" • 1 copy");
+            if (currentTilingMode != SheetGeometry.TilingMode.ONE_UP) {
+                sb.append(" • Total ").append(totalPhysicalSheets).append(totalPhysicalSheets == 1 ? " sheet" : " sheets");
+            }
+        }
+
+        if (currentTilingMode == SheetGeometry.TilingMode.TWO_UP) {
+            sb.append(" (2-in-1 Saves 50% Paper)");
+        } else if (currentTilingMode == SheetGeometry.TilingMode.FOUR_UP) {
+            sb.append(" (4-in-1 Saves 75% Paper)");
         }
 
         sb.append(" • ").append(currentPaperSize.name());
-        if (currentPlacementRegion != SheetGeometry.PlacementRegion.FULL_PAGE) {
+        if (currentTilingMode != SheetGeometry.TilingMode.ONE_UP) {
+            sb.append(" (").append(currentTilingMode.title).append(")");
+        } else if (currentPlacementRegion != SheetGeometry.PlacementRegion.FULL_PAGE) {
             sb.append(" (").append(currentPlacementRegion.title).append(")");
         }
 
@@ -1953,7 +2747,7 @@ public class MainActivity extends Activity {
         String watermark = etWatermark.getText().toString().trim();
         float rotation = currentPageRotation;
 
-        DiagnosticLogManager.log("PRINT", "Initiating print job: " + pagesToPrint.size() + " pages, " + copies + " copies, darkness=" + darkness + "%, placement=" + currentPlacementRegion.title);
+        DiagnosticLogManager.log("PRINT", "Initiating print job: " + pagesToPrint.size() + " pages, " + copies + " copies, darkness=" + darkness + "%, placement=" + currentPlacementRegion.title + ", tiling=" + currentTilingMode.title);
 
         currentPrinterCutawayState = PrinterCutawayView.PrinterState.PRINTING;
         btnPrintNow.setEnabled(false);
@@ -1971,7 +2765,7 @@ public class MainActivity extends Activity {
             laserScanView.startScan();
         }
 
-        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, currentPaperSize, currentPlacementRegion, invertDark, watermark, rotation, currentMarginMm, new PrintEngine.PrintProgressListener() {
+        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, currentPaperSize, currentPlacementRegion, currentTilingMode, invertDark, watermark, rotation, currentMarginMm, new PrintEngine.PrintProgressListener() {
             @Override
             public void onProgress(int currentPage, int total, String statusMessage) {
                 DiagnosticLogManager.log("PRINT", statusMessage);
@@ -2031,5 +2825,361 @@ public class MainActivity extends Activity {
                 });
             }
         });
+    }
+
+    // =========================================================================
+    // BYOK (Bring Your Own Key) AI Print Suite
+    // =========================================================================
+
+    private void updateAiKeyDisplay() {
+        if (etGeminiApiKey == null || tvAiKeyStatus == null) return;
+        if (AiAssistantEngine.hasApiKey(this)) {
+            String key = AiAssistantEngine.getApiKey(this);
+            etGeminiApiKey.setText(key);
+            tvAiKeyStatus.setText("✓ Gemini API Key Configured (100% Free Tier 15 RPM Active)");
+            tvAiKeyStatus.setTextColor(Color.parseColor("#10B981"));
+        } else {
+            etGeminiApiKey.setText("");
+            tvAiKeyStatus.setText("No key configured. Get your free key at aistudio.google.com");
+            tvAiKeyStatus.setTextColor(Color.parseColor("#94A3B8"));
+        }
+    }
+
+    private void saveAiKey() {
+        if (etGeminiApiKey == null) return;
+        String key = etGeminiApiKey.getText().toString().trim();
+        AiAssistantEngine.saveApiKey(this, key);
+        updateAiKeyDisplay();
+        SoundManager.playClick();
+        if (!key.isEmpty()) {
+            Toast.makeText(this, "Gemini API Key saved! AI Print Suite ready.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Gemini API Key cleared.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void testAiKey() {
+        if (etGeminiApiKey == null || tvAiKeyStatus == null) return;
+        String key = etGeminiApiKey.getText().toString().trim();
+        if (key.isEmpty()) {
+            key = AiAssistantEngine.getApiKey(this);
+        }
+        if (key.isEmpty()) {
+            Toast.makeText(this, "Please enter an API key first.", Toast.LENGTH_SHORT).show();
+            tvAiKeyStatus.setText("Please enter an API key to test.");
+            tvAiKeyStatus.setTextColor(Color.parseColor("#F59E0B"));
+            return;
+        }
+
+        tvAiKeyStatus.setText("⚡ Testing connection to Gemini API...");
+        tvAiKeyStatus.setTextColor(Color.parseColor("#38BDF8"));
+        if (btnTestAiKey != null) btnTestAiKey.setEnabled(false);
+
+        final String testKey = key;
+        AiAssistantEngine.testApiKey(this, testKey, new AiAssistantEngine.AiCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                runOnUiThread(() -> {
+                    if (btnTestAiKey != null) btnTestAiKey.setEnabled(true);
+                    tvAiKeyStatus.setText("✓ " + result);
+                    tvAiKeyStatus.setTextColor(Color.parseColor("#10B981"));
+                    SoundManager.playXpPrintChime();
+                    Toast.makeText(MainActivity.this, "Gemini API ping successful!", Toast.LENGTH_SHORT).show();
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    if (btnTestAiKey != null) btnTestAiKey.setEnabled(true);
+                    tvAiKeyStatus.setText("✗ Ping failed: " + e.getMessage());
+                    tvAiKeyStatus.setTextColor(Color.parseColor("#EF4444"));
+                    SoundManager.playAlert();
+                    Toast.makeText(MainActivity.this, "Test failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void showAiAssistantDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("✨ AI Print Suite (100% Free BYOK)");
+
+        String[] options = new String[] {
+            "🧾 Chat / WhatsApp Text → Clean Invoice PDF",
+            "📝 Lecture / Notes → 1-Page Executive Cheat Sheet",
+            "🌐 Document / Text Translator & Placard",
+            "⚙️ Configure Gemini API Key (Dev Tab)"
+        };
+
+        builder.setItems(options, (dialog, which) -> {
+            SoundManager.playClick();
+            if (which == 0) {
+                if (!ensureAiKeyConfigured()) return;
+                promptChatToInvoice();
+            } else if (which == 1) {
+                if (!ensureAiKeyConfigured()) return;
+                promptSummarize();
+            } else if (which == 2) {
+                if (!ensureAiKeyConfigured()) return;
+                promptTranslate();
+            } else if (which == 3) {
+                showPage(3);
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private boolean ensureAiKeyConfigured() {
+        if (!AiAssistantEngine.hasApiKey(this)) {
+            new AlertDialog.Builder(this)
+                .setTitle("🔑 Gemini API Key Required")
+                .setMessage("DodoPress uses Bring Your Own Key (BYOK) architecture with Google Gemini (Free Tier: 15 requests/minute forever).\n\nNo credit card required at aistudio.google.com.\n\nWould you like to configure your key now in the Dev tab?")
+                .setPositiveButton("Configure Key", (d, w) -> {
+                    SoundManager.playClick();
+                    showPage(3);
+                })
+                .setNegativeButton("Later", (d, w) -> d.dismiss())
+                .show();
+            return false;
+        }
+        return true;
+    }
+
+    private void promptChatToInvoice() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🧾 Chat to Laser Invoice");
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(36, 24, 36, 24);
+
+        TextView tvDesc = new TextView(this);
+        tvDesc.setText("Paste an informal WhatsApp message, email order, or rough notes with client, items, and prices:");
+        tvDesc.setTextColor(Color.WHITE);
+        tvDesc.setTextSize(13f);
+        tvDesc.setPadding(0, 0, 0, 12);
+        layout.addView(tvDesc);
+
+        EditText etChat = new EditText(this);
+        etChat.setLines(8);
+        etChat.setGravity(Gravity.TOP | Gravity.START);
+        etChat.setTextColor(Color.WHITE);
+        etChat.setHintTextColor(0xFF888888);
+        etChat.setHint("e.g.\nClient: Rajesh Kumar, Ph: 9876543210\n1x LaserJet Cartridge Refill - ₹450\n2x A4 Paper Reams (JK Copier) - ₹720\nAdvance paid: ₹500, Balance due: ₹670\nThank you for choosing us!");
+        layout.addView(etChat);
+        scrollView.addView(layout);
+        builder.setView(scrollView);
+
+        builder.setPositiveButton("⚡ Generate Invoice PDF", (dialog, which) -> {
+            String text = etChat.getText().toString().trim();
+            if (text.isEmpty()) {
+                Toast.makeText(this, "Please enter or paste order details.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ProgressDialog progress = new ProgressDialog(this);
+            progress.setMessage("AI is formatting order into 300 DPI vector invoice...");
+            progress.setCancelable(false);
+            progress.show();
+
+            AiAssistantEngine.chatToInvoice(this, text, currentPaperSize, new AiAssistantEngine.AiCallback<File>() {
+                @Override
+                public void onSuccess(File invoicePdf) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playXpPrintChime();
+                        showPage(0);
+                        loadPdfFromFile(invoicePdf, "AI_Invoice_" + System.currentTimeMillis() + ".pdf");
+                        Toast.makeText(MainActivity.this, "Invoice generated! Ready to print.", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playAlert();
+                        new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Invoice Generation Failed")
+                            .setMessage(e.getMessage())
+                            .setPositiveButton("OK", null)
+                            .show();
+                    });
+                }
+            });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private void promptSummarize() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("📝 1-Page Executive / Cheat Sheet");
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(36, 24, 36, 24);
+
+        TextView tvDesc = new TextView(this);
+        tvDesc.setText("Paste lengthy lecture notes, article, meeting transcript, or contract to condense into a 1-page high-contrast laser printout:");
+        tvDesc.setTextColor(Color.WHITE);
+        tvDesc.setTextSize(13f);
+        tvDesc.setPadding(0, 0, 0, 12);
+        layout.addView(tvDesc);
+
+        EditText etTitle = new EditText(this);
+        etTitle.setHint("Document Title (e.g. Operating Systems Notes)");
+        etTitle.setTextColor(Color.WHITE);
+        etTitle.setHintTextColor(0xFF888888);
+        layout.addView(etTitle);
+
+        EditText etNotes = new EditText(this);
+        etNotes.setLines(8);
+        etNotes.setGravity(Gravity.TOP | Gravity.START);
+        etNotes.setTextColor(Color.WHITE);
+        etNotes.setHintTextColor(0xFF888888);
+        etNotes.setHint("Paste full lecture or meeting text here...");
+        layout.addView(etNotes);
+
+        scrollView.addView(layout);
+        builder.setView(scrollView);
+
+        builder.setPositiveButton("⚡ Generate Cheat Sheet PDF", (dialog, which) -> {
+            String text = etNotes.getText().toString().trim();
+            String title = etTitle.getText().toString().trim();
+            if (title.isEmpty()) title = "Executive Cheat Sheet";
+            if (text.isEmpty()) {
+                Toast.makeText(this, "Please enter or paste document text.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ProgressDialog progress = new ProgressDialog(this);
+            progress.setMessage("AI is condensing and formatting into 1-page laser cheat sheet...");
+            progress.setCancelable(false);
+            progress.show();
+
+            AiAssistantEngine.summarizeToCheatSheet(this, text, title, currentPaperSize, new AiAssistantEngine.AiCallback<File>() {
+                @Override
+                public void onSuccess(File summaryPdf) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playXpPrintChime();
+                        showPage(0);
+                        loadPdfFromFile(summaryPdf, "AI_CheatSheet_" + System.currentTimeMillis() + ".pdf");
+                        Toast.makeText(MainActivity.this, "1-Page Cheat Sheet generated! Ready to print.", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playAlert();
+                        new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Cheat Sheet Generation Failed")
+                            .setMessage(e.getMessage())
+                            .setPositiveButton("OK", null)
+                            .show();
+                    });
+                }
+            });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private void promptTranslate() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🌐 Document Translator & Placard");
+
+        ScrollView scrollView = new ScrollView(this);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(36, 24, 36, 24);
+
+        TextView tvDesc = new TextView(this);
+        tvDesc.setText("Select target language and paste content to generate a clean translated printable document:");
+        tvDesc.setTextColor(Color.WHITE);
+        tvDesc.setTextSize(13f);
+        tvDesc.setPadding(0, 0, 0, 12);
+        layout.addView(tvDesc);
+
+        final String[] languages = new String[] {
+            "Hindi (हिन्दी)", "Spanish (Español)", "French (Français)", "German (Deutsch)",
+            "Japanese (日本語)", "Arabic (العربية)", "Russian (Русский)", "Portuguese (Português)",
+            "Bengali (বাংলা)", "Telugu (తెలుగు)", "Tamil (தமிழ்)", "Marathi (मराठी)", "Gujarati (ગુજરાતી)"
+        };
+        final String[] langCodes = new String[] {
+            "Hindi", "Spanish", "French", "German",
+            "Japanese", "Arabic", "Russian", "Portuguese",
+            "Bengali", "Telugu", "Tamil", "Marathi", "Gujarati"
+        };
+
+        Spinner spLang = new Spinner(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, languages);
+        spLang.setAdapter(adapter);
+        layout.addView(spLang);
+
+        EditText etText = new EditText(this);
+        etText.setLines(7);
+        etText.setGravity(Gravity.TOP | Gravity.START);
+        etText.setTextColor(Color.WHITE);
+        etText.setHintTextColor(0xFF888888);
+        etText.setHint("Paste notice, guidelines, contract, or placard text to translate...");
+        layout.addView(etText);
+
+        scrollView.addView(layout);
+        builder.setView(scrollView);
+
+        builder.setPositiveButton("⚡ Translate & Generate PDF", (dialog, which) -> {
+            String text = etText.getText().toString().trim();
+            if (text.isEmpty()) {
+                Toast.makeText(this, "Please enter or paste text to translate.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            int selectedIdx = spLang.getSelectedItemPosition();
+            String targetLang = (selectedIdx >= 0 && selectedIdx < langCodes.length) ? langCodes[selectedIdx] : "Hindi";
+
+            ProgressDialog progress = new ProgressDialog(this);
+            progress.setMessage("AI is translating into " + targetLang + " and formatting PDF...");
+            progress.setCancelable(false);
+            progress.show();
+
+            AiAssistantEngine.translateAndFormat(this, text, targetLang, currentPaperSize, new AiAssistantEngine.AiCallback<File>() {
+                @Override
+                public void onSuccess(File transPdf) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playXpPrintChime();
+                        showPage(0);
+                        loadPdfFromFile(transPdf, "AI_Translated_" + targetLang + ".pdf");
+                        Toast.makeText(MainActivity.this, "Translated document ready to print!", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    runOnUiThread(() -> {
+                        progress.dismiss();
+                        SoundManager.playAlert();
+                        new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Translation Failed")
+                            .setMessage(e.getMessage())
+                            .setPositiveButton("OK", null)
+                            .show();
+                    });
+                }
+            });
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 }

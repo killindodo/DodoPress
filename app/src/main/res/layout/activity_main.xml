@@ -81,180 +81,43 @@
         android:layout_above="@+id/layout_bottom_bar_container">
 
         <!-- ================= PAGE 1: PRINT STUDIO ================= -->
-        <ScrollView
+        <LinearLayout
             android:id="@+id/page_print_studio"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:orientation="vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="68dp">
 
+            <!-- 1. Precision Aerospace / Telemetry Header -->
             <LinearLayout
-                android:id="@+id/root_linear_layout"
+                android:id="@+id/layout_modern_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="120dp">
+                android:layout_marginBottom="6dp">
 
-                <!-- Modern Luxury Glass Header -->
+                <!-- Row 1: Brand Title & Action Chips -->
                 <LinearLayout
-                    android:id="@+id/layout_modern_header"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="6dp">
 
-                    <!-- Brand Emblem & Title -->
+                    <com.dodopress.ui.AnimatedLogoView
+                        android:id="@+id/view_animated_logo"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginEnd="8dp"/>
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <com.dodopress.ui.AnimatedLogoView
-                            android:id="@+id/view_animated_logo"
-                            android:layout_width="44dp"
-                            android:layout_height="44dp"
-                            android:layout_marginEnd="10dp"/>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical">
-
-                                <TextView
-                                    android:id="@+id/tv_app_title"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="DodoPress"
-                                    android:textSize="21sp"
-                                    android:textStyle="bold"
-                                    android:textColor="@color/text_high"
-                                    android:letterSpacing="0.02"/>
-
-                                <TextView
-                                    android:id="@+id/tv_pro_badge"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="8dp"
-                                    android:background="@drawable/badge_pro_pill"
-                                    android:paddingStart="8dp"
-                                    android:paddingTop="2dp"
-                                    android:paddingEnd="8dp"
-                                    android:paddingBottom="2dp"
-                                    android:text="PRO"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold"
-                                    android:textColor="#FFFFFF"
-                                    android:letterSpacing="0.06"/>
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/tv_app_subtitle"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="LASER STUDIO • HP M1005"
-                                android:textSize="10sp"
-                                android:textStyle="bold"
-                                android:letterSpacing="0.05"
-                                android:textColor="@color/brand_primary"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Quick Telemetry Capsule Button -->
-                    <Button
-                        android:id="@+id/btn_diagnostics"
-                        android:layout_width="wrap_content"
-                        android:layout_height="34dp"
-                        android:background="@drawable/btn_chip"
-                        android:text="⚡ Telemetry"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/brand_primary"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:layout_marginEnd="8dp"/>
-
-                    <!-- Animated Status Capsule with Beacon -->
-                    <LinearLayout
-                        android:id="@+id/layout_status_capsule"
-                        android:layout_width="wrap_content"
-                        android:layout_height="34dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/badge_status_offline"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="12dp">
-
-                        <com.dodopress.ui.PulsingBeaconView
-                            android:id="@+id/view_beacon"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_marginEnd="6dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_printer_status"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Checking USB..."
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/status_waiting_text"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Interactive Theme Switcher Bar (5 Themes) -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="14dp">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="6dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="INTERFACE"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="6dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_theme_label"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Theme Engine Palette"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-
-                    <HorizontalScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:scrollbars="none">
+                        android:orientation="vertical">
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -262,1165 +125,1454 @@
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
 
-                            <Button
-                                android:id="@+id/btn_theme_xp"
+                            <TextView
+                                android:id="@+id/tv_app_title"
                                 android:layout_width="wrap_content"
-                                android:layout_height="34dp"
-                                android:background="@drawable/btn_theme_chip"
-                                android:text="🪟 Windows XP"
-                                android:textSize="11sp"
+                                android:layout_height="wrap_content"
+                                android:text="DodoPress"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
-                                android:textColor="#FFFFFF"
-                                android:layout_marginEnd="6dp"/>
+                                android:textColor="@color/text_high"
+                                android:letterSpacing="0.02"/>
 
-                            <Button
-                                android:id="@+id/btn_theme_cyber"
+                            <TextView
+                                android:id="@+id/tv_pro_badge"
                                 android:layout_width="wrap_content"
-                                android:layout_height="34dp"
-                                android:background="@drawable/btn_theme_chip"
-                                android:text="⚡ Cyber Neon"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:textColor="#FFFFFF"
-                                android:layout_marginEnd="6dp"/>
-
-                            <Button
-                                android:id="@+id/btn_theme_slate"
-                                android:layout_width="wrap_content"
-                                android:layout_height="34dp"
-                                android:background="@drawable/btn_theme_chip_active"
-                                android:text="💎 Deep Slate"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:textColor="#FFFFFF"
-                                android:layout_marginEnd="6dp"/>
-
-                            <Button
-                                android:id="@+id/btn_theme_matrix"
-                                android:layout_width="wrap_content"
-                                android:layout_height="34dp"
-                                android:background="@drawable/btn_theme_chip"
-                                android:text="🟢 Matrix CRT"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:textColor="#FFFFFF"
-                                android:layout_marginEnd="6dp"/>
-
-                            <Button
-                                android:id="@+id/btn_theme_studio"
-                                android:layout_width="wrap_content"
-                                android:layout_height="34dp"
-                                android:background="@drawable/btn_theme_chip"
-                                android:text="☀️ Studio Light"
-                                android:textSize="11sp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:background="@drawable/badge_pro_pill"
+                                android:paddingStart="6dp"
+                                android:paddingTop="1dp"
+                                android:paddingEnd="6dp"
+                                android:paddingBottom="1dp"
+                                android:text="PRO"
+                                android:textSize="9sp"
                                 android:textStyle="bold"
                                 android:textColor="#FFFFFF"/>
                         </LinearLayout>
-                    </HorizontalScrollView>
-                </LinearLayout>
-
-                <!-- Recent Prints Shelf -->
-                <LinearLayout
-                    android:id="@+id/card_recents"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_bg"
-                    android:padding="14dp"
-                    android:layout_marginBottom="14dp"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
 
                         <TextView
-                            android:id="@+id/tv_recents_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="📁 Recent Documents"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-
-                        <TextView
-                            android:id="@+id/btn_clear_recents"
+                            android:id="@+id/tv_app_subtitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Clear History"
-                            android:textSize="11sp"
-                            android:textColor="@color/brand_primary"
-                            android:padding="4dp"/>
-                    </LinearLayout>
-
-                    <HorizontalScrollView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:scrollbars="none">
-
-                        <LinearLayout
-                            android:id="@+id/layout_recents_container"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"/>
-                    </HorizontalScrollView>
-                </LinearLayout>
-
-                <!-- Hero Document Stage: Selection & Preview Card -->
-                <LinearLayout
-                    android:id="@+id/card_doc_preview"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_bg"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
-
-                    <TextView
-                        android:id="@+id/tv_xp_group_doc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="── Document &amp; Live Preview ──"
-                        android:textColor="#003399"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        android:layout_marginBottom="6dp"/>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="SOURCE MEDIA"
+                            android:text="HP LASERJET M1005 • BITONAL"
                             android:textSize="9sp"
                             android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="8dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Choose or Scan Document"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-                    </LinearLayout>
-
-                    <!-- Dual Luxury Ingestion Buttons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/btn_pick_file"
-                            android:layout_width="0dp"
-                            android:layout_height="52dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_primary"
-                            android:text="📄 Open PDF File"
-                            android:textColor="#FFFFFF"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.02"
-                            android:layout_marginEnd="6dp"/>
-
-                        <Button
-                            android:id="@+id/btn_scan_document"
-                            android:layout_width="0dp"
-                            android:layout_height="52dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_secondary"
-                            android:text="📷 Scan Paper Doc"
-                            android:textColor="@color/text_high"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.02"
-                            android:layout_marginStart="6dp"/>
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tv_file_info"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center"
-                        android:text="No document selected yet"
-                        android:textColor="@color/text_med"
-                        android:textSize="12sp"/>
-
-                    <!-- Embedded Live Page Preview Container -->
-                    <LinearLayout
-                        android:id="@+id/layout_preview_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone"
-                        android:layout_marginTop="14dp">
-
-                        <!-- Floating Island Toolbar -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <TextView
-                                android:id="@+id/tv_preview_mode_badge"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="⚡ Deep Ink Preview"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/brand_primary"/>
-
-                            <Button
-                                android:id="@+id/btn_rotate_page"
-                                android:layout_width="wrap_content"
-                                android:layout_height="32dp"
-                                android:background="@drawable/btn_chip"
-                                android:textColor="@color/text_high"
-                                android:textSize="11sp"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:layout_marginEnd="4dp"
-                                android:text="↻ Rotate"/>
-
-                            <Button
-                                android:id="@+id/btn_toggle_preview_mode"
-                                android:layout_width="wrap_content"
-                                android:layout_height="32dp"
-                                android:background="@drawable/btn_chip"
-                                android:textColor="@color/text_high"
-                                android:textSize="11sp"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:layout_marginEnd="4dp"
-                                android:text="Compare"/>
-
-                            <Button
-                                android:id="@+id/btn_quick_zoom"
-                                android:layout_width="wrap_content"
-                                android:layout_height="32dp"
-                                android:background="@drawable/btn_chip"
-                                android:textColor="@color/brand_primary"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:text="🔍 Zoom"/>
-                        </LinearLayout>
-
-                        <!-- Paper Frame with Laser Scan -->
-                        <FrameLayout
-                            android:id="@+id/frame_paper_preview"
-                            android:layout_width="match_parent"
-                            android:layout_height="310dp"
-                            android:background="#070C16"
-                            android:padding="8dp">
-
-                            <com.dodopress.ui.ZoomableImageView
-                                android:id="@+id/iv_page_preview"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="#FFFFFF"/>
-
-                            <com.dodopress.ui.LaserScanView
-                                android:id="@+id/laser_scan_view"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:visibility="gone"/>
-
-                            <!-- Auto-Blank Page Detection Chip / Banner -->
-                            <LinearLayout
-                                android:id="@+id/layout_blank_page_banner"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:layout_gravity="top"
-                                android:background="#E6DC2626"
-                                android:padding="8dp"
-                                android:gravity="center_vertical"
-                                android:visibility="gone">
-
-                                <TextView
-                                    android:id="@+id/tv_blank_page_text"
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:text="⚠️ Page appears blank. Skip printing?"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="11sp"
-                                    android:textStyle="bold" />
-
-                                <Button
-                                    android:id="@+id/btn_skip_blank_page"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="28dp"
-                                    android:background="@drawable/btn_primary"
-                                    android:text="Skip Page"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="10sp"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="10dp" />
-
-                                <TextView
-                                    android:id="@+id/btn_dismiss_blank_banner"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text=" ✕ "
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="14sp"
-                                    android:textStyle="bold"
-                                    android:paddingStart="8dp"
-                                    android:paddingEnd="4dp" />
-                            </LinearLayout>
-                        </FrameLayout>
-
-                        <!-- Pagination Stepper -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center"
-                            android:layout_marginTop="10dp">
-
-                            <Button
-                                android:id="@+id/btn_prev_page"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
-                                android:background="@drawable/btn_secondary"
-                                android:textColor="@color/text_high"
-                                android:textSize="12sp"
-                                android:text="◀ Prev"/>
-
-                            <TextView
-                                android:id="@+id/tv_page_indicator"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="16dp"
-                                android:layout_marginEnd="16dp"
-                                android:text="Page 1 of 1"
-                                android:textStyle="bold"
-                                android:textSize="13sp"
-                                android:textColor="@color/brand_primary"/>
-
-                            <Button
-                                android:id="@+id/btn_next_page"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
-                                android:background="@drawable/btn_secondary"
-                                android:textColor="@color/text_high"
-                                android:textSize="12sp"
-                                android:text="Next ▶"/>
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Laser Toner Studio Card -->
-                <LinearLayout
-                    android:id="@+id/card_toner_density"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_bg"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
-
-                    <TextView
-                        android:id="@+id/tv_xp_group_density"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="── Print Density &amp; Toner Quality ──"
-                        android:textColor="#003399"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        android:layout_marginBottom="6dp"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="CALIBRATION"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="8dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_density_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ink_density_title"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-
-                        <TextView
-                            android:id="@+id/tv_darkness_pct"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="75%"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
+                            android:letterSpacing="0.05"
                             android:textColor="@color/brand_primary"/>
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tv_density_desc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/ink_density_desc"
-                        android:textSize="11sp"
-                        android:textColor="@color/text_med"
-                        android:layout_marginTop="3dp"
-                        android:layout_marginBottom="12dp"/>
-
-                    <!-- High-End Custom Glowing Laser SeekBar -->
-                    <SeekBar
-                        android:id="@+id/seek_darkness"
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:max="100"
-                        android:progress="75"
-                        android:progressDrawable="@drawable/custom_seekbar_track"
-                        android:thumb="@drawable/custom_seekbar_thumb"
-                        android:splitTrack="false"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"/>
-
-                    <TextView
-                        android:id="@+id/tv_darkness_label"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:text="75% — Deep Black (PC Match — Locked Default)"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/brand_primary"
-                        android:layout_marginTop="6dp"
-                        android:layout_marginBottom="12dp"/>
-
-                    <!-- Quick Preset Segmented Buttons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginBottom="12dp">
-
-                        <Button
-                            android:id="@+id/btn_preset_draft"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Draft (25%)"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_preset_normal"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Normal (50%)"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_preset_deep"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1.3"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_primary"
-                            android:text="Deep (PC Match ★)"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-
-                        <Button
-                            android:id="@+id/btn_preset_ultra"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1.1"
-                            android:background="@drawable/btn_chip"
-                            android:text="Max (100%)"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"/>
-                    </LinearLayout>
-
-                    <!-- Smart Toner Shield (Dark PDF Inversion) -->
-                    <CheckBox
-                        android:id="@+id/cb_invert_dark"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="🛡️ Toner Shield (Invert Dark Backgrounds / Lecture Slides)"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_high"
-                        android:checked="false"/>
-                </LinearLayout>
-
-                <!-- Advanced Paper Size & Placement Geometry Card -->
-                <LinearLayout
-                    android:id="@+id/card_geometry"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_bg"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
-
-                    <TextView
-                        android:id="@+id/tv_xp_group_geometry"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="── Paper Geometry &amp; Partial-Page Placement ──"
-                        android:textColor="#003399"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        android:layout_marginBottom="6dp"/>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="GEOMETRY"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="8dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_geometry_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Paper Size &amp; Placement"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-
-                        <TextView
-                            android:id="@+id/tv_geometry_badge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="A4 • Full Page"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"/>
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tv_geometry_desc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Strictly uniform aspect ratio fit — zero stretching or distortion."
-                        android:textSize="11sp"
-                        android:textColor="@color/text_med"
-                        android:layout_marginTop="3dp"
-                        android:layout_marginBottom="12dp"/>
-
-                    <!-- Paper Size Segmented Selector -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginBottom="12dp">
-
-                        <Button
-                            android:id="@+id/btn_paper_a4"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_primary"
-                            android:text="A4"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-
-                        <Button
-                            android:id="@+id/btn_paper_letter"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Letter"
-                            android:textSize="11sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_paper_legal"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Legal"
-                            android:textSize="11sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_paper_a5"
-                            android:layout_width="0dp"
-                            android:layout_height="36dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_chip"
-                            android:text="A5"
-                            android:textSize="11sp"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-
-                    <!-- Interactive Graphical Sheet Widget -->
-                    <com.dodopress.ui.SheetGeometrySelectorView
-                        android:id="@+id/view_sheet_geometry"
-                        android:layout_width="match_parent"
-                        android:layout_height="140dp"
-                        android:layout_gravity="center"
-                        android:layout_marginBottom="12dp"/>
-
-                    <!-- Region Preset Chips (Grid) -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
-
-                        <Button
-                            android:id="@+id/btn_place_full"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_primary"
-                            android:text="Full Page"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-
-                        <Button
-                            android:id="@+id/btn_place_top_half"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Top Half"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_place_bottom_half"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_chip"
-                            android:text="Bottom Half"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/btn_place_left_half"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Left Half"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_place_right_half"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="Right Half"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_place_quad_tl"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_chip"
-                            android:text="Quadrant"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-
-                    <!-- Print Margin Selection Header -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="4dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="MARGINS"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="8dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_margin_title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Print Margin (Page Padding)"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-
-                        <TextView
-                            android:id="@+id/tv_margin_label"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="12 mm (Normal)"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"/>
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/tv_margin_desc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Set physical edge distance. Real-time preview updates instantly."
-                        android:textSize="11sp"
-                        android:textColor="@color/text_med"
-                        android:layout_marginBottom="8dp"/>
-
-                    <!-- Glowing Margin Slider (0 to 40 mm) -->
-                    <SeekBar
-                        android:id="@+id/seek_margin"
-                        android:layout_width="match_parent"
-                        android:layout_height="32dp"
-                        android:max="40"
-                        android:progress="12"
-                        android:progressDrawable="@drawable/custom_seekbar_track"
-                        android:thumb="@drawable/custom_seekbar_thumb"
-                        android:splitTrack="false"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"/>
-
-                    <!-- Margin Preset Chips (0mm, 5mm, 12mm, 24mm) -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginTop="8dp">
-
-                        <Button
-                            android:id="@+id/btn_margin_zero"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="0 mm (None)"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_margin_narrow"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_chip"
-                            android:text="5 mm (Narrow)"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-
-                        <Button
-                            android:id="@+id/btn_margin_normal"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:background="@drawable/btn_primary"
-                            android:text="12 mm (Normal)"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF"/>
-
-                        <Button
-                            android:id="@+id/btn_margin_wide"
-                            android:layout_width="0dp"
-                            android:layout_height="34dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/btn_chip"
-                            android:text="24 mm (Wide)"
-                            android:textSize="10sp"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Output Configuration Card -->
-                <LinearLayout
-                    android:id="@+id/card_page_config"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_bg"
-                    android:padding="16dp"
-                    android:layout_marginBottom="14dp">
-
-                    <TextView
-                        android:id="@+id/tv_xp_group_pages"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="── Print Range &amp; Copies ──"
-                        android:textColor="#003399"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        android:layout_marginBottom="6dp"/>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/badge_section_tag"
-                            android:paddingStart="6dp"
-                            android:paddingTop="2dp"
-                            android:paddingEnd="6dp"
-                            android:paddingBottom="2dp"
-                            android:text="PRINT CONFIG"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:letterSpacing="0.08"
-                            android:layout_marginEnd="8dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Copies &amp; Page Range"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"/>
-                    </LinearLayout>
-
-                    <!-- Copies Stepper -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/tv_copies_title"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/copies_title"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/text_high"/>
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:layout_marginTop="6dp">
-
-                                <Button
-                                    android:id="@+id/btn_copies_minus"
-                                    android:layout_width="38dp"
-                                    android:layout_height="38dp"
-                                    android:background="@drawable/btn_secondary"
-                                    android:textColor="@color/text_high"
-                                    android:text="−"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold"/>
-
-                                <TextView
-                                    android:id="@+id/tv_copies_count"
-                                    android:layout_width="44dp"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center"
-                                    android:text="1"
-                                    android:textSize="17sp"
-                                    android:textStyle="bold"
-                                    android:textColor="@color/brand_primary"/>
-
-                                <Button
-                                    android:id="@+id/btn_copies_plus"
-                                    android:layout_width="38dp"
-                                    android:layout_height="38dp"
-                                    android:background="@drawable/btn_secondary"
-                                    android:textColor="@color/text_high"
-                                    android:text="+"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold"/>
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="20dp"
-                            android:layout_height="1dp" />
-
-                        <CheckBox
-                            android:id="@+id/cb_collate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/order_collate"
-                            android:checked="true"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_med"/>
-                    </LinearLayout>
-
-                    <!-- Page Selection -->
-                    <TextView
-                        android:id="@+id/tv_pages_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/pages_title"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_high"/>
-
-                    <RadioGroup
-                        android:id="@+id/rg_pages"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="6dp">
-
-                        <RadioButton
-                            android:id="@+id/rb_pages_all"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:checked="true"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_high"
-                            android:text="@string/pages_all"/>
-
-                        <RadioButton
-                            android:id="@+id/rb_pages_current"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_high"
-                            android:text="@string/pages_current"/>
-
-                        <RadioButton
-                            android:id="@+id/rb_pages_odd"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_high"
-                            android:text="@string/pages_odd"/>
-
-                        <RadioButton
-                            android:id="@+id/rb_pages_even"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_high"
-                            android:text="@string/pages_even"/>
-
-                        <RadioButton
-                            android:id="@+id/rb_pages_custom"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_high"
-                            android:text="@string/pages_custom"/>
-                    </RadioGroup>
-
-                    <LinearLayout
-                        android:id="@+id/layout_custom_range"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone"
-                        android:layout_marginTop="6dp"
-                        android:layout_marginStart="28dp">
-
-                        <EditText
-                            android:id="@+id/et_custom_pages"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/input_bg"
-                            android:hint="@string/pages_custom_hint"
-                            android:textColorHint="@color/text_muted"
-                            android:textColor="@color/text_high"
-                            android:textSize="13sp"
-                            android:singleLine="true" />
-                    </LinearLayout>
-
-                    <!-- Watermark Stamp Input -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="12dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🏷️ Official Watermark Stamp (Optional):"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_high"
-                            android:layout_marginBottom="6dp"/>
-
-                        <EditText
-                            android:id="@+id/et_watermark"
-                            android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            android:background="@drawable/input_bg"
-                            android:hint="e.g. CONFIDENTIAL / DRAFT / PAID"
-                            android:textColorHint="@color/text_muted"
-                            android:textColor="@color/text_high"
-                            android:textSize="12sp"
-                            android:singleLine="true"/>
-                    </LinearLayout>
-
-                    <CheckBox
-                        android:id="@+id/cb_reverse_order"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/order_reverse"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_high"/>
-
-                    <!-- Action: Queue for Print when unplugged -->
+                    <!-- Theme Menu Button -->
                     <Button
-                        android:id="@+id/btn_queue_job"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="12dp"
-                        android:background="@drawable/btn_secondary"
-                        android:text="📥 Queue to Offline Spool (Print Later)"
+                        android:id="@+id/btn_theme_menu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="🎨 Theme"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
                         android:textColor="@color/brand_primary"
-                        android:textSize="12sp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginEnd="6dp"/>
+
+                    <!-- Diagnostics Button -->
+                    <Button
+                        android:id="@+id/btn_diagnostics"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="⚡ Telemetry"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"/>
+                </LinearLayout>
+
+                <!-- Row 2: Rock-solid Full-Width Telemetry Status Capsule HUD -->
+                <LinearLayout
+                    android:id="@+id/layout_status_capsule"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/badge_status_offline"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:layout_marginBottom="6dp">
+
+                    <com.dodopress.ui.PulsingBeaconView
+                        android:id="@+id/view_beacon"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="6dp"/>
+
+                    <TextView
+                        android:id="@+id/tv_printer_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Checking USB OTG..."
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textColor="@color/status_waiting_text"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="USB 0x03F0:0x3B17"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:textColor="@color/text_muted"/>
+                </LinearLayout>
+
+                <!-- Row 3: Quick Document Source Strip -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+
+                    <Button
+                        android:id="@+id/btn_pick_file"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1.2"
+                        android:background="@drawable/btn_primary"
+                        android:text="📄 PDF/Photo"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="3dp"/>
+
+                    <Button
+                        android:id="@+id/btn_scan_document"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_secondary"
+                        android:text="📷 Scan"
+                        android:textColor="@color/text_high"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="3dp"/>
+
+                    <Button
+                        android:id="@+id/btn_qr_label"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_secondary"
+                        android:text="🏁 QR"
+                        android:textColor="@color/text_high"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:layout_marginEnd="3dp"/>
+
+                    <Button
+                        android:id="@+id/btn_ai_assistant"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1.2"
+                        android:background="@drawable/btn_secondary"
+                        android:text="✨ AI Suite"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="11sp"
                         android:textStyle="bold"/>
                 </LinearLayout>
 
-                <!-- Inline Progress & Print Status -->
-                <ProgressBar
-                    android:id="@+id/pb_print_progress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="6dp"
-                    android:visibility="gone"
-                    android:progressBackgroundTint="@color/slider_track"
-                    android:progressTint="@color/brand_primary"
-                    android:layout_marginBottom="8dp"/>
-
                 <TextView
-                    android:id="@+id/tv_print_status"
+                    android:id="@+id/tv_file_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:visibility="gone"
-                    android:text="Preparing print..."
-                    android:textColor="@color/brand_primary"
-                    android:textSize="13sp"
-                    android:layout_marginBottom="10dp"/>
-
-                <!-- High-Impact Laser Print Action Button -->
-                <Button
-                    android:id="@+id/btn_print_now"
-                    android:layout_width="match_parent"
-                    android:layout_height="52dp"
-                    android:background="@drawable/btn_primary"
-                    android:text="⚡ START LASER PRINTING"
-                    android:textSize="14sp"
-                    android:textColor="#FFFFFF"
-                    android:letterSpacing="0.04"
-                    android:textStyle="bold"/>
+                    android:text="No document selected yet"
+                    android:textColor="@color/text_med"
+                    android:textSize="11sp"
+                    android:singleLine="true"
+                    android:ellipsize="middle"/>
             </LinearLayout>
-        </ScrollView>
+
+            <!-- 2. Hero Document Stage: Selection & Preview Card (PINNED & PERMANENTLY VISIBLE) -->
+            <LinearLayout
+                android:id="@+id/card_doc_preview"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:orientation="vertical"
+                android:background="@drawable/card_bg"
+                android:padding="8dp"
+                android:layout_marginBottom="6dp">
+
+                <!-- Floating Toolbar -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_preview_mode_badge"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="⚡ Deep Ink Preview"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_primary"/>
+
+                    <Button
+                        android:id="@+id/btn_rotate_page"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/text_high"
+                        android:textSize="10sp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginEnd="3dp"
+                        android:text="↻ 90°"/>
+
+                    <Button
+                        android:id="@+id/btn_toggle_preview_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/text_high"
+                        android:textSize="10sp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginEnd="3dp"
+                        android:text="Compare"/>
+
+                    <Button
+                        android:id="@+id/btn_quick_zoom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:text="🔍 Zoom"/>
+                </LinearLayout>
+
+                <!-- Paper Frame with Laser Scan -->
+                <FrameLayout
+                    android:id="@+id/layout_preview_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="#070C16"
+                    android:padding="4dp">
+
+                    <com.dodopress.ui.ZoomableImageView
+                        android:id="@+id/iv_page_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#FFFFFF"/>
+
+                    <com.dodopress.ui.LaserScanView
+                        android:id="@+id/laser_scan_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone"/>
+
+                    <!-- Auto-Blank Page Detection Chip / Banner -->
+                    <LinearLayout
+                        android:id="@+id/layout_blank_page_banner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_gravity="top"
+                        android:background="#E6DC2626"
+                        android:padding="6dp"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/tv_blank_page_text"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⚠️ Blank page detected"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <Button
+                            android:id="@+id/btn_skip_blank_page"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:background="@drawable/btn_primary"
+                            android:text="Skip"
+                            android:textColor="#FFFFFF"
+                            android:textSize="9sp"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp" />
+
+                        <TextView
+                            android:id="@+id/btn_dismiss_blank_banner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ✕ "
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="2dp" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <!-- Pagination Stepper -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp">
+
+                    <Button
+                        android:id="@+id/btn_prev_page"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:background="@drawable/btn_secondary"
+                        android:textColor="@color/text_high"
+                        android:textSize="11sp"
+                        android:text="◀ Prev"/>
+
+                    <TextView
+                        android:id="@+id/tv_page_indicator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_marginEnd="14dp"
+                        android:text="Page 1 of 1"
+                        android:textStyle="bold"
+                        android:textSize="12sp"
+                        android:textColor="@color/brand_primary"/>
+
+                    <Button
+                        android:id="@+id/btn_next_page"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:background="@drawable/btn_secondary"
+                        android:textColor="@color/text_high"
+                        android:textSize="11sp"
+                        android:text="Next ▶"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 3. Retractable Sliding Options Panel (Sliding & Retractable) -->
+            <LinearLayout
+                android:id="@+id/layout_sliding_panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Sliding Grab Bar & Category Strip -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_panel_handle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="── ⚙️ PRINT CONTROLS (REAL-TIME SLIDER) ──"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_muted"/>
+
+                    <Button
+                        android:id="@+id/btn_toggle_panel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="▼ RETRACT"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"/>
+                </LinearLayout>
+
+                <!-- Category Fast-Switch Tabs -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="6dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btn_tab_tone"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="🎚️ Density &amp; Tone"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_tab_geometry"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="📐 Tiling &amp; Position"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_tab_margins"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="📏 Margins (0-24mm)"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_tab_pages"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="📄 Range &amp; Copies"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_tab_watermark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="🏷️ Watermark"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"/>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <!-- Scrollable Options Container -->
+                <ScrollView
+                    android:id="@+id/scroll_options"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fillViewport="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingBottom="40dp">
+
+                        <!-- Recent Prints Shelf -->
+                        <LinearLayout
+                            android:id="@+id/card_recents"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="12dp"
+                            android:layout_marginBottom="12dp"
+                            android:visibility="gone">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="8dp">
+
+                                <TextView
+                                    android:id="@+id/tv_recents_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="📁 Recent Documents"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+
+                                <TextView
+                                    android:id="@+id/btn_clear_recents"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Clear History"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/brand_primary"
+                                    android:padding="4dp"/>
+                            </LinearLayout>
+
+                            <HorizontalScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:scrollbars="none">
+
+                                <LinearLayout
+                                    android:id="@+id/layout_recents_container"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"/>
+                            </HorizontalScrollView>
+                        </LinearLayout>
+
+                        <!-- Laser Toner Studio Card -->
+                        <LinearLayout
+                            android:id="@+id/card_toner_density"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="14dp"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="CALIBRATION"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_density_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/ink_density_title"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+
+                                <TextView
+                                    android:id="@+id/tv_darkness_pct"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="75%"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"/>
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tv_density_desc"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/ink_density_desc"
+                                android:textSize="10sp"
+                                android:textColor="@color/text_med"
+                                android:layout_marginTop="2dp"
+                                android:layout_marginBottom="10dp"/>
+
+                            <!-- High-End Glowing Laser SeekBar -->
+                            <SeekBar
+                                android:id="@+id/seek_darkness"
+                                android:layout_width="match_parent"
+                                android:layout_height="30dp"
+                                android:max="100"
+                                android:progress="75"
+                                android:progressDrawable="@drawable/custom_seekbar_track"
+                                android:thumb="@drawable/custom_seekbar_thumb"
+                                android:splitTrack="false"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"/>
+
+                            <TextView
+                                android:id="@+id/tv_darkness_label"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="75% — Deep Black (PC Match — Locked Default)"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/brand_primary"
+                                android:layout_marginTop="4dp"
+                                android:layout_marginBottom="10dp"/>
+
+                            <!-- Quick Preset Segmented Buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginBottom="10dp">
+
+                                <Button
+                                    android:id="@+id/btn_preset_draft"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Draft (25%)"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_preset_normal"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Normal (50%)"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_preset_deep"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1.3"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="Deep (PC Match ★)"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_preset_ultra"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1.1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Max (100%)"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"/>
+                            </LinearLayout>
+
+                            <!-- Smart Toner Shield (Dark PDF Inversion) -->
+                            <CheckBox
+                                android:id="@+id/cb_invert_dark"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="🛡️ Toner Shield (Invert Dark Backgrounds / Lecture Slides)"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_high"
+                                android:checked="false"/>
+                        </LinearLayout>
+
+                        <!-- Advanced Paper Size & Placement Geometry Card -->
+                        <LinearLayout
+                            android:id="@+id/card_geometry"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="14dp"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="GEOMETRY"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_geometry_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Paper Size &amp; Placement"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+
+                                <TextView
+                                    android:id="@+id/tv_geometry_badge"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="A4 • Full Page"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"/>
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tv_geometry_desc"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Strict uniform aspect ratio — zero stretching or distortion."
+                                android:textSize="10sp"
+                                android:textColor="@color/text_med"
+                                android:layout_marginTop="2dp"
+                                android:layout_marginBottom="10dp"/>
+
+                            <!-- Paper Size Selector -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginBottom="10dp">
+
+                                <Button
+                                    android:id="@+id/btn_paper_a4"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="A4"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_paper_letter"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Letter"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_paper_legal"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Legal"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_paper_a5"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="A5"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- N-Up Multi-Page Sheet Tiling Header -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="2dp"
+                                android:layout_marginBottom="6dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="N-UP TILING"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#38BDF8"/>
+
+                                <TextView
+                                    android:id="@+id/tv_tiling_label"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="1-Up (Standard)"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- N-Up Tiling Buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginBottom="10dp">
+
+                                <Button
+                                    android:id="@+id/btn_tile_1up"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="1-Up"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_tile_2up"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="2-in-1"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_tile_4up"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="4-in-1"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- Interactive Graphical Sheet Widget -->
+                            <com.dodopress.ui.SheetGeometrySelectorView
+                                android:id="@+id/view_sheet_geometry"
+                                android:layout_width="match_parent"
+                                android:layout_height="120dp"
+                                android:layout_gravity="center"
+                                android:layout_marginBottom="10dp"/>
+
+                            <!-- Region Preset Chips -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginBottom="4dp">
+
+                                <Button
+                                    android:id="@+id/btn_place_full"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="Full Page"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_place_top_half"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Top Half"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_place_bottom_half"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Bottom Half"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <Button
+                                    android:id="@+id/btn_place_left_half"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Left Half"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_place_right_half"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Right Half"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_place_quad_tl"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Quadrant"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Precision Margin Card -->
+                        <LinearLayout
+                            android:id="@+id/card_margins"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="14dp"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="4dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="MARGINS"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <TextView
+                                    android:id="@+id/tv_margin_title"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Print Margin (Page Padding)"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+
+                                <TextView
+                                    android:id="@+id/tv_margin_label"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="12 mm (Normal)"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"/>
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tv_margin_desc"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Adjust physical edge padding. Live sheet updates instantly."
+                                android:textSize="10sp"
+                                android:textColor="@color/text_med"
+                                android:layout_marginBottom="6dp"/>
+
+                            <!-- Glowing Margin Slider (0 to 40 mm) -->
+                            <SeekBar
+                                android:id="@+id/seek_margin"
+                                android:layout_width="match_parent"
+                                android:layout_height="30dp"
+                                android:max="40"
+                                android:progress="12"
+                                android:progressDrawable="@drawable/custom_seekbar_track"
+                                android:thumb="@drawable/custom_seekbar_thumb"
+                                android:splitTrack="false"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"/>
+
+                            <!-- Margin Preset Chips -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginTop="6dp">
+
+                                <Button
+                                    android:id="@+id/btn_margin_zero"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="0 mm (None)"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_margin_narrow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="5 mm"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_margin_normal"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="4dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="12 mm (★)"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_margin_wide"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="24 mm"
+                                    android:textSize="10sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Output Configuration Card -->
+                        <LinearLayout
+                            android:id="@+id/card_page_config"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="14dp"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="8dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="PRINT CONFIG"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Copies &amp; Page Range"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+                            </LinearLayout>
+
+                            <!-- Copies Stepper -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="10dp">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/tv_copies_title"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/copies_title"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/text_high"/>
+
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal"
+                                        android:gravity="center_vertical"
+                                        android:layout_marginTop="4dp">
+
+                                        <Button
+                                            android:id="@+id/btn_copies_minus"
+                                            android:layout_width="36dp"
+                                            android:layout_height="36dp"
+                                            android:background="@drawable/btn_secondary"
+                                            android:textColor="@color/text_high"
+                                            android:text="−"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold"/>
+
+                                        <TextView
+                                            android:id="@+id/tv_copies_count"
+                                            android:layout_width="40dp"
+                                            android:layout_height="wrap_content"
+                                            android:gravity="center"
+                                            android:text="1"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold"
+                                            android:textColor="@color/brand_primary"/>
+
+                                        <Button
+                                            android:id="@+id/btn_copies_plus"
+                                            android:layout_width="36dp"
+                                            android:layout_height="36dp"
+                                            android:background="@drawable/btn_secondary"
+                                            android:textColor="@color/text_high"
+                                            android:text="+"
+                                            android:textSize="16sp"
+                                            android:textStyle="bold"/>
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <View
+                                    android:layout_width="20dp"
+                                    android:layout_height="1dp" />
+
+                                <CheckBox
+                                    android:id="@+id/cb_collate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/order_collate"
+                                    android:checked="true"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- Page Selection -->
+                            <TextView
+                                android:id="@+id/tv_pages_title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/pages_title"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_high"/>
+
+                            <RadioGroup
+                                android:id="@+id/rg_pages"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginTop="4dp">
+
+                                <RadioButton
+                                    android:id="@+id/rb_pages_all"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:checked="true"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_high"
+                                    android:text="@string/pages_all"/>
+
+                                <RadioButton
+                                    android:id="@+id/rb_pages_current"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_high"
+                                    android:text="@string/pages_current"/>
+
+                                <RadioButton
+                                    android:id="@+id/rb_pages_odd"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_high"
+                                    android:text="@string/pages_odd"/>
+
+                                <RadioButton
+                                    android:id="@+id/rb_pages_even"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_high"
+                                    android:text="@string/pages_even"/>
+
+                                <RadioButton
+                                    android:id="@+id/rb_pages_custom"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_high"
+                                    android:text="@string/pages_custom"/>
+                            </RadioGroup>
+
+                            <LinearLayout
+                                android:id="@+id/layout_custom_range"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:visibility="gone"
+                                android:layout_marginTop="4dp"
+                                android:layout_marginStart="24dp">
+
+                                <EditText
+                                    android:id="@+id/et_custom_pages"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="38dp"
+                                    android:background="@drawable/input_bg"
+                                    android:hint="@string/pages_custom_hint"
+                                    android:textColorHint="@color/text_muted"
+                                    android:textColor="@color/text_high"
+                                    android:textSize="12sp"
+                                    android:singleLine="true" />
+                            </LinearLayout>
+
+                            <CheckBox
+                                android:id="@+id/cb_reverse_order"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="@string/order_reverse"
+                                android:textSize="11sp"
+                                android:textColor="@color/text_high"/>
+                        </LinearLayout>
+
+                        <!-- Watermark & Official Stamp Card -->
+                        <LinearLayout
+                            android:id="@+id/card_watermark"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:background="@drawable/card_bg"
+                            android:padding="14dp"
+                            android:layout_marginBottom="12dp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="6dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="WATERMARK"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/brand_primary"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginEnd="8dp"/>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Official Stamp (Live Preview)"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_high"/>
+                            </LinearLayout>
+
+                            <EditText
+                                android:id="@+id/et_watermark"
+                                android:layout_width="match_parent"
+                                android:layout_height="40dp"
+                                android:background="@drawable/input_bg"
+                                android:hint="e.g. CONFIDENTIAL / DRAFT / PAID"
+                                android:textColorHint="@color/text_muted"
+                                android:textColor="@color/text_high"
+                                android:textSize="12sp"
+                                android:padding="8dp"
+                                android:singleLine="true"
+                                android:layout_marginBottom="8dp"/>
+
+                            <!-- Quick Watermark Preset Chips -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center">
+
+                                <Button
+                                    android:id="@+id/btn_wm_confidential"
+                                    android:layout_width="0dp"
+                                    android:layout_height="28dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="3dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="CONFIDENTIAL"
+                                    android:textSize="9sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_wm_draft"
+                                    android:layout_width="0dp"
+                                    android:layout_height="28dp"
+                                    android:layout_weight="0.8"
+                                    android:layout_marginEnd="3dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="DRAFT"
+                                    android:textSize="9sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_wm_paid"
+                                    android:layout_width="0dp"
+                                    android:layout_height="28dp"
+                                    android:layout_weight="0.7"
+                                    android:layout_marginEnd="3dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="PAID"
+                                    android:textSize="9sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_wm_original"
+                                    android:layout_width="0dp"
+                                    android:layout_height="28dp"
+                                    android:layout_weight="0.9"
+                                    android:layout_marginEnd="3dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="ORIGINAL"
+                                    android:textSize="9sp"
+                                    android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_wm_clear"
+                                    android:layout_width="0dp"
+                                    android:layout_height="28dp"
+                                    android:layout_weight="0.7"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="Clear"
+                                    android:textSize="9sp"
+                                    android:textColor="@color/text_muted"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Action: Queue for Print when unplugged -->
+                        <Button
+                            android:id="@+id/btn_queue_job"
+                            android:layout_width="match_parent"
+                            android:layout_height="40dp"
+                            android:layout_marginTop="4dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@drawable/btn_secondary"
+                            android:text="📥 Queue to Offline Spool (Print Later)"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="11sp"
+                            android:textStyle="bold"/>
+
+                        <!-- Inline Progress & Print Status -->
+                        <ProgressBar
+                            android:id="@+id/pb_print_progress"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="6dp"
+                            android:visibility="gone"
+                            android:progressBackgroundTint="@color/slider_track"
+                            android:progressTint="@color/brand_primary"
+                            android:layout_marginBottom="8dp"/>
+
+                        <TextView
+                            android:id="@+id/tv_print_status"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:visibility="gone"
+                            android:text="Preparing print..."
+                            android:textColor="@color/brand_primary"
+                            android:textSize="12sp"
+                            android:layout_marginBottom="10dp"/>
+
+                        <!-- High-Impact Laser Print Action Button -->
+                        <Button
+                            android:id="@+id/btn_print_now"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/btn_primary"
+                            android:text="⚡ START LASER PRINTING"
+                            android:textSize="13sp"
+                            android:textColor="#FFFFFF"
+                            android:letterSpacing="0.04"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+                </ScrollView>
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- ================= PAGE 2: ID CARD COPIER ================= -->
         <ScrollView
@@ -1732,11 +1884,124 @@
                             android:layout_width="wrap_content"
                             android:layout_height="34dp"
                             android:background="@drawable/btn_primary"
-                            android:text="📋 Copy UPI"
+                            android:text="📋 Copy"
                             android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp"/>
+
+                        <Button
+                            android:id="@+id/btn_print_upi_qr"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:background="@drawable/btn_secondary"
+                            android:text="🏁 Print QR"
+                            android:textColor="@color/text_high"
                             android:textSize="11sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
+                </LinearLayout>
+
+                <!-- BYOK AI Print Assistant Card -->
+                <LinearLayout
+                    android:id="@+id/card_ai_byok"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_bg"
+                    android:padding="16dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="✨ AI Print Assistant (BYOK)"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"/>
+
+                        <TextView
+                            android:id="@+id/tv_ai_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/badge_section_tag"
+                            android:paddingStart="8dp"
+                            android:paddingTop="2dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="2dp"
+                            android:text="100% FREE TIER"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="9sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Bring Your Own Key (BYOK) with Google Gemini 2.0 Flash / 1.5 Flash. Zero server costs or recurring fees — 15 RPM free forever."
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="12dp"/>
+
+                    <EditText
+                        android:id="@+id/et_gemini_api_key"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:background="@drawable/input_bg"
+                        android:padding="10dp"
+                        android:hint="Paste Gemini API Key (AIzaSy...)"
+                        android:textColor="@color/text_high"
+                        android:textColorHint="@color/text_muted"
+                        android:textSize="12sp"
+                        android:inputType="textPassword"
+                        android:layout_marginBottom="8dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <Button
+                            android:id="@+id/btn_save_ai_key"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="6dp"
+                            android:background="@drawable/btn_primary"
+                            android:text="💾 Save Key"
+                            android:textColor="#FFFFFF"
+                            android:textSize="11sp"
+                            android:textStyle="bold"/>
+
+                        <Button
+                            android:id="@+id/btn_test_ai_key"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_secondary"
+                            android:text="⚡ Test Ping"
+                            android:textColor="@color/text_high"
+                            android:textSize="11sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_ai_key_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No key configured. Get your free key at aistudio.google.com"
+                        android:textColor="@color/text_muted"
+                        android:textSize="10sp"/>
                 </LinearLayout>
 
                 <!-- Sound Pack & Sensory Polish Card -->
@@ -1875,51 +2140,179 @@
         <LinearLayout
             android:id="@+id/bottom_nav_bar"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="64dp"
             android:background="@drawable/nav_bottom_bg"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <Button
+            <!-- Tab 1: Studio -->
+            <LinearLayout
                 android:id="@+id/tab_print_studio"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="🖨️ Studio"
-                android:textColor="@color/brand_primary"
-                android:textSize="11sp"
-                android:textStyle="bold"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
-            <Button
+                <FrameLayout
+                    android:id="@+id/pill_print_studio"
+                    android:layout_width="58dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/bg_nav_pill_active">
+
+                    <ImageView
+                        android:id="@+id/icon_print_studio"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_studio"
+                        android:contentDescription="Studio" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/label_print_studio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="3dp"
+                    android:text="Studio"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_primary"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- Tab 2: ID Copier -->
+            <LinearLayout
                 android:id="@+id/tab_id_copier"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="🪪 ID Copier"
-                android:textColor="@color/text_med"
-                android:textSize="11sp"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
-            <Button
+                <FrameLayout
+                    android:id="@+id/pill_id_copier"
+                    android:layout_width="58dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/bg_nav_pill_inactive">
+
+                    <ImageView
+                        android:id="@+id/icon_id_copier"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_id_card"
+                        android:contentDescription="ID Copier" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/label_id_copier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="3dp"
+                    android:text="ID Copier"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- Tab 3: Spool Queue -->
+            <LinearLayout
                 android:id="@+id/tab_spool_queue"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="📥 Queue"
-                android:textColor="@color/text_med"
-                android:textSize="11sp"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
-            <Button
+                <FrameLayout
+                    android:id="@+id/pill_spool_queue"
+                    android:layout_width="58dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/bg_nav_pill_inactive">
+
+                    <ImageView
+                        android:id="@+id/icon_spool_queue"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_spool"
+                        android:contentDescription="Queue" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/label_spool_queue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="3dp"
+                    android:text="Queue"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"
+                    android:singleLine="true" />
+            </LinearLayout>
+
+            <!-- Tab 4: Developer -->
+            <LinearLayout
                 android:id="@+id/tab_developer"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="☕ Dev"
-                android:textColor="@color/text_med"
-                android:textSize="11sp"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
+
+                <FrameLayout
+                    android:id="@+id/pill_developer"
+                    android:layout_width="58dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/bg_nav_pill_inactive">
+
+                    <ImageView
+                        android:id="@+id/icon_developer"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nav_developer"
+                        android:contentDescription="Dev" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/label_developer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="3dp"
+                    android:text="Dev"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"
+                    android:singleLine="true" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

@@ -6,6 +6,7 @@
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.usb.host" android:required="false"/>
@@ -37,19 +38,21 @@
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/usb_device_filter" />
 
-            <!-- Open PDF from file managers, downloads, browsers -->
+            <!-- Open PDF and Images from file managers, downloads, browsers -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="application/pdf" />
+                <data android:mimeType="image/*" />
             </intent-filter>
 
-            <!-- Share PDF to DodoPress -->
+            <!-- Share PDF and Images to DodoPress -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/pdf" />
+                <data android:mimeType="image/*" />
             </intent-filter>
 
             <!-- App Shortcuts for Instant Photocopy -->

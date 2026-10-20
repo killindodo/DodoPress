@@ -1,4 +1,5 @@
 <resources>
+    <!-- Base Application Theme with Flagship Inter Typography -->
     <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:colorPrimary">@color/brand_primary</item>
         <item name="android:colorPrimaryDark">@color/bg_dark</item>
@@ -6,5 +7,165 @@
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:textColorPrimary">@color/text_high</item>
         <item name="android:textColorSecondary">@color/text_med</item>
+        <item name="android:fontFamily">@font/inter</item>
+
+        <!-- Base Widget Default Styles -->
+        <item name="android:textViewStyle">@style/Widget.DodoPress.TextView</item>
+        <item name="android:buttonStyle">@style/Widget.DodoPress.Button</item>
+        <item name="android:editTextStyle">@style/Widget.DodoPress.EditText</item>
     </style>
+
+    <!-- Base Widget Typography -->
+    <style name="Widget.DodoPress.TextView" parent="@android:style/Widget.Material.TextView">
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textColor">@color/text_high</item>
+    </style>
+
+    <style name="Widget.DodoPress.Button" parent="@android:style/Widget.Material.Button">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Widget.DodoPress.EditText" parent="@android:style/Widget.Material.EditText">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="android:textColor">@color/text_high</item>
+        <item name="android:textColorHint">@color/text_muted</item>
+    </style>
+
+    <!-- =================================================================== -->
+    <!-- Flagship Inter Typography Styles (Titles, Badges, Body, Buttons)    -->
+    <!-- Matching Figma, Linear, and Modern Flagship Design Systems           -->
+    <!-- =================================================================== -->
+
+    <style name="Typography" parent="">
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textColor">@color/text_high</item>
+    </style>
+
+    <!-- Titles -->
+    <style name="Typography.Title" parent="Typography">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_high</item>
+        <item name="android:letterSpacing">-0.005</item>
+    </style>
+
+    <style name="Typography.Title.Display" parent="Typography.Title">
+        <item name="android:textSize">22sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="Typography.Title.Large" parent="Typography.Title">
+        <item name="android:textSize">18sp</item>
+        <item name="android:letterSpacing">-0.005</item>
+    </style>
+
+    <style name="Typography.Title.Medium" parent="Typography.Title">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.00</item>
+    </style>
+
+    <style name="Typography.Title.Small" parent="Typography.Title">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0.005</item>
+    </style>
+
+    <!-- Section Badges & Overlines (Linear / Play Store style optical tracking) -->
+    <style name="Typography.SectionBadge" parent="Typography">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/brand_primary</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="Typography.Badge" parent="Typography">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <style name="Typography.Badge.Pro" parent="Typography.Badge">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <!-- Body Text -->
+    <style name="Typography.Body" parent="Typography">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_high</item>
+        <item name="android:letterSpacing">0.005</item>
+    </style>
+
+    <style name="Typography.Body.Large" parent="Typography.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0.005</item>
+    </style>
+
+    <style name="Typography.Body.Medium" parent="Typography.Body">
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="Typography.Body.Secondary" parent="Typography.Body">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_med</item>
+    </style>
+
+    <style name="Typography.Body.Muted" parent="Typography.Body">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+    </style>
+
+    <style name="Typography.Caption" parent="Typography">
+        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- Button Labels -->
+    <style name="Typography.Button" parent="Typography">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="Typography.Button.Primary" parent="Typography.Button">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:letterSpacing">0.035</item>
+    </style>
+
+    <style name="Typography.Button.Secondary" parent="Typography.Button">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_high</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <style name="Typography.Button.Small" parent="Typography.Button">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- TextAppearance Compatible Aliases -->
+    <style name="TextAppearance.DodoPress.Title" parent="Typography.Title" />
+    <style name="TextAppearance.DodoPress.SectionBadge" parent="Typography.SectionBadge" />
+    <style name="TextAppearance.DodoPress.Body" parent="Typography.Body" />
+    <style name="TextAppearance.DodoPress.Button" parent="Typography.Button" />
+    <style name="TextAppearance.DodoPress.Caption" parent="Typography.Caption" />
 </resources>

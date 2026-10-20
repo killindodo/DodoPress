@@ -22,6 +22,7 @@ public class SheetGeometrySelectorView extends View {
 
     private SheetGeometry.PaperSize paperSize = SheetGeometry.PaperSize.A4;
     private SheetGeometry.PlacementRegion activeRegion = SheetGeometry.PlacementRegion.FULL_PAGE;
+    private SheetGeometry.TilingMode tilingMode = SheetGeometry.TilingMode.ONE_UP;
     private OnRegionSelectedListener listener;
 
     private int primaryColor = 0xFF38BDF8;
@@ -101,11 +102,21 @@ public class SheetGeometrySelectorView extends View {
 
     public void setPlacementRegion(SheetGeometry.PlacementRegion region) {
         this.activeRegion = region;
+        this.tilingMode = SheetGeometry.TilingMode.ONE_UP;
         invalidate();
     }
 
     public SheetGeometry.PlacementRegion getPlacementRegion() {
         return activeRegion;
+    }
+
+    public void setTilingMode(SheetGeometry.TilingMode mode) {
+        this.tilingMode = (mode != null) ? mode : SheetGeometry.TilingMode.ONE_UP;
+        invalidate();
+    }
+
+    public SheetGeometry.TilingMode getTilingMode() {
+        return tilingMode;
     }
 
     public void setOnRegionSelectedListener(OnRegionSelectedListener listener) {
@@ -187,6 +198,7 @@ public class SheetGeometrySelectorView extends View {
                 }
 
                 activeRegion = newRegion;
+                tilingMode = SheetGeometry.TilingMode.ONE_UP;
                 if (listener != null) {
                     listener.onRegionSelected(activeRegion);
                 }
@@ -223,49 +235,90 @@ public class SheetGeometrySelectorView extends View {
         canvas.drawLine(midX, sheetRect.top + 4f, midX, sheetRect.bottom - 4f, gridGuidePaint);
 
         // 4. Calculate Selected Region Coordinates
-        float rx = sheetRect.left + (activeRegion.relX * sheetRect.width());
-        float ry = sheetRect.top + (activeRegion.relY * sheetRect.height());
-        float rw = activeRegion.relW * sheetRect.width();
-        float rh = activeRegion.relH * sheetRect.height();
-        activeRegionRect.set(rx, ry, rx + rw, ry + rh);
+        if (tilingMode != null && tilingMode != SheetGeometry.TilingMode.ONE_UP) {
+            Rect[] boxes = SheetGeometry.calculateNUpBoxes(tilingMode, (int) sheetRect.width(), (int) sheetRect.height(), 4);
+            int alphaInt = (int) (pulseAlpha * 255);
+            activeFillPaint.setColor(Color.argb(alphaInt, Color.red(primaryColor), Color.green(primaryColor), Color.blue(primaryColor)));
+            activeStrokePaint.setColor(primaryColor);
 
-        // 5. Draw Active Region Highlight
-        int alphaInt = (int) (pulseAlpha * 255);
-        activeFillPaint.setColor(Color.argb(alphaInt, Color.red(primaryColor), Color.green(primaryColor), Color.blue(primaryColor)));
-        canvas.drawRoundRect(activeRegionRect, 6f, 6f, activeFillPaint);
+            Paint wireLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            wireLinePaint.setColor(primaryColor);
+            wireLinePaint.setStrokeWidth(1.5f);
 
-        activeStrokePaint.setColor(primaryColor);
-        canvas.drawRoundRect(activeRegionRect, 6f, 6f, activeStrokePaint);
+            for (int i = 0; i < boxes.length; i++) {
+                Rect b = boxes[i];
+                RectF r = new RectF(sheetRect.left + b.left, sheetRect.top + b.top, sheetRect.left + b.right, sheetRect.top + b.bottom);
+                canvas.drawRoundRect(r, 4f, 4f, activeFillPaint);
+                canvas.drawRoundRect(r, 4f, 4f, activeStrokePaint);
 
-        // 6. Draw Centered Document Wireframe (Preserving Aspect Ratio)
-        float wireW = activeRegionRect.width() * 0.72f;
-        float wireH = wireW * 1.414f;
-        if (wireH > activeRegionRect.height() * 0.82f) {
-            wireH = activeRegionRect.height() * 0.82f;
-            wireW = wireH / 1.414f;
+                float wireW = r.width() * 0.70f;
+                float wireH = wireW * 1.414f;
+                if (wireH > r.height() * 0.78f) {
+                    wireH = r.height() * 0.78f;
+                    wireW = wireH / 1.414f;
+                }
+                float wLeft = r.centerX() - (wireW / 2f);
+                float wTop = r.centerY() - (wireH / 2f);
+                RectF wireRect = new RectF(wLeft, wTop, wLeft + wireW, wTop + wireH);
+                docWireframePaint.setColor(Color.argb(70, Color.red(accentColor), Color.green(accentColor), Color.blue(accentColor)));
+                canvas.drawRoundRect(wireRect, 3f, 3f, docWireframePaint);
+
+                float lineStep = wireRect.height() / 5f;
+                for (int l = 1; l <= 3; l++) {
+                    float lineY = wireRect.top + (l * lineStep);
+                    canvas.drawLine(wireRect.left + 4f, lineY, wireRect.right - 4f, lineY, wireLinePaint);
+                }
+            }
+
+            textPaint.setColor(primaryColor);
+            textPaint.setTextSize(Math.max(18f, sheetRect.height() * 0.055f));
+            String statusText = paperSize.name() + " • " + tilingMode.title;
+            canvas.drawText(statusText, sheetRect.centerX(), sheetRect.bottom + 22f, textPaint);
+        } else {
+            float rx = sheetRect.left + (activeRegion.relX * sheetRect.width());
+            float ry = sheetRect.top + (activeRegion.relY * sheetRect.height());
+            float rw = activeRegion.relW * sheetRect.width();
+            float rh = activeRegion.relH * sheetRect.height();
+            activeRegionRect.set(rx, ry, rx + rw, ry + rh);
+
+            // 5. Draw Active Region Highlight
+            int alphaInt = (int) (pulseAlpha * 255);
+            activeFillPaint.setColor(Color.argb(alphaInt, Color.red(primaryColor), Color.green(primaryColor), Color.blue(primaryColor)));
+            canvas.drawRoundRect(activeRegionRect, 6f, 6f, activeFillPaint);
+
+            activeStrokePaint.setColor(primaryColor);
+            canvas.drawRoundRect(activeRegionRect, 6f, 6f, activeStrokePaint);
+
+            // 6. Draw Centered Document Wireframe (Preserving Aspect Ratio)
+            float wireW = activeRegionRect.width() * 0.72f;
+            float wireH = wireW * 1.414f;
+            if (wireH > activeRegionRect.height() * 0.82f) {
+                wireH = activeRegionRect.height() * 0.82f;
+                wireW = wireH / 1.414f;
+            }
+            float wLeft = activeRegionRect.centerX() - (wireW / 2f);
+            float wTop = activeRegionRect.centerY() - (wireH / 2f);
+            RectF wireRect = new RectF(wLeft, wTop, wLeft + wireW, wTop + wireH);
+
+            docWireframePaint.setColor(Color.argb(70, Color.red(accentColor), Color.green(accentColor), Color.blue(accentColor)));
+            canvas.drawRoundRect(wireRect, 3f, 3f, docWireframePaint);
+
+            // Draw mini document text lines in wireframe
+            Paint wireLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            wireLinePaint.setColor(primaryColor);
+            wireLinePaint.setStrokeWidth(2f);
+            float lineStep = wireRect.height() / 6f;
+            for (int i = 1; i <= 4; i++) {
+                float lineY = wireRect.top + (i * lineStep);
+                canvas.drawLine(wireRect.left + 6f, lineY, wireRect.right - 6f, lineY, wireLinePaint);
+            }
+
+            // 7. Label on Sheet (e.g. "A4 Sheet — Top Half")
+            textPaint.setColor(primaryColor);
+            textPaint.setTextSize(Math.max(18f, sheetRect.height() * 0.055f));
+            String statusText = paperSize.name() + " • " + activeRegion.title;
+            canvas.drawText(statusText, sheetRect.centerX(), sheetRect.bottom + 22f, textPaint);
         }
-        float wLeft = activeRegionRect.centerX() - (wireW / 2f);
-        float wTop = activeRegionRect.centerY() - (wireH / 2f);
-        RectF wireRect = new RectF(wLeft, wTop, wLeft + wireW, wTop + wireH);
-
-        docWireframePaint.setColor(Color.argb(70, Color.red(accentColor), Color.green(accentColor), Color.blue(accentColor)));
-        canvas.drawRoundRect(wireRect, 3f, 3f, docWireframePaint);
-
-        // Draw mini document text lines in wireframe
-        Paint wireLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        wireLinePaint.setColor(primaryColor);
-        wireLinePaint.setStrokeWidth(2f);
-        float lineStep = wireRect.height() / 6f;
-        for (int i = 1; i <= 4; i++) {
-            float lineY = wireRect.top + (i * lineStep);
-            canvas.drawLine(wireRect.left + 6f, lineY, wireRect.right - 6f, lineY, wireLinePaint);
-        }
-
-        // 7. Label on Sheet (e.g. "A4 Sheet — Top Half")
-        textPaint.setColor(primaryColor);
-        textPaint.setTextSize(Math.max(18f, sheetRect.height() * 0.055f));
-        String statusText = paperSize.name() + " • " + activeRegion.title;
-        canvas.drawText(statusText, sheetRect.centerX(), sheetRect.bottom + 22f, textPaint);
     }
 
     @Override

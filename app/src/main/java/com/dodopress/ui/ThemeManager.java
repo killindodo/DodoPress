@@ -8,15 +8,23 @@ import com.dodopress.R;
 public class ThemeManager {
 
     public enum AppTheme {
-        WINDOWS_XP("🪟 Windows XP"),
-        CYBERPUNK("⚡ Cyberpunk"),
-        DEEP_SLATE("🌙 Deep Slate"),
-        MATRIX("📟 Matrix"),
-        STUDIO_LIGHT("☀️ Studio Light");
+        MATRIX_CRT("🟢 Matrix CRT", "P1 Phosphor • 525nm Laser Terminal", "#00FF66", "#000000"),
+        AMBER_CRT("🟡 Amber CRT", "DEC VT220 • Warm P3 Vintage Terminal", "#FFB000", "#050300"),
+        CYBER_HUD("⚡ Cyber-HUD", "Tokyo Night • Neon Cyan & Hot Magenta", "#00F0FF", "#060913"),
+        TACTICAL_STEALTH("🎯 Stealth OLED", "Night Vision • Precision Laser Lime", "#A3E635", "#000000"),
+        SWISS_INDUSTRIAL("📐 Swiss Studio", "Dieter Rams • Basalt & Signal Orange", "#FF5500", "#121214"),
+        ARCTIC_GLACIER("❄️ Arctic Frost", "Nordic Deep Glass • Electric Glacier", "#38BDF8", "#080E1E");
 
         public final String title;
-        AppTheme(String title) {
+        public final String subtitle;
+        public final String previewAccentHex;
+        public final String previewBgHex;
+
+        AppTheme(String title, String subtitle, String previewAccentHex, String previewBgHex) {
             this.title = title;
+            this.subtitle = subtitle;
+            this.previewAccentHex = previewAccentHex;
+            this.previewBgHex = previewBgHex;
         }
     }
 
@@ -25,15 +33,16 @@ public class ThemeManager {
 
     public static AppTheme getTheme(Context ctx) {
         SharedPreferences sp = ctx.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String name = sp.getString(KEY_THEME, AppTheme.WINDOWS_XP.name());
+        String name = sp.getString(KEY_THEME, AppTheme.MATRIX_CRT.name());
         try {
             return AppTheme.valueOf(name);
         } catch (Exception e) {
-            // Handle legacy theme names gracefully
-            if ("MIDNIGHT".equals(name)) return AppTheme.DEEP_SLATE;
-            if ("CYBER".equals(name)) return AppTheme.CYBERPUNK;
-            if ("STUDIO".equals(name)) return AppTheme.STUDIO_LIGHT;
-            return AppTheme.WINDOWS_XP;
+            if ("MATRIX".equals(name)) return AppTheme.MATRIX_CRT;
+            if ("CYBERPUNK".equals(name) || "CYBER".equals(name)) return AppTheme.CYBER_HUD;
+            if ("DEEP_SLATE".equals(name) || "MIDNIGHT".equals(name)) return AppTheme.TACTICAL_STEALTH;
+            if ("STUDIO_LIGHT".equals(name) || "STUDIO".equals(name)) return AppTheme.SWISS_INDUSTRIAL;
+            if ("WINDOWS_XP".equals(name)) return AppTheme.MATRIX_CRT;
+            return AppTheme.MATRIX_CRT;
         }
     }
 
@@ -58,115 +67,108 @@ public class ThemeManager {
         public int chipTextColor;
         public int laserColor;
         public int beaconColor;
-        public boolean isLight;
-        public boolean isXp;
 
         public static ThemePalette forTheme(AppTheme theme) {
             ThemePalette p = new ThemePalette();
+            p.primaryButtonDrawableRes = R.drawable.btn_primary;
+            p.chipButtonDrawableRes = R.drawable.btn_chip;
+
             switch (theme) {
-                case WINDOWS_XP:
-                    p.bgColor = Color.parseColor("#ECE9D8");
-                    p.cardBgColor = Color.parseColor("#ECE9D8");
-                    p.cardBorderColor = Color.parseColor("#7F9DB9");
-                    p.cardDrawableRes = R.drawable.theme_card_xp;
-                    p.textHighColor = Color.parseColor("#000000");
-                    p.textMedColor = Color.parseColor("#333333");
-                    p.textMutedColor = Color.parseColor("#666666");
-                    p.brandPrimaryColor = Color.parseColor("#0055EA");
-                    p.accentColor = Color.parseColor("#003399");
-                    p.primaryButtonDrawableRes = R.drawable.theme_btn_xp_primary;
-                    p.chipButtonDrawableRes = R.drawable.theme_btn_xp;
-                    p.primaryButtonTextColor = Color.parseColor("#000000");
-                    p.chipTextColor = Color.parseColor("#000000");
-                    p.laserColor = Color.parseColor("#0055EA");
-                    p.beaconColor = Color.parseColor("#22C55E");
-                    p.isLight = true;
-                    p.isXp = true;
+                case AMBER_CRT:
+                    p.bgColor = Color.parseColor("#050300");
+                    p.cardBgColor = Color.parseColor("#120A02");
+                    p.cardBorderColor = Color.parseColor("#FFB000");
+                    p.cardDrawableRes = R.drawable.theme_card_amber;
+                    p.textHighColor = Color.parseColor("#FFB000");
+                    p.textMedColor = Color.parseColor("#FDBA74");
+                    p.textMutedColor = Color.parseColor("#9A3412");
+                    p.brandPrimaryColor = Color.parseColor("#FFB000");
+                    p.accentColor = Color.parseColor("#FF9100");
+                    p.primaryButtonTextColor = Color.parseColor("#050300");
+                    p.chipTextColor = Color.parseColor("#FFB000");
+                    p.laserColor = Color.parseColor("#FFB000");
+                    p.beaconColor = Color.parseColor("#FFB000");
                     break;
 
-                case CYBERPUNK:
-                    // Zezes DNA: Deep midnight, Neon Cyan #00F0FF, Hot Magenta #FF007F, Electric Purple #BC13FE
-                    p.bgColor = Color.parseColor("#0B0F19");
-                    p.cardBgColor = Color.parseColor("#121722");
+                case CYBER_HUD:
+                    p.bgColor = Color.parseColor("#060913");
+                    p.cardBgColor = Color.parseColor("#0B1220");
                     p.cardBorderColor = Color.parseColor("#00F0FF");
                     p.cardDrawableRes = R.drawable.theme_card_cyber;
                     p.textHighColor = Color.parseColor("#FFFFFF");
-                    p.textMedColor = Color.parseColor("#00F0FF");
-                    p.textMutedColor = Color.parseColor("#7E8B9B");
+                    p.textMedColor = Color.parseColor("#38BDF8");
+                    p.textMutedColor = Color.parseColor("#64748B");
                     p.brandPrimaryColor = Color.parseColor("#00F0FF");
                     p.accentColor = Color.parseColor("#FF007F");
-                    p.primaryButtonDrawableRes = R.drawable.btn_primary;
-                    p.chipButtonDrawableRes = R.drawable.btn_chip;
-                    p.primaryButtonTextColor = Color.parseColor("#000000");
+                    p.primaryButtonTextColor = Color.parseColor("#060913");
                     p.chipTextColor = Color.parseColor("#00F0FF");
                     p.laserColor = Color.parseColor("#FF007F");
                     p.beaconColor = Color.parseColor("#00F0FF");
-                    p.isLight = false;
-                    p.isXp = false;
                     break;
 
-                case MATRIX:
-                    // Pinion/Zezes DNA: Pure black, phosphor green #00FF66, CRT border
+                case TACTICAL_STEALTH:
                     p.bgColor = Color.parseColor("#000000");
-                    p.cardBgColor = Color.parseColor("#0A120D");
-                    p.cardBorderColor = Color.parseColor("#113322");
+                    p.cardBgColor = Color.parseColor("#11141A");
+                    p.cardBorderColor = Color.parseColor("#A3E635");
+                    p.cardDrawableRes = R.drawable.theme_card_stealth;
+                    p.textHighColor = Color.parseColor("#F8FAFC");
+                    p.textMedColor = Color.parseColor("#A3E635");
+                    p.textMutedColor = Color.parseColor("#64748B");
+                    p.brandPrimaryColor = Color.parseColor("#A3E635");
+                    p.accentColor = Color.parseColor("#4ADE80");
+                    p.primaryButtonTextColor = Color.parseColor("#000000");
+                    p.chipTextColor = Color.parseColor("#A3E635");
+                    p.laserColor = Color.parseColor("#A3E635");
+                    p.beaconColor = Color.parseColor("#A3E635");
+                    break;
+
+                case SWISS_INDUSTRIAL:
+                    p.bgColor = Color.parseColor("#121214");
+                    p.cardBgColor = Color.parseColor("#1C1C20");
+                    p.cardBorderColor = Color.parseColor("#FF5500");
+                    p.cardDrawableRes = R.drawable.theme_card_swiss;
+                    p.textHighColor = Color.parseColor("#F4F4F5");
+                    p.textMedColor = Color.parseColor("#D4D4D8");
+                    p.textMutedColor = Color.parseColor("#71717A");
+                    p.brandPrimaryColor = Color.parseColor("#FF5500");
+                    p.accentColor = Color.parseColor("#FAFAFA");
+                    p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
+                    p.chipTextColor = Color.parseColor("#F4F4F5");
+                    p.laserColor = Color.parseColor("#FF5500");
+                    p.beaconColor = Color.parseColor("#FF5500");
+                    break;
+
+                case ARCTIC_GLACIER:
+                    p.bgColor = Color.parseColor("#080E1E");
+                    p.cardBgColor = Color.parseColor("#0F1A34");
+                    p.cardBorderColor = Color.parseColor("#38BDF8");
+                    p.cardDrawableRes = R.drawable.theme_card_arctic;
+                    p.textHighColor = Color.parseColor("#F0F9FF");
+                    p.textMedColor = Color.parseColor("#BAE6FD");
+                    p.textMutedColor = Color.parseColor("#64748B");
+                    p.brandPrimaryColor = Color.parseColor("#38BDF8");
+                    p.accentColor = Color.parseColor("#67E8F9");
+                    p.primaryButtonTextColor = Color.parseColor("#080E1E");
+                    p.chipTextColor = Color.parseColor("#F0F9FF");
+                    p.laserColor = Color.parseColor("#38BDF8");
+                    p.beaconColor = Color.parseColor("#38BDF8");
+                    break;
+
+                case MATRIX_CRT:
+                default:
+                    p.bgColor = Color.parseColor("#000000");
+                    p.cardBgColor = Color.parseColor("#040D07");
+                    p.cardBorderColor = Color.parseColor("#00FF66");
                     p.cardDrawableRes = R.drawable.theme_card_matrix;
                     p.textHighColor = Color.parseColor("#00FF66");
-                    p.textMedColor = Color.parseColor("#00CC55");
-                    p.textMutedColor = Color.parseColor("#008833");
+                    p.textMedColor = Color.parseColor("#34D399");
+                    p.textMutedColor = Color.parseColor("#065F46");
                     p.brandPrimaryColor = Color.parseColor("#00FF66");
                     p.accentColor = Color.parseColor("#00E5FF");
-                    p.primaryButtonDrawableRes = R.drawable.btn_primary;
-                    p.chipButtonDrawableRes = R.drawable.btn_chip;
                     p.primaryButtonTextColor = Color.parseColor("#000000");
                     p.chipTextColor = Color.parseColor("#00FF66");
                     p.laserColor = Color.parseColor("#00FF66");
                     p.beaconColor = Color.parseColor("#00FF66");
-                    p.isLight = false;
-                    p.isXp = false;
-                    break;
-
-                case STUDIO_LIGHT:
-                    // Crisp light mode: ceramic paper white, navy text, royal blue accent
-                    p.bgColor = Color.parseColor("#F8FAFC");
-                    p.cardBgColor = Color.parseColor("#FFFFFF");
-                    p.cardBorderColor = Color.parseColor("#E2E8F0");
-                    p.cardDrawableRes = R.drawable.theme_card_studio;
-                    p.textHighColor = Color.parseColor("#0F172A");
-                    p.textMedColor = Color.parseColor("#475569");
-                    p.textMutedColor = Color.parseColor("#94A3B8");
-                    p.brandPrimaryColor = Color.parseColor("#0969DA");
-                    p.accentColor = Color.parseColor("#2563EB");
-                    p.primaryButtonDrawableRes = R.drawable.btn_primary;
-                    p.chipButtonDrawableRes = R.drawable.btn_chip;
-                    p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
-                    p.chipTextColor = Color.parseColor("#0F172A");
-                    p.laserColor = Color.parseColor("#0969DA");
-                    p.beaconColor = Color.parseColor("#10B981");
-                    p.isLight = true;
-                    p.isXp = false;
-                    break;
-
-                case DEEP_SLATE:
-                default:
-                    // Pinion DNA: Slate #0F172A, Card #1E293B, Border #334155, Sky Blue #38BDF8
-                    p.bgColor = Color.parseColor("#0F172A");
-                    p.cardBgColor = Color.parseColor("#1E293B");
-                    p.cardBorderColor = Color.parseColor("#334155");
-                    p.cardDrawableRes = R.drawable.theme_card_slate;
-                    p.textHighColor = Color.parseColor("#F8FAFC");
-                    p.textMedColor = Color.parseColor("#94A3B8");
-                    p.textMutedColor = Color.parseColor("#64748B");
-                    p.brandPrimaryColor = Color.parseColor("#38BDF8");
-                    p.accentColor = Color.parseColor("#818CF8");
-                    p.primaryButtonDrawableRes = R.drawable.btn_primary;
-                    p.chipButtonDrawableRes = R.drawable.btn_chip;
-                    p.primaryButtonTextColor = Color.parseColor("#0F172A");
-                    p.chipTextColor = Color.parseColor("#F8FAFC");
-                    p.laserColor = Color.parseColor("#38BDF8");
-                    p.beaconColor = Color.parseColor("#22C55E");
-                    p.isLight = false;
-                    p.isXp = false;
                     break;
             }
             return p;
