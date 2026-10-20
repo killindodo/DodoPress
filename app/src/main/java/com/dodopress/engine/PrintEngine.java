@@ -333,6 +333,7 @@ public class PrintEngine {
                 }
             }
         }
+        ppdFile.setReadable(true, false);
         return ppdFile;
     }
 }

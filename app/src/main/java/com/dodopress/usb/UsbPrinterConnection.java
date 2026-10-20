@@ -12,6 +12,7 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Build;
+import android.util.Log;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -122,27 +123,76 @@ public class UsbPrinterConnection {
         endpointIn = null;
         printerInterface = null;
 
+        UsbInterface selectedInterface = null;
+        UsbEndpoint selectedOut = null;
+        UsbEndpoint selectedIn = null;
+
+        // Pass 1: Prioritize standard USB_CLASS_PRINTER (Class 7) interface
+        // Critical for MFPs (like HP LaserJet M1005 MFP) where Interface 0 is Scanner and Interface 1 is Printer!
         for (int i = 0; i < device.getInterfaceCount(); i++) {
             UsbInterface iface = device.getInterface(i);
-            for (int e = 0; e < iface.getEndpointCount(); e++) {
-                UsbEndpoint ep = iface.getEndpoint(e);
-                if (ep.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
-                    if (ep.getDirection() == UsbConstants.USB_DIR_OUT && endpointOut == null) {
-                        endpointOut = ep;
-                        printerInterface = iface;
-                    } else if (ep.getDirection() == UsbConstants.USB_DIR_IN && endpointIn == null) {
-                        endpointIn = ep;
+            Log.d("DodoPress-USB", "Inspect interface " + i + ": class=" + iface.getInterfaceClass()
+                + ", subclass=" + iface.getInterfaceSubclass() + ", protocol=" + iface.getInterfaceProtocol()
+                + ", endpoints=" + iface.getEndpointCount());
+
+            if (iface.getInterfaceClass() == USB_CLASS_PRINTER) {
+                UsbEndpoint out = null;
+                UsbEndpoint in = null;
+                for (int e = 0; e < iface.getEndpointCount(); e++) {
+                    UsbEndpoint ep = iface.getEndpoint(e);
+                    if (ep.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                        if (ep.getDirection() == UsbConstants.USB_DIR_OUT && out == null) {
+                            out = ep;
+                        } else if (ep.getDirection() == UsbConstants.USB_DIR_IN && in == null) {
+                            in = ep;
+                        }
                     }
                 }
+                if (out != null) {
+                    selectedInterface = iface;
+                    selectedOut = out;
+                    selectedIn = in;
+                    Log.i("DodoPress-USB", "Successfully selected PRINTER class interface " + i + " (OUT endpoint: " + out.getEndpointNumber() + ")");
+                    break;
+                }
             }
-            if (endpointOut != null) break;
         }
 
-        if (printerInterface == null || endpointOut == null) {
+        // Pass 2: Fallback to any interface with bulk OUT endpoint if no class 7 interface found
+        if (selectedInterface == null) {
+            for (int i = 0; i < device.getInterfaceCount(); i++) {
+                UsbInterface iface = device.getInterface(i);
+                UsbEndpoint out = null;
+                UsbEndpoint in = null;
+                for (int e = 0; e < iface.getEndpointCount(); e++) {
+                    UsbEndpoint ep = iface.getEndpoint(e);
+                    if (ep.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                        if (ep.getDirection() == UsbConstants.USB_DIR_OUT && out == null) {
+                            out = ep;
+                        } else if (ep.getDirection() == UsbConstants.USB_DIR_IN && in == null) {
+                            in = ep;
+                        }
+                    }
+                }
+                if (out != null) {
+                    selectedInterface = iface;
+                    selectedOut = out;
+                    selectedIn = in;
+                    Log.w("DodoPress-USB", "Fallback: Selected non-printer interface " + i + " (OUT endpoint: " + out.getEndpointNumber() + ")");
+                    break;
+                }
+            }
+        }
+
+        if (selectedInterface == null || selectedOut == null) {
             connection.close();
             connection = null;
             throw new IOException("Could not find printer bulk OUT endpoint.");
         }
+
+        printerInterface = selectedInterface;
+        endpointOut = selectedOut;
+        endpointIn = selectedIn;
 
         if (!connection.claimInterface(printerInterface, true)) {
             connection.close();
