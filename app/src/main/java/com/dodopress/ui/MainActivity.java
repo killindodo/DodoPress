@@ -5,8 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.pdf.PdfRenderer;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
@@ -16,7 +18,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
@@ -56,10 +60,15 @@ public class MainActivity extends Activity {
     private PrintEngine printEngine;
     private BroadcastReceiver usbHotplugReceiver;
 
-    // Theming views
+    // Theming & Navigation views
     private ScrollView rootScrollView;
     private View layoutXpTitlebar;
     private View layoutModernHeader;
+
+    private Button btnDiagnostics;
+    private View layoutStatusCapsule;
+    private PulsingBeaconView viewBeacon;
+    private LaserScanView laserScanView;
 
     private Button btnThemeXp;
     private Button btnThemeMidnight;
@@ -67,6 +76,13 @@ public class MainActivity extends Activity {
     private Button btnThemeCyber;
     private Button btnThemeWarm;
 
+    // Recent Prints Shelf
+    private View cardRecents;
+    private LinearLayout layoutRecentsContainer;
+    private TextView tvRecentsTitle;
+    private TextView btnClearRecents;
+
+    // Cards
     private View cardDocPreview;
     private View cardTonerDensity;
     private View cardPageConfig;
@@ -164,6 +180,7 @@ public class MainActivity extends Activity {
         currentTheme = ThemeManager.getTheme(this);
         applyAppTheme(currentTheme);
 
+        renderRecentsShelf();
         handleIncomingIntent(getIntent());
     }
 
@@ -191,6 +208,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         refreshPrinterStatus();
+        renderRecentsShelf();
     }
 
     @Override
@@ -206,6 +224,16 @@ public class MainActivity extends Activity {
         rootScrollView = findViewById(com.dodopress.R.id.root_scroll_view);
         layoutXpTitlebar = findViewById(com.dodopress.R.id.layout_xp_titlebar);
         layoutModernHeader = findViewById(com.dodopress.R.id.layout_modern_header);
+
+        btnDiagnostics = findViewById(com.dodopress.R.id.btn_diagnostics);
+        layoutStatusCapsule = findViewById(com.dodopress.R.id.layout_status_capsule);
+        viewBeacon = findViewById(com.dodopress.R.id.view_beacon);
+        laserScanView = findViewById(com.dodopress.R.id.laser_scan_view);
+
+        cardRecents = findViewById(com.dodopress.R.id.card_recents);
+        layoutRecentsContainer = findViewById(com.dodopress.R.id.layout_recents_container);
+        tvRecentsTitle = findViewById(com.dodopress.R.id.tv_recents_title);
+        btnClearRecents = findViewById(com.dodopress.R.id.btn_clear_recents);
 
         btnThemeXp = findViewById(com.dodopress.R.id.btn_theme_xp);
         btnThemeMidnight = findViewById(com.dodopress.R.id.btn_theme_midnight);
@@ -278,6 +306,13 @@ public class MainActivity extends Activity {
     }
 
     private void setupListeners() {
+        btnDiagnostics.setOnClickListener(v -> DiagnosticLogManager.showDiagnosticDialog(this));
+
+        btnClearRecents.setOnClickListener(v -> {
+            RecentDocsManager.clearRecents(this);
+            renderRecentsShelf();
+        });
+
         btnThemeXp.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.WINDOWS_XP));
         btnThemeMidnight.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.MIDNIGHT));
         btnThemeStudio.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.STUDIO));
@@ -304,6 +339,9 @@ public class MainActivity extends Activity {
                 } else {
                     scheduleDarknessPreview(seekDarkness.getProgress());
                 }
+            }
+            if (laserScanView != null) {
+                laserScanView.triggerScan();
             }
         });
 
@@ -384,6 +422,69 @@ public class MainActivity extends Activity {
         cbCollate.setOnCheckedChangeListener((buttonView, isChecked) -> updatePageSummary());
 
         btnPrintNow.setOnClickListener(v -> startPrinting());
+
+        // Universal Tactile Spring Micro-Interactions
+        TouchFeedback.applyAll(
+            btnPickFile, btnPrintNow, btnDiagnostics,
+            btnTogglePreviewMode, btnQuickZoom, btnPrevPage, btnNextPage,
+            btnPresetDraft, btnPresetNormal, btnPresetDeep, btnPresetUltra,
+            btnCopiesMinus, btnCopiesPlus,
+            btnThemeXp, btnThemeMidnight, btnThemeStudio, btnThemeCyber, btnThemeWarm
+        );
+    }
+
+    private void renderRecentsShelf() {
+        List<RecentDocsManager.RecentItem> recents = RecentDocsManager.getRecents(this);
+        if (recents == null || recents.isEmpty()) {
+            cardRecents.setVisibility(View.GONE);
+            return;
+        }
+
+        cardRecents.setVisibility(View.VISIBLE);
+        layoutRecentsContainer.removeAllViews();
+
+        for (RecentDocsManager.RecentItem item : recents) {
+            LinearLayout itemCard = new LinearLayout(this);
+            itemCard.setOrientation(LinearLayout.VERTICAL);
+            itemCard.setBackgroundResource(com.dodopress.R.drawable.card_recent_item);
+            int pad = (int) (10 * getResources().getDisplayMetrics().density);
+            itemCard.setPadding(pad, pad, pad, pad);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                (int) (140 * getResources().getDisplayMetrics().density),
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+            itemCard.setLayoutParams(lp);
+
+            TextView tvName = new TextView(this);
+            tvName.setText(item.title);
+            tvName.setTextColor(Color.WHITE);
+            tvName.setTextSize(12);
+            tvName.setTypeface(Typeface.DEFAULT_BOLD);
+            tvName.setMaxLines(1);
+            tvName.setEllipsize(TextUtils.TruncateAt.END);
+
+            TextView tvInfo = new TextView(this);
+            tvInfo.setText(item.getSubtitle());
+            tvInfo.setTextColor(Color.parseColor("#94A3B8"));
+            tvInfo.setTextSize(10);
+            tvInfo.setPadding(0, 2, 0, 0);
+
+            itemCard.addView(tvName);
+            itemCard.addView(tvInfo);
+
+            TouchFeedback.apply(itemCard);
+            itemCard.setOnClickListener(v -> {
+                try {
+                    Uri uri = Uri.parse(item.uriString);
+                    loadPdfFromUri(uri);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Could not open document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            layoutRecentsContainer.addView(itemCard);
+        }
     }
 
     private void applyAppTheme(ThemeManager.AppTheme theme) {
@@ -393,6 +494,10 @@ public class MainActivity extends Activity {
 
         // 1. Root background
         rootScrollView.setBackgroundColor(p.bgColor);
+
+        if (laserScanView != null) {
+            laserScanView.setLaserColor(p.laserColor);
+        }
 
         // 2. XP titlebar vs Modern header
         if (p.isXp) {
@@ -598,13 +703,17 @@ public class MainActivity extends Activity {
         UsbDevice printer = usbPrinterConnection.findPrinter();
         if (printer != null) {
             String displayName = usbPrinterConnection.getPrinterDisplayName(printer);
-            tvPrinterStatus.setText("● " + displayName);
-            tvPrinterStatus.setBackgroundResource(com.dodopress.R.drawable.status_badge_connected);
-            tvPrinterStatus.setTextColor(getResources().getColor(com.dodopress.R.color.status_connected_text));
+            tvPrinterStatus.setText(displayName);
+            if (viewBeacon != null) viewBeacon.setBeaconColor(Color.parseColor("#10B981"));
+            layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_online);
+            tvPrinterStatus.setTextColor(Color.parseColor("#34D399"));
+            DiagnosticLogManager.log("USB", "Connected: " + displayName);
         } else {
-            tvPrinterStatus.setText("○ Connect USB OTG");
-            tvPrinterStatus.setBackgroundResource(com.dodopress.R.drawable.status_badge_waiting);
-            tvPrinterStatus.setTextColor(getResources().getColor(com.dodopress.R.color.status_waiting_text));
+            tvPrinterStatus.setText("Connect USB OTG");
+            if (viewBeacon != null) viewBeacon.setBeaconColor(Color.parseColor("#F59E0B"));
+            layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_offline);
+            tvPrinterStatus.setTextColor(Color.parseColor("#FBBF24"));
+            DiagnosticLogManager.log("USB", "Waiting for USB OTG cable connection...");
         }
     }
 
@@ -641,6 +750,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private String queryFileName(Uri uri) {
+        String result = null;
+        if ("content".equals(uri.getScheme())) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (nameIndex >= 0) {
+                        result = cursor.getString(nameIndex);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        if (result == null) {
+            result = uri.getLastPathSegment();
+        }
+        return (result != null && !result.isEmpty()) ? result : "Document.pdf";
+    }
+
     private void loadPdfFromUri(Uri uri) {
         try {
             closePdf();
@@ -661,14 +788,21 @@ public class MainActivity extends Activity {
             currentPageIndex = 0;
 
             long sizeKb = currentPdfFile.length() / 1024;
-            tvFileInfo.setText(totalPages + " Page" + (totalPages > 1 ? "s" : "") + " (" + sizeKb + " KB)");
+            String fileName = queryFileName(uri);
+            tvFileInfo.setText(fileName + " (" + totalPages + " Pages • " + sizeKb + " KB)");
             layoutPreviewContainer.setVisibility(View.VISIBLE);
+
+            RecentDocsManager.addDoc(this, uri, fileName, totalPages, sizeKb);
+            renderRecentsShelf();
+
+            DiagnosticLogManager.log("PDF", "Opened " + fileName + " (" + totalPages + " pages, " + sizeKb + " KB)");
 
             renderPageThumb();
             updatePageRangeLabels();
             updatePageSummary();
 
         } catch (Exception e) {
+            DiagnosticLogManager.logError("PDF", "Failed to load document", e);
             Toast.makeText(this, "Failed to read PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -700,6 +834,10 @@ public class MainActivity extends Activity {
 
             updatePageRangeLabels();
             scheduleDarknessPreview(seekDarkness.getProgress());
+
+            if (laserScanView != null) {
+                laserScanView.triggerScan();
+            }
 
         } catch (Exception e) {
             Toast.makeText(this, "Render thumbnail error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -856,12 +994,14 @@ public class MainActivity extends Activity {
 
         UsbDevice printer = usbPrinterConnection.findPrinter();
         if (printer == null) {
+            DiagnosticLogManager.log("PRINT", "No USB printer detected.");
             Toast.makeText(this, "No USB printer detected. Connect printer via USB OTG cable.", Toast.LENGTH_LONG).show();
             return;
         }
 
         if (!usbPrinterConnection.hasPermission(printer)) {
             usbPrinterConnection.requestPermission(printer, this::executePrintJob, () -> {
+                DiagnosticLogManager.log("USB", "Permission denied by user.");
                 Toast.makeText(this, "USB permission was denied.", Toast.LENGTH_SHORT).show();
             });
         } else {
@@ -880,6 +1020,8 @@ public class MainActivity extends Activity {
         int dpi = 300;
         boolean collate = cbCollate.isChecked();
 
+        DiagnosticLogManager.log("PRINT", "Initiating print job: " + pagesToPrint.size() + " pages, " + copies + " copies, darkness=" + darkness + "%");
+
         btnPrintNow.setEnabled(false);
         pbPrintProgress.setVisibility(View.VISIBLE);
         tvPrintStatus.setVisibility(View.VISIBLE);
@@ -889,6 +1031,7 @@ public class MainActivity extends Activity {
         printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, new PrintEngine.PrintProgressListener() {
             @Override
             public void onProgress(int currentPage, int total, String statusMessage) {
+                DiagnosticLogManager.log("PRINT", statusMessage);
                 runOnUiThread(() -> {
                     tvPrintStatus.setText(statusMessage);
                     if (total > 0) {
@@ -900,6 +1043,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onComplete() {
+                DiagnosticLogManager.log("PRINT", "Print job finished successfully!");
                 runOnUiThread(() -> {
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);
@@ -911,6 +1055,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onError(Exception e) {
+                DiagnosticLogManager.logError("PRINT", "Printing failed", e);
                 runOnUiThread(() -> {
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);

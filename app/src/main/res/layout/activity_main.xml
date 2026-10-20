@@ -79,7 +79,7 @@
                 android:layout_marginRight="4dp"/>
         </LinearLayout>
 
-        <!-- 2. Modern Top Header & USB Status (Active in Modern Themes) -->
+        <!-- 2. Modern Glass Top Navigation Bar -->
         <LinearLayout
             android:id="@+id/layout_modern_header"
             android:layout_width="match_parent"
@@ -88,6 +88,7 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
+            <!-- Brand Title & PRO Badge -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -108,7 +109,7 @@
                     android:id="@+id/tv_pro_badge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="8dp"
+                    android:layout_marginLeft="6dp"
                     android:background="@drawable/btn_chip"
                     android:paddingLeft="8dp"
                     android:paddingTop="2dp"
@@ -120,19 +121,44 @@
                     android:textColor="@color/brand_primary"/>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_printer_status"
+            <!-- Quick Telemetry & Diagnostics Pill -->
+            <Button
+                android:id="@+id/btn_diagnostics"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/status_badge_waiting"
-                android:paddingLeft="12dp"
-                android:paddingTop="6dp"
-                android:paddingRight="12dp"
-                android:paddingBottom="6dp"
-                android:text="○ Checking USB..."
-                android:textSize="12sp"
+                android:layout_height="32dp"
+                android:background="@drawable/btn_icon_pill"
+                android:text="⚡ Logs"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="@color/status_waiting_text"/>
+                android:textColor="@color/brand_primary"
+                android:layout_marginRight="6dp"/>
+
+            <!-- Animated Status Capsule with Living Beacon -->
+            <LinearLayout
+                android:id="@+id/layout_status_capsule"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/badge_status_offline"
+                android:paddingLeft="8dp"
+                android:paddingRight="10dp">
+
+                <com.dodopress.ui.PulsingBeaconView
+                    android:id="@+id/view_beacon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginRight="6dp"/>
+
+                <TextView
+                    android:id="@+id/tv_printer_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Checking USB..."
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/status_waiting_text"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- 3. Interactive Theme Switcher Bar (5 Themes) -->
@@ -216,7 +242,56 @@
             </HorizontalScrollView>
         </LinearLayout>
 
-        <!-- Card 1: Document Selection & Interactive Preview -->
+        <!-- 4. Recent Prints Shelf (Horizontal Carousel) -->
+        <LinearLayout
+            android:id="@+id/card_recents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <TextView
+                    android:id="@+id/tv_recents_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="📁 Recent Documents"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_high"/>
+
+                <TextView
+                    android:id="@+id/btn_clear_recents"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear"
+                    android:textSize="11sp"
+                    android:textColor="@color/brand_primary"
+                    android:padding="4dp"/>
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/layout_recents_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"/>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- 5. Hero Stage: Document Selection & Interactive Paper Canvas -->
         <LinearLayout
             android:id="@+id/card_doc_preview"
             android:layout_width="match_parent"
@@ -237,10 +312,11 @@
                 android:visibility="gone"
                 android:layout_marginBottom="6dp"/>
 
+            <!-- Document Upload Vault Button -->
             <Button
                 android:id="@+id/btn_pick_file"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="48dp"
                 android:background="@drawable/btn_primary"
                 android:text="@string/btn_select_document"
                 android:textColor="#FFFFFF"
@@ -266,7 +342,7 @@
                 android:visibility="gone"
                 android:layout_marginTop="12dp">
 
-                <!-- Preview Header & Interactive Tools -->
+                <!-- Floating Island Toolbar -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -309,7 +385,7 @@
                         android:text="🔍 Zoom"/>
                 </LinearLayout>
 
-                <!-- High-Resolution Paper Sheet Frame -->
+                <!-- High-Resolution Paper Sheet Frame with Laser Scan Overlay -->
                 <FrameLayout
                     android:id="@+id/frame_paper_preview"
                     android:layout_width="match_parent"
@@ -322,6 +398,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="#FFFFFF"/>
+
+                    <com.dodopress.ui.LaserScanView
+                        android:id="@+id/laser_scan_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone"/>
                 </FrameLayout>
 
                 <TextView
@@ -371,7 +453,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Card 2: Toner Density / PC Match Engine -->
+        <!-- 6. Card: Laser Toner Studio (PC Match Engine) -->
         <LinearLayout
             android:id="@+id/card_toner_density"
             android:layout_width="match_parent"
@@ -501,7 +583,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Card 3: Print Range & Hardware Configuration -->
+        <!-- 7. Card: Print Geometry, Copies & Page Range -->
         <LinearLayout
             android:id="@+id/card_page_config"
             android:layout_width="match_parent"
@@ -753,7 +835,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Live Print Status & Progress Bar -->
+        <!-- 8. Live Print Status & Progress Bar -->
         <ProgressBar
             android:id="@+id/pb_print_progress"
             style="?android:attr/progressBarStyleHorizontal"
@@ -775,7 +857,7 @@
             android:textSize="13sp"
             android:layout_marginBottom="10dp"/>
 
-        <!-- Primary Action Button -->
+        <!-- 9. Primary Action Button -->
         <Button
             android:id="@+id/btn_print_now"
             android:layout_width="match_parent"
@@ -787,7 +869,7 @@
             android:textStyle="bold"
             android:elevation="4dp"/>
 
-        <!-- 4. Proper Branding Footer -->
+        <!-- 10. Proper Branding Footer -->
         <LinearLayout
             android:id="@+id/card_footer"
             android:layout_width="match_parent"

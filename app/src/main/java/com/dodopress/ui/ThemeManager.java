@@ -3,13 +3,6 @@ package com.dodopress.ui;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import com.dodopress.R;
 
 public class ThemeManager {
@@ -54,6 +47,7 @@ public class ThemeManager {
         public int primaryButtonDrawableRes;
         public int chipButtonDrawableRes;
         public int primaryButtonTextColor;
+        public int laserColor;
         public boolean isXp;
 
         public static ThemePalette forTheme(AppTheme theme) {
@@ -68,6 +62,7 @@ public class ThemeManager {
                     p.primaryButtonDrawableRes = R.drawable.theme_btn_xp_primary;
                     p.chipButtonDrawableRes = R.drawable.theme_btn_xp;
                     p.primaryButtonTextColor = Color.parseColor("#000000");
+                    p.laserColor = Color.parseColor("#0055EA");
                     p.isXp = true;
                     break;
 
@@ -80,6 +75,7 @@ public class ThemeManager {
                     p.primaryButtonDrawableRes = R.drawable.btn_primary;
                     p.chipButtonDrawableRes = R.drawable.btn_chip;
                     p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
+                    p.laserColor = Color.parseColor("#2563EB");
                     p.isXp = false;
                     break;
 
@@ -92,6 +88,7 @@ public class ThemeManager {
                     p.primaryButtonDrawableRes = R.drawable.btn_primary;
                     p.chipButtonDrawableRes = R.drawable.btn_chip;
                     p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
+                    p.laserColor = Color.parseColor("#10B981");
                     p.isXp = false;
                     break;
 
@@ -104,6 +101,7 @@ public class ThemeManager {
                     p.primaryButtonDrawableRes = R.drawable.btn_primary;
                     p.chipButtonDrawableRes = R.drawable.btn_chip;
                     p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
+                    p.laserColor = Color.parseColor("#D97706");
                     p.isXp = false;
                     break;
 
@@ -117,6 +115,7 @@ public class ThemeManager {
                     p.primaryButtonDrawableRes = R.drawable.btn_primary;
                     p.chipButtonDrawableRes = R.drawable.btn_chip;
                     p.primaryButtonTextColor = Color.parseColor("#FFFFFF");
+                    p.laserColor = Color.parseColor("#38BDF8");
                     p.isXp = false;
                     break;
             }
