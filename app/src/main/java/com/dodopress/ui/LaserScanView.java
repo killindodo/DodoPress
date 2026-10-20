@@ -47,6 +47,7 @@ public class LaserScanView extends View {
 
     public void setLaserColor(int color) {
         this.laserColor = color;
+        invalidate();
     }
 
     public void triggerScan() {
@@ -80,6 +81,39 @@ public class LaserScanView extends View {
             }
         });
         scanAnimator.start();
+    }
+
+    public void startScan() {
+        if (getHeight() == 0) {
+            post(this::startScan);
+            return;
+        }
+        if (scanAnimator != null) {
+            scanAnimator.cancel();
+        }
+
+        isScanning = true;
+        setVisibility(View.VISIBLE);
+        setAlpha(1f);
+
+        scanAnimator = ValueAnimator.ofFloat(0f, getHeight());
+        scanAnimator.setDuration(1200);
+        scanAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        scanAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        scanAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        scanAnimator.addUpdateListener(animation -> {
+            scanY = (float) animation.getAnimatedValue();
+            invalidate();
+        });
+        scanAnimator.start();
+    }
+
+    public void stopScan() {
+        if (scanAnimator != null) {
+            scanAnimator.cancel();
+        }
+        isScanning = false;
+        setVisibility(View.GONE);
     }
 
     @Override

@@ -1,4 +1,5 @@
 <resources>
+    <!-- Deep Slate Default -->
     <color name="bg_dark">#0F172A</color>
     <color name="surface_card">#1E293B</color>
     <color name="surface_card_border">#334155</color>
@@ -23,4 +24,30 @@
     <color name="chip_selected_bg">#0284C7</color>
     <color name="chip_unselected_bg">#334155</color>
     <color name="slider_track">#475569</color>
+
+    <!-- Windows XP Luna -->
+    <color name="xp_bg">#ECE9D8</color>
+    <color name="xp_card">#ECE9D8</color>
+    <color name="xp_blue">#0055EA</color>
+    <color name="xp_dark_blue">#003399</color>
+    <color name="xp_border">#D0CDBB</color>
+
+    <!-- Cyberpunk Neon (Zezes DNA) -->
+    <color name="cyber_bg">#0B0F19</color>
+    <color name="cyber_card">#121722</color>
+    <color name="cyber_cyan">#00F0FF</color>
+    <color name="cyber_magenta">#FF007F</color>
+    <color name="cyber_purple">#BC13FE</color>
+
+    <!-- Matrix CRT Phosphor (Pinion/Zezes DNA) -->
+    <color name="matrix_bg">#000000</color>
+    <color name="matrix_card">#0A120D</color>
+    <color name="matrix_green">#00FF66</color>
+    <color name="matrix_border">#113322</color>
+
+    <!-- Studio Clean Light -->
+    <color name="studio_bg">#F8FAFC</color>
+    <color name="studio_card">#FFFFFF</color>
+    <color name="studio_blue">#0969DA</color>
+    <color name="studio_border">#E2E8F0</color>
 </resources>

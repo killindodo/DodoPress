@@ -88,7 +88,7 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <!-- Brand Title & PRO Badge -->
+            <!-- Brand Title & Animated Moving Logo -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -96,29 +96,56 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/tv_app_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DodoPress"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_high"/>
+                <com.dodopress.ui.AnimatedLogoView
+                    android:id="@+id/view_animated_logo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="10dp"/>
 
-                <TextView
-                    android:id="@+id/tv_pro_badge"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="6dp"
-                    android:background="@drawable/btn_chip"
-                    android:paddingLeft="8dp"
-                    android:paddingTop="2dp"
-                    android:paddingRight="8dp"
-                    android:paddingBottom="2dp"
-                    android:text="PRO"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/brand_primary"/>
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_app_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DodoPress"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_high"/>
+
+                        <TextView
+                            android:id="@+id/tv_pro_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="6dp"
+                            android:background="@drawable/btn_chip"
+                            android:paddingLeft="6dp"
+                            android:paddingTop="2dp"
+                            android:paddingRight="6dp"
+                            android:paddingBottom="2dp"
+                            android:text="PRO"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_app_subtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Universal Laser Print Engine"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_muted"/>
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Quick Telemetry & Diagnostics Pill -->
@@ -201,11 +228,31 @@
                         android:layout_marginRight="6dp"/>
 
                     <Button
-                        android:id="@+id/btn_theme_midnight"
+                        android:id="@+id/btn_theme_cyber"
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:background="@drawable/btn_theme_chip"
-                        android:text="🌙 Midnight"
+                        android:text="⚡ Cyberpunk"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_slate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="🌙 Deep Slate"
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginRight="6dp"/>
+
+                    <Button
+                        android:id="@+id/btn_theme_matrix"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_theme_chip"
+                        android:text="📟 Matrix"
                         android:textSize="11sp"
                         android:textColor="@color/text_med"
                         android:layout_marginRight="6dp"/>
@@ -215,27 +262,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="32dp"
                         android:background="@drawable/btn_theme_chip"
-                        android:text="☀️ Studio"
-                        android:textSize="11sp"
-                        android:textColor="@color/text_med"
-                        android:layout_marginRight="6dp"/>
-
-                    <Button
-                        android:id="@+id/btn_theme_cyber"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:background="@drawable/btn_theme_chip"
-                        android:text="⚡ Cyber"
-                        android:textSize="11sp"
-                        android:textColor="@color/text_med"
-                        android:layout_marginRight="6dp"/>
-
-                    <Button
-                        android:id="@+id/btn_theme_warm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="32dp"
-                        android:background="@drawable/btn_theme_chip"
-                        android:text="📜 Vintage"
+                        android:text="☀️ Studio Light"
                         android:textSize="11sp"
                         android:textColor="@color/text_med"/>
                 </LinearLayout>
@@ -583,7 +610,219 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 7. Card: Print Geometry, Copies & Page Range -->
+        <!-- 7. Advanced Sheet Geometry & Partial-Page Placement Stage (NEW) -->
+        <LinearLayout
+            android:id="@+id/card_geometry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tv_xp_group_geometry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="── Paper Geometry &amp; Partial-Page Placement ──"
+                android:textColor="#003399"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:layout_marginBottom="6dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_geometry_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="📐 Paper Size &amp; Placement Region"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_high"/>
+
+                <TextView
+                    android:id="@+id/tv_geometry_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="A4 • Full Page"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_primary"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_geometry_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Freedom to print in the half part or quadrants. Aspect ratio is strictly locked to prevent stretching or distortion."
+                android:textSize="12sp"
+                android:textColor="@color/text_med"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Paper Size Selector Chips -->
+            <TextView
+                android:id="@+id/label_paper_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PHYSICAL PAPER SIZE:"
+                android:letterSpacing="0.08"
+                android:textColor="@color/text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp">
+
+                <Button
+                    android:id="@+id/btn_paper_a4"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/btn_primary"
+                    android:text="A4"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"/>
+
+                <Button
+                    android:id="@+id/btn_paper_letter"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/btn_chip"
+                    android:text="Letter"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"/>
+
+                <Button
+                    android:id="@+id/btn_paper_legal"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="4dp"
+                    android:background="@drawable/btn_chip"
+                    android:text="Legal"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"/>
+
+                <Button
+                    android:id="@+id/btn_paper_a5"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_chip"
+                    android:text="A5"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"/>
+            </LinearLayout>
+
+            <!-- Graphical Interactive Sheet View -->
+            <com.dodopress.ui.SheetGeometrySelectorView
+                android:id="@+id/view_sheet_geometry"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"/>
+
+            <!-- Quick Placement Preset Chips -->
+            <TextView
+                android:id="@+id/label_placement_preset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="QUICK PLACEMENT REGIONS:"
+                android:letterSpacing="0.08"
+                android:textColor="@color/text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_place_full"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginRight="4dp"
+                        android:background="@drawable/btn_primary"
+                        android:text="📄 Full Page"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"/>
+
+                    <Button
+                        android:id="@+id/btn_place_top_half"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginRight="4dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="⬆️ Top Half"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_med"/>
+
+                    <Button
+                        android:id="@+id/btn_place_bottom_half"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginRight="4dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="⬇️ Bottom Half"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_med"/>
+
+                    <Button
+                        android:id="@+id/btn_place_left_half"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginRight="4dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="⬅️ Left Half"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_med"/>
+
+                    <Button
+                        android:id="@+id/btn_place_right_half"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginRight="4dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="➡️ Right Half"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_med"/>
+
+                    <Button
+                        android:id="@+id/btn_place_quad_tl"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_chip"
+                        android:text="↖️ Top-Left (1/4)"
+                        android:textSize="10sp"
+                        android:textColor="@color/text_med"/>
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <!-- 8. Card: Print Copies & Page Range -->
         <LinearLayout
             android:id="@+id/card_page_config"
             android:layout_width="match_parent"
@@ -835,7 +1074,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 8. Live Print Status & Progress Bar -->
+        <!-- 9. Live Print Status & Progress Bar -->
         <ProgressBar
             android:id="@+id/pb_print_progress"
             style="?android:attr/progressBarStyleHorizontal"
@@ -857,7 +1096,7 @@
             android:textSize="13sp"
             android:layout_marginBottom="10dp"/>
 
-        <!-- 9. Primary Action Button -->
+        <!-- 10. Primary Action Button -->
         <Button
             android:id="@+id/btn_print_now"
             android:layout_width="match_parent"
@@ -869,7 +1108,7 @@
             android:textStyle="bold"
             android:elevation="4dp"/>
 
-        <!-- 10. Proper Branding Footer -->
+        <!-- 11. Proper Branding Footer -->
         <LinearLayout
             android:id="@+id/card_footer"
             android:layout_width="match_parent"

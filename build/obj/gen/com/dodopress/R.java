@@ -9,25 +9,58 @@ package com.dodopress;
 
 public final class R {
   public static final class color {
+    /**
+     * Deep Slate Default
+     */
     public static final int bg_dark=0x7f010000;
     public static final int brand_accent=0x7f010001;
     public static final int brand_primary=0x7f010002;
     public static final int brand_primary_dark=0x7f010003;
     public static final int chip_selected_bg=0x7f010004;
     public static final int chip_unselected_bg=0x7f010005;
-    public static final int slider_track=0x7f010006;
-    public static final int status_connected_bg=0x7f010007;
-    public static final int status_connected_stroke=0x7f010008;
-    public static final int status_connected_text=0x7f010009;
-    public static final int status_waiting_bg=0x7f01000a;
-    public static final int status_waiting_stroke=0x7f01000b;
-    public static final int status_waiting_text=0x7f01000c;
-    public static final int surface_card=0x7f01000d;
-    public static final int surface_card_border=0x7f01000e;
-    public static final int surface_secondary=0x7f01000f;
-    public static final int text_high=0x7f010010;
-    public static final int text_med=0x7f010011;
-    public static final int text_muted=0x7f010012;
+    /**
+     * Cyberpunk Neon (Zezes DNA)
+     */
+    public static final int cyber_bg=0x7f010006;
+    public static final int cyber_card=0x7f010007;
+    public static final int cyber_cyan=0x7f010008;
+    public static final int cyber_magenta=0x7f010009;
+    public static final int cyber_purple=0x7f01000a;
+    /**
+     * Matrix CRT Phosphor (Pinion/Zezes DNA)
+     */
+    public static final int matrix_bg=0x7f01000b;
+    public static final int matrix_border=0x7f01000c;
+    public static final int matrix_card=0x7f01000d;
+    public static final int matrix_green=0x7f01000e;
+    public static final int slider_track=0x7f01000f;
+    public static final int status_connected_bg=0x7f010010;
+    public static final int status_connected_stroke=0x7f010011;
+    public static final int status_connected_text=0x7f010012;
+    public static final int status_waiting_bg=0x7f010013;
+    public static final int status_waiting_stroke=0x7f010014;
+    public static final int status_waiting_text=0x7f010015;
+    /**
+     * Studio Clean Light
+     */
+    public static final int studio_bg=0x7f010016;
+    public static final int studio_blue=0x7f010017;
+    public static final int studio_border=0x7f010018;
+    public static final int studio_card=0x7f010019;
+    public static final int surface_card=0x7f01001a;
+    public static final int surface_card_border=0x7f01001b;
+    public static final int surface_secondary=0x7f01001c;
+    public static final int text_high=0x7f01001d;
+    public static final int text_med=0x7f01001e;
+    public static final int text_muted=0x7f01001f;
+    /**
+     * Windows XP Luna
+     */
+    public static final int xp_bg=0x7f010020;
+    public static final int xp_blue=0x7f010021;
+    public static final int xp_border=0x7f010022;
+    public static final int xp_card=0x7f010023;
+    public static final int xp_dark_blue=0x7f010024;
   }
   public static final class drawable {
     public static final int badge_info=0x7f020000;
@@ -53,11 +86,13 @@ public final class R {
     public static final int theme_btn_xp=0x7f020014;
     public static final int theme_btn_xp_primary=0x7f020015;
     public static final int theme_card_cyber=0x7f020016;
-    public static final int theme_card_midnight=0x7f020017;
-    public static final int theme_card_studio=0x7f020018;
-    public static final int theme_card_warm=0x7f020019;
-    public static final int theme_card_xp=0x7f02001a;
-    public static final int theme_titlebar_xp=0x7f02001b;
+    public static final int theme_card_matrix=0x7f020017;
+    public static final int theme_card_midnight=0x7f020018;
+    public static final int theme_card_slate=0x7f020019;
+    public static final int theme_card_studio=0x7f02001a;
+    public static final int theme_card_warm=0x7f02001b;
+    public static final int theme_card_xp=0x7f02001c;
+    public static final int theme_titlebar_xp=0x7f02001d;
   }
   public static final class id {
     public static final int btn_clear_recents=0x7f030000;
@@ -65,75 +100,95 @@ public final class R {
     public static final int btn_copies_plus=0x7f030002;
     public static final int btn_diagnostics=0x7f030003;
     public static final int btn_next_page=0x7f030004;
-    public static final int btn_pick_file=0x7f030005;
-    public static final int btn_preset_deep=0x7f030006;
-    public static final int btn_preset_draft=0x7f030007;
-    public static final int btn_preset_normal=0x7f030008;
-    public static final int btn_preset_ultra=0x7f030009;
-    public static final int btn_prev_page=0x7f03000a;
-    public static final int btn_print_now=0x7f03000b;
-    public static final int btn_quick_zoom=0x7f03000c;
-    public static final int btn_theme_cyber=0x7f03000d;
-    public static final int btn_theme_midnight=0x7f03000e;
-    public static final int btn_theme_studio=0x7f03000f;
-    public static final int btn_theme_warm=0x7f030010;
-    public static final int btn_theme_xp=0x7f030011;
-    public static final int btn_toggle_preview_mode=0x7f030012;
-    public static final int card_doc_preview=0x7f030013;
-    public static final int card_footer=0x7f030014;
-    public static final int card_page_config=0x7f030015;
-    public static final int card_recents=0x7f030016;
-    public static final int card_toner_density=0x7f030017;
-    public static final int cb_collate=0x7f030018;
-    public static final int cb_reverse_order=0x7f030019;
-    public static final int et_custom_pages=0x7f03001a;
-    public static final int frame_paper_preview=0x7f03001b;
-    public static final int iv_page_preview=0x7f03001c;
-    public static final int laser_scan_view=0x7f03001d;
-    public static final int layout_custom_range=0x7f03001e;
-    public static final int layout_engine_badge=0x7f03001f;
-    public static final int layout_modern_header=0x7f030020;
-    public static final int layout_page_summary_badge=0x7f030021;
-    public static final int layout_preview_container=0x7f030022;
-    public static final int layout_recents_container=0x7f030023;
-    public static final int layout_status_capsule=0x7f030024;
-    public static final int layout_xp_titlebar=0x7f030025;
-    public static final int pb_print_progress=0x7f030026;
-    public static final int rb_pages_all=0x7f030027;
-    public static final int rb_pages_current=0x7f030028;
-    public static final int rb_pages_custom=0x7f030029;
-    public static final int rb_pages_even=0x7f03002a;
-    public static final int rb_pages_odd=0x7f03002b;
-    public static final int rg_pages=0x7f03002c;
-    public static final int root_linear_layout=0x7f03002d;
-    public static final int root_scroll_view=0x7f03002e;
-    public static final int seek_darkness=0x7f03002f;
-    public static final int tv_app_title=0x7f030030;
-    public static final int tv_copies_count=0x7f030031;
-    public static final int tv_copies_title=0x7f030032;
-    public static final int tv_darkness_label=0x7f030033;
-    public static final int tv_darkness_pct=0x7f030034;
-    public static final int tv_density_desc=0x7f030035;
-    public static final int tv_density_title=0x7f030036;
-    public static final int tv_engine_info=0x7f030037;
-    public static final int tv_engine_tag=0x7f030038;
-    public static final int tv_file_info=0x7f030039;
-    public static final int tv_footer_branding=0x7f03003a;
-    public static final int tv_footer_sub=0x7f03003b;
-    public static final int tv_page_indicator=0x7f03003c;
-    public static final int tv_page_summary=0x7f03003d;
-    public static final int tv_pages_title=0x7f03003e;
-    public static final int tv_preview_mode_badge=0x7f03003f;
-    public static final int tv_print_status=0x7f030040;
-    public static final int tv_printer_status=0x7f030041;
-    public static final int tv_pro_badge=0x7f030042;
-    public static final int tv_recents_title=0x7f030043;
-    public static final int tv_theme_label=0x7f030044;
-    public static final int tv_xp_group_density=0x7f030045;
-    public static final int tv_xp_group_doc=0x7f030046;
-    public static final int tv_xp_group_pages=0x7f030047;
-    public static final int tv_zoom_hint=0x7f030048;
-    public static final int view_beacon=0x7f030049;
+    public static final int btn_paper_a4=0x7f030005;
+    public static final int btn_paper_a5=0x7f030006;
+    public static final int btn_paper_legal=0x7f030007;
+    public static final int btn_paper_letter=0x7f030008;
+    public static final int btn_pick_file=0x7f030009;
+    public static final int btn_place_bottom_half=0x7f03000a;
+    public static final int btn_place_full=0x7f03000b;
+    public static final int btn_place_left_half=0x7f03000c;
+    public static final int btn_place_quad_tl=0x7f03000d;
+    public static final int btn_place_right_half=0x7f03000e;
+    public static final int btn_place_top_half=0x7f03000f;
+    public static final int btn_preset_deep=0x7f030010;
+    public static final int btn_preset_draft=0x7f030011;
+    public static final int btn_preset_normal=0x7f030012;
+    public static final int btn_preset_ultra=0x7f030013;
+    public static final int btn_prev_page=0x7f030014;
+    public static final int btn_print_now=0x7f030015;
+    public static final int btn_quick_zoom=0x7f030016;
+    public static final int btn_theme_cyber=0x7f030017;
+    public static final int btn_theme_matrix=0x7f030018;
+    public static final int btn_theme_slate=0x7f030019;
+    public static final int btn_theme_studio=0x7f03001a;
+    public static final int btn_theme_xp=0x7f03001b;
+    public static final int btn_toggle_preview_mode=0x7f03001c;
+    public static final int card_doc_preview=0x7f03001d;
+    public static final int card_footer=0x7f03001e;
+    public static final int card_geometry=0x7f03001f;
+    public static final int card_page_config=0x7f030020;
+    public static final int card_recents=0x7f030021;
+    public static final int card_toner_density=0x7f030022;
+    public static final int cb_collate=0x7f030023;
+    public static final int cb_reverse_order=0x7f030024;
+    public static final int et_custom_pages=0x7f030025;
+    public static final int frame_paper_preview=0x7f030026;
+    public static final int iv_page_preview=0x7f030027;
+    public static final int label_paper_size=0x7f030028;
+    public static final int label_placement_preset=0x7f030029;
+    public static final int laser_scan_view=0x7f03002a;
+    public static final int layout_custom_range=0x7f03002b;
+    public static final int layout_engine_badge=0x7f03002c;
+    public static final int layout_modern_header=0x7f03002d;
+    public static final int layout_page_summary_badge=0x7f03002e;
+    public static final int layout_preview_container=0x7f03002f;
+    public static final int layout_recents_container=0x7f030030;
+    public static final int layout_status_capsule=0x7f030031;
+    public static final int layout_xp_titlebar=0x7f030032;
+    public static final int pb_print_progress=0x7f030033;
+    public static final int rb_pages_all=0x7f030034;
+    public static final int rb_pages_current=0x7f030035;
+    public static final int rb_pages_custom=0x7f030036;
+    public static final int rb_pages_even=0x7f030037;
+    public static final int rb_pages_odd=0x7f030038;
+    public static final int rg_pages=0x7f030039;
+    public static final int root_linear_layout=0x7f03003a;
+    public static final int root_scroll_view=0x7f03003b;
+    public static final int seek_darkness=0x7f03003c;
+    public static final int tv_app_subtitle=0x7f03003d;
+    public static final int tv_app_title=0x7f03003e;
+    public static final int tv_copies_count=0x7f03003f;
+    public static final int tv_copies_title=0x7f030040;
+    public static final int tv_darkness_label=0x7f030041;
+    public static final int tv_darkness_pct=0x7f030042;
+    public static final int tv_density_desc=0x7f030043;
+    public static final int tv_density_title=0x7f030044;
+    public static final int tv_engine_info=0x7f030045;
+    public static final int tv_engine_tag=0x7f030046;
+    public static final int tv_file_info=0x7f030047;
+    public static final int tv_footer_branding=0x7f030048;
+    public static final int tv_footer_sub=0x7f030049;
+    public static final int tv_geometry_badge=0x7f03004a;
+    public static final int tv_geometry_desc=0x7f03004b;
+    public static final int tv_geometry_title=0x7f03004c;
+    public static final int tv_page_indicator=0x7f03004d;
+    public static final int tv_page_summary=0x7f03004e;
+    public static final int tv_pages_title=0x7f03004f;
+    public static final int tv_preview_mode_badge=0x7f030050;
+    public static final int tv_print_status=0x7f030051;
+    public static final int tv_printer_status=0x7f030052;
+    public static final int tv_pro_badge=0x7f030053;
+    public static final int tv_recents_title=0x7f030054;
+    public static final int tv_theme_label=0x7f030055;
+    public static final int tv_xp_group_density=0x7f030056;
+    public static final int tv_xp_group_doc=0x7f030057;
+    public static final int tv_xp_group_geometry=0x7f030058;
+    public static final int tv_xp_group_pages=0x7f030059;
+    public static final int tv_zoom_hint=0x7f03005a;
+    public static final int view_animated_logo=0x7f03005b;
+    public static final int view_beacon=0x7f03005c;
+    public static final int view_sheet_geometry=0x7f03005d;
   }
   public static final class layout {
     public static final int activity_main=0x7f040000;

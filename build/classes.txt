@@ -4,6 +4,9 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/PrintEngine.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/PrintEngine$PrintProgressListener.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/ToneEngine.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/SheetGeometry.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/SheetGeometry$PaperSize.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/engine/SheetGeometry$PlacementRegion.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$style.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/R$layout.class
@@ -17,8 +20,10 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$3.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/LaserScanView.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/PulsingBeaconView.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/SheetGeometrySelectorView.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/LaserScanView$1.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/RecentDocsManager.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/AnimatedLogoView.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView$ScaleListener.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView$GestureListener.class
@@ -26,6 +31,7 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/TouchFeedback.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$4.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/SheetGeometrySelectorView$OnRegionSelectedListener.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ThemeManager$ThemePalette.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$1.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/DiagnosticLogManager.class

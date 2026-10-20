@@ -2,6 +2,8 @@ package com.dodopress.engine;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 import com.dodopress.cups.CupsRasterWriter;
@@ -44,10 +46,16 @@ public class PrintEngine {
         for (int i = from; i <= to; i++) {
             pages.add(i);
         }
-        printPdf(pdfFile, darkness, dpi, copies, true, pages, listener);
+        printPdf(pdfFile, darkness, dpi, copies, true, pages, SheetGeometry.PaperSize.A4, SheetGeometry.PlacementRegion.FULL_PAGE, listener);
     }
 
     public void printPdf(File pdfFile, int darkness, int dpi, int copies, boolean collate, List<Integer> pageIndices, PrintProgressListener listener) {
+        printPdf(pdfFile, darkness, dpi, copies, collate, pageIndices, SheetGeometry.PaperSize.A4, SheetGeometry.PlacementRegion.FULL_PAGE, listener);
+    }
+
+    public void printPdf(File pdfFile, int darkness, int dpi, int copies, boolean collate, List<Integer> pageIndices,
+                         SheetGeometry.PaperSize paperSize, SheetGeometry.PlacementRegion placementRegion,
+                         PrintProgressListener listener) {
         new Thread(() -> {
             ParcelFileDescriptor pfd = null;
             PdfRenderer renderer = null;
@@ -81,14 +89,14 @@ public class PrintEngine {
                 // 4. Set up JNI pipes and execute filter
                 drv = new DrvRuntime.libhplip();
                 int[] pipes = new int[3];
-                // Note: we pass copies "1" to hpcups filter because our loop delivers the exact page sequence
+                String paperArg = (paperSize != null) ? paperSize.name() : "A4";
                 String[] args = new String[] {
                     libFile.getAbsolutePath(),
                     "1", // Job ID
                     "android", // User
                     "DodoPress", // Title
                     "1", // Copies per page header
-                    "PageSize=A4 OutputMode=Normal Resolution=" + dpi + "dpi"
+                    "PageSize=" + paperArg + " OutputMode=Normal Resolution=" + dpi + "dpi"
                 };
                 // env array MUST be alternating (key, value) pairs for setenv(key, val, 1)
                 String[] env = new String[] {
@@ -171,6 +179,7 @@ public class PrintEngine {
                 int numCopies = Math.max(1, copies);
                 int totalSheets = validPages.size() * numCopies;
                 int currentSheet = 0;
+                int[] metrics = new int[4];
 
                 if (collate || numCopies == 1) {
                     // Collate: Full document set (Copy 1), then full document set (Copy 2)...
@@ -182,23 +191,18 @@ public class PrintEngine {
                             if (listener != null) {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
-                            renderAndStreamPage(renderer, pageIdx, dpi, darkness, filterIn);
+                            Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, metrics);
+                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3]);
+                            filterIn.flush();
+                            ToneEngine.streamBitmapTo1BitRaster(sheetBitmap, darkness, filterIn);
+                            sheetBitmap.recycle();
+                            System.gc();
                         }
                     }
                 } else {
                     // Uncollated: Page 1 (Copy 1, Copy 2...), then Page 2 (Copy 1, Copy 2...)...
                     for (int pageIdx : validPages) {
-                        PdfRenderer.Page page = renderer.openPage(pageIdx);
-                        int pagePtsW = page.getWidth();
-                        int pagePtsH = page.getHeight();
-                        int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
-                        int pixelW = (targetW + 31) & ~31; // Align to 32 pixels for JBIG word alignment
-                        int pixelH = ((int) Math.round((pagePtsH / 72.0) * dpi)) & ~1; // Even line count
-
-                        Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
-                        pageBitmap.eraseColor(0xFFFFFFFF);
-                        page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
-                        page.close();
+                        Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, metrics);
 
                         for (int c = 1; c <= numCopies; c++) {
                             currentSheet++;
@@ -207,11 +211,11 @@ public class PrintEngine {
                             if (listener != null) {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
-                            CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, pagePtsW, pagePtsH);
+                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3]);
                             filterIn.flush();
-                            ToneEngine.streamBitmapTo1BitRaster(pageBitmap, darkness, filterIn);
+                            ToneEngine.streamBitmapTo1BitRaster(sheetBitmap, darkness, filterIn);
                         }
-                        pageBitmap.recycle();
+                        sheetBitmap.recycle();
                         System.gc();
                     }
                 }
@@ -230,7 +234,6 @@ public class PrintEngine {
                 // 9. Wait for pump thread and filter completion
                 if (listener != null) listener.onProgress(totalSheets, totalSheets, "Flushing printer buffer...");
 
-                // Wait up to 35 seconds for pump thread to finish transferring all data
                 pumpThread.join(35000);
                 if (pumpThread.isAlive()) {
                     Log.w("DodoPress-Pump", "Pump thread timed out after 35s; terminating filter.");
@@ -241,7 +244,7 @@ public class PrintEngine {
                 }
 
                 int exitCode = drv.procWait(procHandle);
-                procHandle = 0; // procWait frees the native handle; prevent procDestroy from double-freeing
+                procHandle = 0;
 
                 if (exitCode != 0) {
                     Log.w("DodoPress-hpcups", "Filter exited with non-zero code: " + exitCode);
@@ -273,25 +276,57 @@ public class PrintEngine {
         }).start();
     }
 
-    private void renderAndStreamPage(PdfRenderer renderer, int pageIdx, int dpi, int darkness, OutputStream filterIn) throws IOException {
+    private Bitmap createPageOrSheetBitmap(PdfRenderer renderer, int pageIdx, int dpi,
+                                           SheetGeometry.PaperSize paperSize, SheetGeometry.PlacementRegion region,
+                                           int[] outMetrics) {
         PdfRenderer.Page page = renderer.openPage(pageIdx);
         int pagePtsW = page.getWidth();
         int pagePtsH = page.getHeight();
-        int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
-        int pixelW = (targetW + 31) & ~31; // Align to 32 pixels for JBIG word alignment
-        int pixelH = ((int) Math.round((pagePtsH / 72.0) * dpi)) & ~1; // Even line count
 
-        Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
-        pageBitmap.eraseColor(0xFFFFFFFF);
-        page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
-        page.close();
+        if (paperSize == null || region == null || region == SheetGeometry.PlacementRegion.FULL_PAGE) {
+            int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
+            int pixelW = (targetW + 31) & ~31;
+            int pixelH = ((int) Math.round((pagePtsH / 72.0) * dpi)) & ~1;
 
-        CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, pagePtsW, pagePtsH);
-        filterIn.flush();
+            outMetrics[0] = pixelW;
+            outMetrics[1] = pixelH;
+            outMetrics[2] = pagePtsW;
+            outMetrics[3] = pagePtsH;
 
-        ToneEngine.streamBitmapTo1BitRaster(pageBitmap, darkness, filterIn);
-        pageBitmap.recycle();
-        System.gc();
+            Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
+            pageBitmap.eraseColor(0xFFFFFFFF);
+            page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+            page.close();
+            return pageBitmap;
+        } else {
+            int sheetPixelW = paperSize.getPixelWidth(dpi);
+            int sheetPixelH = paperSize.getPixelHeight(dpi);
+            int sheetPtsW = paperSize.widthPts;
+            int sheetPtsH = paperSize.heightPts;
+
+            outMetrics[0] = sheetPixelW;
+            outMetrics[1] = sheetPixelH;
+            outMetrics[2] = sheetPtsW;
+            outMetrics[3] = sheetPtsH;
+
+            Bitmap sheetBitmap = Bitmap.createBitmap(sheetPixelW, sheetPixelH, Bitmap.Config.ARGB_8888);
+            sheetBitmap.eraseColor(0xFFFFFFFF);
+
+            Rect targetBox = SheetGeometry.getTargetBox(region, sheetPixelW, sheetPixelH);
+            int margin = (int) (dpi * 0.15f); // 0.15 inch hardware safety margin
+            Rect destRect = SheetGeometry.calculateAspectFit(pagePtsW, pagePtsH, targetBox, margin);
+
+            Bitmap docBitmap = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+            docBitmap.eraseColor(0xFFFFFFFF);
+            page.render(docBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+            page.close();
+
+            Canvas canvas = new Canvas(sheetBitmap);
+            canvas.drawBitmap(docBitmap, destRect.left, destRect.top, null);
+            docBitmap.recycle();
+
+            return sheetBitmap;
+        }
     }
 
     private File prepareNativeLibrary() throws IOException {
@@ -301,7 +336,6 @@ public class PrintEngine {
             return libFile;
         }
 
-        // Fallback: extract to app internal files directory
         File internalLib = new File(context.getFilesDir(), "libhplip.so");
         if (!internalLib.exists() || internalLib.length() == 0) {
             try (InputStream in = context.getAssets().open("libhplip.so");
@@ -312,7 +346,6 @@ public class PrintEngine {
                     out.write(buf, 0, len);
                 }
             } catch (Exception e) {
-                // If not in assets, try copying from lib/arm64-v8a in apk
                 if (libFile.exists()) {
                     return libFile;
                 }
