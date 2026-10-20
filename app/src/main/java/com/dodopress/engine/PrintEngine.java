@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import android.util.Log;
 
@@ -36,6 +38,16 @@ public class PrintEngine {
     }
 
     public void printPdf(File pdfFile, int darkness, int dpi, int copies, int startPage, int endPage, PrintProgressListener listener) {
+        List<Integer> pages = new ArrayList<>();
+        int from = Math.max(0, startPage);
+        int to = Math.max(from, endPage);
+        for (int i = from; i <= to; i++) {
+            pages.add(i);
+        }
+        printPdf(pdfFile, darkness, dpi, copies, true, pages, listener);
+    }
+
+    public void printPdf(File pdfFile, int darkness, int dpi, int copies, boolean collate, List<Integer> pageIndices, PrintProgressListener listener) {
         new Thread(() -> {
             ParcelFileDescriptor pfd = null;
             PdfRenderer renderer = null;
@@ -69,13 +81,13 @@ public class PrintEngine {
                 // 4. Set up JNI pipes and execute filter
                 drv = new DrvRuntime.libhplip();
                 int[] pipes = new int[3];
-                int safeCopies = Math.max(1, copies);
+                // Note: we pass copies "1" to hpcups filter because our loop delivers the exact page sequence
                 String[] args = new String[] {
                     libFile.getAbsolutePath(),
                     "1", // Job ID
                     "android", // User
                     "DodoPress", // Title
-                    String.valueOf(safeCopies), // Copies
+                    "1", // Copies per page header
                     "PageSize=A4 Resolution=" + dpi + "dpi"
                 };
                 // env array MUST be alternating (key, value) pairs for setenv(key, val, 1)
@@ -139,38 +151,61 @@ public class PrintEngine {
                 renderer = new PdfRenderer(pfd);
                 int docTotalPages = renderer.getPageCount();
 
-                int from = Math.max(0, startPage);
-                int to = (endPage >= from && endPage < docTotalPages) ? endPage : (docTotalPages - 1);
-                int pagesToPrint = to - from + 1;
-
-                for (int pageIdx = from; pageIdx <= to; pageIdx++) {
-                    int currentStep = pageIdx - from + 1;
-                    if (listener != null) {
-                        listener.onProgress(currentStep, pagesToPrint, "Rendering & printing page " + currentStep + " of " + pagesToPrint + " (" + dpi + " DPI)...");
+                List<Integer> validPages = new ArrayList<>();
+                for (int p : pageIndices) {
+                    if (p >= 0 && p < docTotalPages) {
+                        validPages.add(p);
                     }
+                }
+                if (validPages.isEmpty()) {
+                    throw new IOException("No valid pages selected for printing.");
+                }
 
-                    PdfRenderer.Page page = renderer.openPage(pageIdx);
-                    int pagePtsW = page.getWidth();
-                    int pagePtsH = page.getHeight();
+                int numCopies = Math.max(1, copies);
+                int totalSheets = validPages.size() * numCopies;
+                int currentSheet = 0;
 
-                    // Pixel dimensions at chosen DPI (e.g. 600 DPI)
-                    int pixelW = (int) Math.round((pagePtsW / 72.0) * dpi);
-                    int pixelH = (int) Math.round((pagePtsH / 72.0) * dpi);
+                if (collate || numCopies == 1) {
+                    // Collate: Full document set (Copy 1), then full document set (Copy 2)...
+                    for (int c = 1; c <= numCopies; c++) {
+                        for (int pageIdx : validPages) {
+                            currentSheet++;
+                            String status = "Printing sheet " + currentSheet + " of " + totalSheets
+                                + " (Page " + (pageIdx + 1) + (numCopies > 1 ? ", Copy " + c : "") + ")...";
+                            if (listener != null) {
+                                listener.onProgress(currentSheet, totalSheets, status);
+                            }
+                            renderAndStreamPage(renderer, pageIdx, dpi, darkness, filterIn);
+                        }
+                    }
+                } else {
+                    // Uncollated: Page 1 (Copy 1, Copy 2...), then Page 2 (Copy 1, Copy 2...)...
+                    for (int pageIdx : validPages) {
+                        PdfRenderer.Page page = renderer.openPage(pageIdx);
+                        int pagePtsW = page.getWidth();
+                        int pagePtsH = page.getHeight();
+                        int pixelW = (int) Math.round((pagePtsW / 72.0) * dpi);
+                        int pixelH = (int) Math.round((pagePtsH / 72.0) * dpi);
 
-                    Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
-                    pageBitmap.eraseColor(0xFFFFFFFF); // White background
+                        Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
+                        pageBitmap.eraseColor(0xFFFFFFFF);
+                        page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+                        page.close();
 
-                    page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
-                    page.close();
-
-                    // Write page raster header (RGB, 8 bits/channel)
-                    CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, CupsRasterWriter.COLOR_SPACE_RGB, pagePtsW, pagePtsH);
-                    filterIn.flush();
-
-                    // Apply ToneEngine darkness curve & stream pixels to filter
-                    ToneEngine.streamBitmapToRaster(pageBitmap, darkness, filterIn);
-                    pageBitmap.recycle();
-                    System.gc();
+                        for (int c = 1; c <= numCopies; c++) {
+                            currentSheet++;
+                            String status = "Printing sheet " + currentSheet + " of " + totalSheets
+                                + " (Page " + (pageIdx + 1) + (numCopies > 1 ? ", Copy " + c : "") + ")...";
+                            if (listener != null) {
+                                listener.onProgress(currentSheet, totalSheets, status);
+                            }
+                            CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, CupsRasterWriter.COLOR_SPACE_RGB, pagePtsW, pagePtsH);
+                            filterIn.flush();
+                            ToneEngine.streamBitmapToRaster(pageBitmap, darkness, filterIn);
+                        }
+                        pageBitmap.recycle();
+                        System.gc();
+                    }
                 }
 
                 // 8. Close stdin to signal EOF to the filter
@@ -178,7 +213,7 @@ public class PrintEngine {
                 filterIn = null;
 
                 // 9. Wait for pump thread and filter completion
-                if (listener != null) listener.onProgress(pagesToPrint, pagesToPrint, "Flushing printer buffer...");
+                if (listener != null) listener.onProgress(totalSheets, totalSheets, "Flushing printer buffer...");
                 pumpThread.join(30000);
 
                 int exitCode = drv.procWait(procHandle);
@@ -212,6 +247,26 @@ public class PrintEngine {
                 usbConnection.close();
             }
         }).start();
+    }
+
+    private void renderAndStreamPage(PdfRenderer renderer, int pageIdx, int dpi, int darkness, OutputStream filterIn) throws IOException {
+        PdfRenderer.Page page = renderer.openPage(pageIdx);
+        int pagePtsW = page.getWidth();
+        int pagePtsH = page.getHeight();
+        int pixelW = (int) Math.round((pagePtsW / 72.0) * dpi);
+        int pixelH = (int) Math.round((pagePtsH / 72.0) * dpi);
+
+        Bitmap pageBitmap = Bitmap.createBitmap(pixelW, pixelH, Bitmap.Config.ARGB_8888);
+        pageBitmap.eraseColor(0xFFFFFFFF);
+        page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+        page.close();
+
+        CupsRasterWriter.writePageHeader(filterIn, pixelW, pixelH, dpi, CupsRasterWriter.COLOR_SPACE_RGB, pagePtsW, pagePtsH);
+        filterIn.flush();
+
+        ToneEngine.streamBitmapToRaster(pageBitmap, darkness, filterIn);
+        pageBitmap.recycle();
+        System.gc();
     }
 
     private File prepareNativeLibrary() throws IOException {

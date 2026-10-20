@@ -30,14 +30,16 @@ public final class R {
     public static final int text_muted=0x7f010012;
   }
   public static final class drawable {
-    public static final int btn_chip=0x7f020000;
-    public static final int btn_primary=0x7f020001;
-    public static final int btn_secondary=0x7f020002;
-    public static final int card_bg=0x7f020003;
-    public static final int ic_launcher=0x7f020004;
-    public static final int status_badge=0x7f020005;
-    public static final int status_badge_connected=0x7f020006;
-    public static final int status_badge_waiting=0x7f020007;
+    public static final int badge_info=0x7f020000;
+    public static final int btn_chip=0x7f020001;
+    public static final int btn_primary=0x7f020002;
+    public static final int btn_secondary=0x7f020003;
+    public static final int card_bg=0x7f020004;
+    public static final int ic_launcher=0x7f020005;
+    public static final int input_bg=0x7f020006;
+    public static final int status_badge=0x7f020007;
+    public static final int status_badge_connected=0x7f020008;
+    public static final int status_badge_waiting=0x7f020009;
   }
   public static final class id {
     public static final int btn_copies_minus=0x7f030000;
@@ -50,23 +52,31 @@ public final class R {
     public static final int btn_preset_ultra=0x7f030007;
     public static final int btn_prev_page=0x7f030008;
     public static final int btn_print_now=0x7f030009;
-    public static final int iv_page_preview=0x7f03000a;
-    public static final int layout_preview_container=0x7f03000b;
-    public static final int pb_print_progress=0x7f03000c;
-    public static final int rb_dpi_300=0x7f03000d;
-    public static final int rb_dpi_600=0x7f03000e;
-    public static final int rb_pages_all=0x7f03000f;
-    public static final int rb_pages_current=0x7f030010;
-    public static final int rg_dpi=0x7f030011;
-    public static final int rg_pages=0x7f030012;
-    public static final int seek_darkness=0x7f030013;
-    public static final int tv_copies_count=0x7f030014;
-    public static final int tv_darkness_label=0x7f030015;
-    public static final int tv_darkness_pct=0x7f030016;
-    public static final int tv_file_info=0x7f030017;
-    public static final int tv_page_indicator=0x7f030018;
-    public static final int tv_print_status=0x7f030019;
-    public static final int tv_printer_status=0x7f03001a;
+    public static final int cb_collate=0x7f03000a;
+    public static final int cb_reverse_order=0x7f03000b;
+    public static final int et_custom_pages=0x7f03000c;
+    public static final int iv_page_preview=0x7f03000d;
+    public static final int layout_custom_range=0x7f03000e;
+    public static final int layout_preview_container=0x7f03000f;
+    public static final int pb_print_progress=0x7f030010;
+    public static final int rb_dpi_300=0x7f030011;
+    public static final int rb_dpi_600=0x7f030012;
+    public static final int rb_pages_all=0x7f030013;
+    public static final int rb_pages_current=0x7f030014;
+    public static final int rb_pages_custom=0x7f030015;
+    public static final int rb_pages_even=0x7f030016;
+    public static final int rb_pages_odd=0x7f030017;
+    public static final int rg_dpi=0x7f030018;
+    public static final int rg_pages=0x7f030019;
+    public static final int seek_darkness=0x7f03001a;
+    public static final int tv_copies_count=0x7f03001b;
+    public static final int tv_darkness_label=0x7f03001c;
+    public static final int tv_darkness_pct=0x7f03001d;
+    public static final int tv_file_info=0x7f03001e;
+    public static final int tv_page_indicator=0x7f03001f;
+    public static final int tv_page_summary=0x7f030020;
+    public static final int tv_print_status=0x7f030021;
+    public static final int tv_printer_status=0x7f030022;
   }
   public static final class layout {
     public static final int activity_main=0x7f040000;
@@ -80,16 +90,22 @@ public final class R {
     public static final int dpi_600=0x7f050005;
     public static final int ink_density_desc=0x7f050006;
     public static final int ink_density_title=0x7f050007;
-    public static final int pages_all=0x7f050008;
-    public static final int pages_current=0x7f050009;
-    public static final int pages_title=0x7f05000a;
-    public static final int preset_deep=0x7f05000b;
-    public static final int preset_draft=0x7f05000c;
-    public static final int preset_normal=0x7f05000d;
-    public static final int preset_ultra=0x7f05000e;
-    public static final int quality_title=0x7f05000f;
-    public static final int status_offline=0x7f050010;
-    public static final int status_online=0x7f050011;
+    public static final int order_collate=0x7f050008;
+    public static final int order_reverse=0x7f050009;
+    public static final int pages_all=0x7f05000a;
+    public static final int pages_current=0x7f05000b;
+    public static final int pages_custom=0x7f05000c;
+    public static final int pages_custom_hint=0x7f05000d;
+    public static final int pages_even=0x7f05000e;
+    public static final int pages_odd=0x7f05000f;
+    public static final int pages_title=0x7f050010;
+    public static final int preset_deep=0x7f050011;
+    public static final int preset_draft=0x7f050012;
+    public static final int preset_normal=0x7f050013;
+    public static final int preset_ultra=0x7f050014;
+    public static final int quality_title=0x7f050015;
+    public static final int status_offline=0x7f050016;
+    public static final int status_online=0x7f050017;
   }
   public static final class style {
     public static final int AppTheme=0x7f060000;

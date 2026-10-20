@@ -16,8 +16,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -32,6 +36,11 @@ import com.dodopress.usb.UsbPrinterConnection;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,9 +71,18 @@ public class MainActivity extends Activity {
 
     private RadioGroup rgDpi;
     private RadioButton rbDpi600;
+
     private RadioGroup rgPages;
     private RadioButton rbPagesAll;
     private RadioButton rbPagesCurrent;
+    private RadioButton rbPagesOdd;
+    private RadioButton rbPagesEven;
+    private RadioButton rbPagesCustom;
+    private View layoutCustomRange;
+    private EditText etCustomPages;
+    private CheckBox cbReverseOrder;
+    private CheckBox cbCollate;
+    private TextView tvPageSummary;
 
     private Button btnCopiesMinus;
     private Button btnCopiesPlus;
@@ -157,9 +175,18 @@ public class MainActivity extends Activity {
 
         rgDpi = findViewById(com.dodopress.R.id.rg_dpi);
         rbDpi600 = findViewById(com.dodopress.R.id.rb_dpi_600);
+
         rgPages = findViewById(com.dodopress.R.id.rg_pages);
         rbPagesAll = findViewById(com.dodopress.R.id.rb_pages_all);
         rbPagesCurrent = findViewById(com.dodopress.R.id.rb_pages_current);
+        rbPagesOdd = findViewById(com.dodopress.R.id.rb_pages_odd);
+        rbPagesEven = findViewById(com.dodopress.R.id.rb_pages_even);
+        rbPagesCustom = findViewById(com.dodopress.R.id.rb_pages_custom);
+        layoutCustomRange = findViewById(com.dodopress.R.id.layout_custom_range);
+        etCustomPages = findViewById(com.dodopress.R.id.et_custom_pages);
+        cbReverseOrder = findViewById(com.dodopress.R.id.cb_reverse_order);
+        cbCollate = findViewById(com.dodopress.R.id.cb_collate);
+        tvPageSummary = findViewById(com.dodopress.R.id.tv_page_summary);
 
         btnCopiesMinus = findViewById(com.dodopress.R.id.btn_copies_minus);
         btnCopiesPlus = findViewById(com.dodopress.R.id.btn_copies_plus);
@@ -210,6 +237,8 @@ public class MainActivity extends Activity {
             if (copies > 1) {
                 copies--;
                 tvCopiesCount.setText(String.valueOf(copies));
+                cbCollate.setEnabled(copies > 1);
+                updatePageSummary();
             }
         });
 
@@ -217,8 +246,35 @@ public class MainActivity extends Activity {
             if (copies < 99) {
                 copies++;
                 tvCopiesCount.setText(String.valueOf(copies));
+                cbCollate.setEnabled(copies > 1);
+                updatePageSummary();
             }
         });
+
+        rgPages.setOnCheckedChangeListener((group, checkedId) -> {
+            boolean isCustom = (checkedId == com.dodopress.R.id.rb_pages_custom);
+            layoutCustomRange.setVisibility(isCustom ? View.VISIBLE : View.GONE);
+            if (isCustom) {
+                etCustomPages.requestFocus();
+            }
+            updatePageSummary();
+        });
+
+        etCustomPages.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int count, int after) {
+                updatePageSummary();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        cbReverseOrder.setOnCheckedChangeListener((buttonView, isChecked) -> updatePageSummary());
+        cbCollate.setOnCheckedChangeListener((buttonView, isChecked) -> updatePageSummary());
 
         btnPrintNow.setOnClickListener(v -> startPrinting());
     }
@@ -351,6 +407,8 @@ public class MainActivity extends Activity {
             layoutPreviewContainer.setVisibility(View.VISIBLE);
 
             renderPageThumb();
+            updatePageRangeLabels();
+            updatePageSummary();
 
         } catch (Exception e) {
             Toast.makeText(this, "Failed to read PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -381,6 +439,7 @@ public class MainActivity extends Activity {
             btnPrevPage.setEnabled(currentPageIndex > 0);
             btnNextPage.setEnabled(currentPageIndex < totalPages - 1);
 
+            updatePageRangeLabels();
             scheduleDarknessPreview(seekDarkness.getProgress());
 
         } catch (Exception e) {
@@ -388,9 +447,162 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void updatePageRangeLabels() {
+        if (totalPages <= 0) return;
+        rbPagesAll.setText("All Pages (1 – " + totalPages + ")");
+        rbPagesCurrent.setText("Current Page Only (" + (currentPageIndex + 1) + ")");
+        rbPagesOdd.setText("Odd Pages Only (1, 3, 5...)");
+        rbPagesEven.setText("Even Pages Only (2, 4, 6...)");
+        updatePageSummary();
+    }
+
+    private List<Integer> resolveSelectedPages() {
+        List<Integer> pages = new ArrayList<>();
+        if (totalPages <= 0) return pages;
+
+        int checkedId = rgPages.getCheckedRadioButtonId();
+        if (checkedId == com.dodopress.R.id.rb_pages_all) {
+            for (int i = 0; i < totalPages; i++) {
+                pages.add(i);
+            }
+        } else if (checkedId == com.dodopress.R.id.rb_pages_current) {
+            pages.add(currentPageIndex);
+        } else if (checkedId == com.dodopress.R.id.rb_pages_odd) {
+            // User page 1, 3, 5... (0-based indices 0, 2, 4...)
+            for (int i = 0; i < totalPages; i += 2) {
+                pages.add(i);
+            }
+        } else if (checkedId == com.dodopress.R.id.rb_pages_even) {
+            // User page 2, 4, 6... (0-based indices 1, 3, 5...)
+            for (int i = 1; i < totalPages; i += 2) {
+                pages.add(i);
+            }
+        } else if (checkedId == com.dodopress.R.id.rb_pages_custom) {
+            String custom = etCustomPages.getText().toString();
+            pages = parseCustomPageRange(custom, totalPages);
+        }
+
+        if (cbReverseOrder.isChecked() && pages.size() > 1) {
+            Collections.reverse(pages);
+        }
+
+        return pages;
+    }
+
+    public static List<Integer> parseCustomPageRange(String input, int total) {
+        List<Integer> result = new ArrayList<>();
+        if (input == null || total <= 0) return result;
+        Set<Integer> seen = new HashSet<>();
+        String[] parts = input.split("[,;\\s]+");
+        for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty()) continue;
+            if (part.contains("-")) {
+                int dash = part.indexOf('-');
+                String s1 = part.substring(0, dash).trim();
+                String s2 = part.substring(dash + 1).trim();
+                int start = 1;
+                int end = total;
+                boolean valid = false;
+                if (!s1.isEmpty()) {
+                    try { start = Integer.parseInt(s1); valid = true; } catch (NumberFormatException ignored) {}
+                } else {
+                    valid = true;
+                }
+                if (!s2.isEmpty()) {
+                    try { end = Integer.parseInt(s2); valid = true; } catch (NumberFormatException ignored) {}
+                } else if (!s1.isEmpty()) {
+                    valid = true;
+                }
+                if (!valid) continue;
+
+                start = Math.max(1, Math.min(start, total));
+                end = Math.max(1, Math.min(end, total));
+                int step = (start <= end) ? 1 : -1;
+                for (int p = start; ; p += step) {
+                    int zeroIdx = p - 1;
+                    if (!seen.contains(zeroIdx)) {
+                        seen.add(zeroIdx);
+                        result.add(zeroIdx);
+                    }
+                    if (p == end) break;
+                }
+            } else {
+                try {
+                    int p = Integer.parseInt(part);
+                    if (p >= 1 && p <= total) {
+                        int zeroIdx = p - 1;
+                        if (!seen.contains(zeroIdx)) {
+                            seen.add(zeroIdx);
+                            result.add(zeroIdx);
+                        }
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return result;
+    }
+
+    private void updatePageSummary() {
+        if (totalPages <= 0) {
+            tvPageSummary.setText("📄 No document loaded yet");
+            tvPageSummary.setTextColor(Color.parseColor("#94A3B8"));
+            return;
+        }
+
+        List<Integer> pages = resolveSelectedPages();
+        int count = pages.size();
+        int totalSheets = count * copies;
+
+        if (count == 0) {
+            tvPageSummary.setText("⚠️ No pages selected (check custom range)");
+            tvPageSummary.setTextColor(Color.parseColor("#F87171"));
+            return;
+        }
+
+        tvPageSummary.setTextColor(Color.parseColor("#38BDF8"));
+
+        StringBuilder sb = new StringBuilder("📄 Ready: ");
+        sb.append(count).append(count == 1 ? " page" : " pages");
+
+        if (count <= 6) {
+            sb.append(" (");
+            for (int i = 0; i < count; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(pages.get(i) + 1);
+            }
+            sb.append(")");
+        } else {
+            sb.append(" (").append(pages.get(0) + 1).append(" ... ").append(pages.get(count - 1) + 1).append(")");
+        }
+
+        if (copies > 1) {
+            sb.append(" • ").append(copies).append(" copies");
+            if (cbCollate.isChecked()) {
+                sb.append(" [Collated]");
+            } else {
+                sb.append(" [Uncollated]");
+            }
+        }
+
+        sb.append(" = ").append(totalSheets).append(totalSheets == 1 ? " sheet" : " sheets");
+
+        if (cbReverseOrder.isChecked()) {
+            sb.append(" ↺ Reverse");
+        }
+
+        tvPageSummary.setText(sb.toString());
+    }
+
     private void startPrinting() {
         if (currentPdfFile == null || !currentPdfFile.exists()) {
             Toast.makeText(this, "Please select a PDF document first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<Integer> pagesToPrint = resolveSelectedPages();
+        if (pagesToPrint.isEmpty()) {
+            Toast.makeText(this, "Please enter or select a valid page range.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -410,22 +622,22 @@ public class MainActivity extends Activity {
     }
 
     private void executePrintJob() {
+        List<Integer> pagesToPrint = resolveSelectedPages();
+        if (pagesToPrint.isEmpty()) {
+            Toast.makeText(this, "Please enter a valid page range to print.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         int darkness = seekDarkness.getProgress();
         int dpi = rbDpi600.isChecked() ? 600 : 300;
-
-        int fromPage = 0;
-        int toPage = totalPages - 1;
-        if (rbPagesCurrent.isChecked()) {
-            fromPage = currentPageIndex;
-            toPage = currentPageIndex;
-        }
+        boolean collate = cbCollate.isChecked();
 
         btnPrintNow.setEnabled(false);
         pbPrintProgress.setVisibility(View.VISIBLE);
         tvPrintStatus.setVisibility(View.VISIBLE);
         pbPrintProgress.setProgress(0);
 
-        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, fromPage, toPage, new PrintEngine.PrintProgressListener() {
+        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, new PrintEngine.PrintProgressListener() {
             @Override
             public void onProgress(int currentPage, int total, String statusMessage) {
                 runOnUiThread(() -> {
