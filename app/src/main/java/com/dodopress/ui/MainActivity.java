@@ -19,6 +19,7 @@ import android.os.ParcelFileDescriptor;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -636,6 +637,7 @@ public class MainActivity extends Activity {
         pbPrintProgress.setVisibility(View.VISIBLE);
         tvPrintStatus.setVisibility(View.VISIBLE);
         pbPrintProgress.setProgress(0);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, new PrintEngine.PrintProgressListener() {
             @Override
@@ -652,6 +654,7 @@ public class MainActivity extends Activity {
             @Override
             public void onComplete() {
                 runOnUiThread(() -> {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);
                     pbPrintProgress.setVisibility(View.GONE);
                     tvPrintStatus.setText("Print job finished successfully!");
@@ -662,6 +665,7 @@ public class MainActivity extends Activity {
             @Override
             public void onError(Exception e) {
                 runOnUiThread(() -> {
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);
                     pbPrintProgress.setVisibility(View.GONE);
                     tvPrintStatus.setText("Error: " + e.getMessage());

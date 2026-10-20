@@ -109,17 +109,21 @@ public class PrintEngine {
                 stdoutPfd = ParcelFileDescriptor.adoptFd(pipes[1]);
                 stderrPfd = ParcelFileDescriptor.adoptFd(pipes[2]);
 
-                filterIn = new BufferedOutputStream(new FileOutputStream(stdinPfd.getFileDescriptor()), 65536);
-                filterOut = new FileInputStream(stdoutPfd.getFileDescriptor());
-                filterErr = new FileInputStream(stderrPfd.getFileDescriptor());
+                filterIn = new BufferedOutputStream(new ParcelFileDescriptor.AutoCloseOutputStream(stdinPfd), 65536);
+                filterOut = new ParcelFileDescriptor.AutoCloseInputStream(stdoutPfd);
+                filterErr = new ParcelFileDescriptor.AutoCloseInputStream(stderrPfd);
 
                 // Background stderr drainer to prevent pipe buffer stalling and log filter diagnostics
                 final InputStream fErr = filterErr;
                 errThread = new Thread(() -> {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fErr))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            Log.d("DodoPress-hpcups", line);
+                    byte[] buf = new byte[1024];
+                    int r;
+                    try {
+                        while ((r = fErr.read(buf)) != -1) {
+                            String msg = new String(buf, 0, r, java.nio.charset.StandardCharsets.UTF_8).trim();
+                            if (!msg.isEmpty()) {
+                                Log.d("DodoPress-hpcups", msg);
+                            }
                         }
                     } catch (Exception ignored) {}
                 });
@@ -130,11 +134,14 @@ public class PrintEngine {
                 pumpThread = new Thread(() -> {
                     byte[] buffer = new byte[16384];
                     int read;
+                    long totalBytes = 0;
                     try {
                         while ((read = fOut.read(buffer)) != -1) {
                             usbOut.write(buffer, 0, read);
+                            totalBytes += read;
                         }
                         usbOut.flush();
+                        Log.d("DodoPress-Pump", "Pump complete: " + totalBytes + " bytes transferred to USB printer.");
                     } catch (IOException e) {
                         Log.e("DodoPress-Pump", "Error pumping raster to USB: " + e.getMessage());
                         pumpError.set(true);
@@ -209,12 +216,28 @@ public class PrintEngine {
                 }
 
                 // 8. Close stdin to signal EOF to the filter
-                filterIn.close();
-                filterIn = null;
+                if (filterIn != null) {
+                    try { filterIn.flush(); } catch (Exception ignored) {}
+                    try { filterIn.close(); } catch (Exception ignored) {}
+                    filterIn = null;
+                }
+                if (stdinPfd != null) {
+                    try { stdinPfd.close(); } catch (Exception ignored) {}
+                    stdinPfd = null;
+                }
 
                 // 9. Wait for pump thread and filter completion
                 if (listener != null) listener.onProgress(totalSheets, totalSheets, "Flushing printer buffer...");
-                pumpThread.join(30000);
+
+                // Wait up to 35 seconds for pump thread to finish transferring all data
+                pumpThread.join(35000);
+                if (pumpThread.isAlive()) {
+                    Log.w("DodoPress-Pump", "Pump thread timed out after 35s; terminating filter.");
+                    if (drv != null && procHandle != 0) {
+                        try { drv.procDestroy(procHandle); } catch (Exception ignored) {}
+                    }
+                    pumpThread.interrupt();
+                }
 
                 int exitCode = drv.procWait(procHandle);
                 procHandle = 0; // procWait frees the native handle; prevent procDestroy from double-freeing
