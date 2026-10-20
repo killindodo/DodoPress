@@ -8,24 +8,61 @@ public class ToneEngine {
 
     public static final int PRESET_DRAFT = 25;
     public static final int PRESET_NORMAL = 50;
-    public static final int PRESET_DEEP = 75;
-    public static final int PRESET_ULTRA = 100;
+    public static final int PRESET_DEEP = 75; // Locked PC-Match Default
+    public static final int PRESET_ULTRA = 100; // Max Deep (Safe & Protected)
+
+    // Standard high-frequency Bayer 8x8 dither threshold matrix (values 0..252 in steps of 4)
+    public static final int[][] BAYER8 = {
+        {   0, 128,  32, 160,   8, 136,  40, 168 },
+        { 192,  64, 224,  96, 200,  72, 232, 104 },
+        {  48, 176,  16, 144,  56, 184,  24, 152 },
+        { 240, 112, 208,  80, 248, 120, 216,  88 },
+        {  12, 140,  44, 172,   4, 132,  36, 164 },
+        { 204,  76, 236, 108, 196,  68, 228, 100 },
+        {  60, 188,  28, 156,  52, 180,  20, 148 },
+        { 252, 124, 220,  92, 244, 116, 212,  84 }
+    };
+
+    private static final int PAPER_CUTOFF = 244;
+    private static final int DARK_CORE_REQ = 90;
+    private static final int DELTA_REQ = 45;
 
     /**
-     * Builds a 256-entry lookup table for tone preview mapping.
+     * Builds a 256-entry lookup table for tone mapping operations.
      */
     public static int[] buildLut(int darkness) {
         int[] lut = new int[256];
-        int threshold = 64 + (int) ((darkness / 100.0) * 166);
+        int threshold = calculateThreshold(darkness);
         for (int i = 0; i < 256; i++) {
             lut[i] = (i <= threshold) ? 0 : 255;
         }
         return lut;
     }
 
+    public static int calculateThreshold(int darkness) {
+        if (darkness <= 50) {
+            return 90 + (int) ((darkness / 50.0) * 50); // 90..140
+        } else {
+            return 140 + (int) (((darkness - 50) / 50.0) * 55); // 140..195
+        }
+    }
+
+    private static int getCoreBlackLimit(int darkness) {
+        return 85 + (int) ((Math.min(100, Math.max(0, darkness)) / 100.0) * 65); // 85..150
+    }
+
+    private static int getEdgeLimit(int darkness) {
+        if (darkness <= 50) {
+            return 120 + (int) ((darkness / 50.0) * 55); // 120..175
+        } else {
+            // Strictly capped at 215 so backgrounds (>= 220) are NEVER treated as text edges!
+            return 175 + (int) (((darkness - 50) / 50.0) * 40); // 175..215
+        }
+    }
+
     /**
-     * Applies tone curve to preview thumbnail bitmap.
-     * Accurately reflects 1-bit laser toner binarization in real time.
+     * Generates a bit-exact preview of the physical laser print output.
+     * Accurately reproduces deep black text strokes and fine-dithered shading.
      */
     public static Bitmap processPreviewBitmap(Bitmap src, int darkness) {
         if (src == null || src.isRecycled()) return null;
@@ -33,88 +70,205 @@ public class ToneEngine {
         int width = src.getWidth();
         int height = src.getHeight();
         Bitmap output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        int[] pixels = new int[width * height];
-        src.getPixels(pixels, 0, width, 0, 0, width, height);
 
-        int threshold = 64 + (int) ((darkness / 100.0) * 166);
+        int[] srcPixels = new int[width * height];
+        src.getPixels(srcPixels, 0, width, 0, 0, width, height);
 
-        for (int i = 0; i < pixels.length; i++) {
-            int c = pixels[i];
-            int a = (c >>> 24);
+        // Precompute luminance grid for preview
+        byte[] luma = new byte[width * height];
+        for (int i = 0; i < srcPixels.length; i++) {
+            int c = srcPixels[i];
             int r = (c >> 16) & 0xFF;
             int g = (c >> 8) & 0xFF;
             int b = c & 0xFF;
-
-            int luma = (r * 306 + g * 601 + b * 117) >> 10;
-            int val = (luma <= threshold) ? 0 : 255;
-
-            pixels[i] = (a << 24) | (val << 16) | (val << 8) | val;
+            luma[i] = (byte) ((r * 306 + g * 601 + b * 117) >> 10);
         }
 
-        output.setPixels(pixels, 0, width, 0, 0, width, height);
+        int coreLimit = getCoreBlackLimit(darkness);
+        int edgeLimit = getEdgeLimit(darkness);
+
+        int[] outPixels = new int[width * height];
+
+        for (int y = 0; y < height; y++) {
+            int rowOffset = y * width;
+            int prevRowOffset = (y > 0) ? (y - 1) * width : rowOffset;
+            int nextRowOffset = (y < height - 1) ? (y + 1) * width : rowOffset;
+            int[] bayerRow = BAYER8[y & 7];
+
+            for (int x = 0; x < width; x++) {
+                int l = luma[rowOffset + x] & 0xFF;
+                boolean isBlack;
+
+                if (l >= PAPER_CUTOFF) {
+                    isBlack = false;
+                } else if (l <= coreLimit) {
+                    isBlack = true;
+                } else {
+                    int min3 = l;
+                    int max3 = l;
+                    int x0 = (x > 0) ? x - 1 : 0;
+                    int x1 = (x < width - 1) ? x + 1 : width - 1;
+
+                    for (int nx = x0; nx <= x1; nx++) {
+                        int v0 = luma[prevRowOffset + nx] & 0xFF;
+                        if (v0 < min3) min3 = v0;
+                        if (v0 > max3) max3 = v0;
+
+                        int v1 = luma[rowOffset + nx] & 0xFF;
+                        if (v1 < min3) min3 = v1;
+                        if (v1 > max3) max3 = v1;
+
+                        int v2 = luma[nextRowOffset + nx] & 0xFF;
+                        if (v2 < min3) min3 = v2;
+                        if (v2 > max3) max3 = v2;
+                    }
+
+                    int delta = max3 - min3;
+                    if (l <= edgeLimit && min3 <= DARK_CORE_REQ && delta >= DELTA_REQ) {
+                        isBlack = true;
+                    } else {
+                        int blackness = 255 - l;
+                        isBlack = (blackness > bayerRow[x & 7]);
+                    }
+                }
+
+                outPixels[rowOffset + x] = isBlack ? 0xFF000000 : 0xFFFFFFFF;
+            }
+        }
+
+        output.setPixels(outPixels, 0, width, 0, 0, width, height);
         return output;
     }
 
     /**
      * Converts a page bitmap directly into a 1-bit bitonal CUPS_CSPACE_K raster stream.
-     * 
-     * In CUPS_CSPACE_K:
-     *   Bit = 1 -> Pure Black (100% full intensity toner laser dot).
-     *   Bit = 0 -> Pure White (Blank paper, laser off).
-     *
-     * This BYPASSES hpcups internal RGB-to-halftone dithering matrix!
-     * Because no halftoning is applied by hpcups, the text is printed JET BLACK,
-     * solid, and sharp, exactly like a Windows desktop driver.
-     *
-     * Darkness control:
-     *   darkness = 25  (Draft)  -> threshold = 105 (thin, toner-saving text)
-     *   darkness = 50  (Normal) -> threshold = 147 (standard laser text)
-     *   darkness = 75  (Deep)   -> threshold = 188 (thick, bold, rich dark text)
-     *   darkness = 100 (Ultra)  -> threshold = 230 (maximum ink density, pins all anti-aliasing to 100% black)
+     * Uses streaming multi-row buffers to ensure near-zero memory footprint and ultra-fast throughput.
      */
     public static void streamBitmapTo1BitRaster(Bitmap bitmap, int darkness, OutputStream rasterOut) throws IOException {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        int bytesPerLine = width / 8; // width is guaranteed multiple of 32
+        int bytesPerLine = width / 8; // Guaranteed multiple of 32
 
-        int threshold = 64 + (int) ((darkness / 100.0) * 166);
+        int coreLimit = getCoreBlackLimit(darkness);
+        int edgeLimit = getEdgeLimit(darkness);
 
-        int batchRows = 64;
-        int[] blockPixels = new int[width * batchRows];
-        byte[] lineBytes = new byte[bytesPerLine * batchRows];
+        // Circular 3-row luma buffers
+        int[] lumaPrev = new int[width];
+        int[] lumaCurr = new int[width];
+        int[] lumaNext = new int[width];
 
-        for (int y = 0; y < height; y += batchRows) {
-            int currentBatch = Math.min(batchRows, height - y);
-            bitmap.getPixels(blockPixels, 0, width, 0, y, width, currentBatch);
+        // Batch buffer for reading from bitmap
+        int batchSize = 64;
+        int[] batchPixels = new int[width * batchSize];
+        byte[] lineBytes = new byte[bytesPerLine];
 
-            int lineByteOffset = 0;
-            for (int row = 0; row < currentBatch; row++) {
-                int rowPixelOffset = row * width;
-                int currentByte = 0;
-                int bitCount = 0;
+        // Helper ring for rotating
+        int[][] ring = new int[][] { lumaPrev, lumaCurr, lumaNext };
 
-                for (int col = 0; col < width; col++) {
-                    int c = blockPixels[rowPixelOffset + col];
+        // Preload row 0 into lumaCurr
+        readRowLuma(bitmap, 0, width, batchPixels, ring[1]);
+        // Duplicate row 0 into lumaPrev for y=0 boundary
+        System.arraycopy(ring[1], 0, ring[0], 0, width);
+
+        int batchStartRow = -1;
+
+        for (int y = 0; y < height; y++) {
+            // Load row y + 1 into ring[2] (lumaNext)
+            if (y + 1 < height) {
+                int nextY = y + 1;
+                if (batchStartRow < 0 || nextY < batchStartRow || nextY >= batchStartRow + batchSize) {
+                    batchStartRow = nextY;
+                    int count = Math.min(batchSize, height - batchStartRow);
+                    bitmap.getPixels(batchPixels, 0, width, 0, batchStartRow, width, count);
+                }
+                int offsetInBatch = (nextY - batchStartRow) * width;
+                for (int x = 0; x < width; x++) {
+                    int c = batchPixels[offsetInBatch + x];
                     int r = (c >> 16) & 0xFF;
                     int g = (c >> 8) & 0xFF;
                     int b = c & 0xFF;
-                    int luma = (r * 306 + g * 601 + b * 117) >> 10;
+                    ring[2][x] = (r * 306 + g * 601 + b * 117) >> 10;
+                }
+            } else {
+                // Bottom boundary: duplicate curr into next
+                System.arraycopy(ring[1], 0, ring[2], 0, width);
+            }
 
-                    // 1-bit CUPS_CSPACE_K: 1 = Black, 0 = White
-                    if (luma <= threshold) {
-                        currentByte |= (1 << (7 - bitCount));
+            int[] prev = ring[0];
+            int[] curr = ring[1];
+            int[] next = ring[2];
+            int[] bayerRow = BAYER8[y & 7];
+
+            int currentByte = 0;
+            int bitCount = 0;
+            int byteIndex = 0;
+
+            for (int x = 0; x < width; x++) {
+                int l = curr[x];
+                boolean isBlack;
+
+                if (l >= PAPER_CUTOFF) {
+                    isBlack = false;
+                } else if (l <= coreLimit) {
+                    isBlack = true;
+                } else {
+                    int min3 = l;
+                    int max3 = l;
+                    int x0 = (x > 0) ? x - 1 : 0;
+                    int x1 = (x < width - 1) ? x + 1 : width - 1;
+
+                    for (int nx = x0; nx <= x1; nx++) {
+                        int v0 = prev[nx];
+                        if (v0 < min3) min3 = v0;
+                        if (v0 > max3) max3 = v0;
+
+                        int v1 = curr[nx];
+                        if (v1 < min3) min3 = v1;
+                        if (v1 > max3) max3 = v1;
+
+                        int v2 = next[nx];
+                        if (v2 < min3) min3 = v2;
+                        if (v2 > max3) max3 = v2;
                     }
 
-                    bitCount++;
-                    if (bitCount == 8) {
-                        lineBytes[lineByteOffset++] = (byte) currentByte;
-                        currentByte = 0;
-                        bitCount = 0;
+                    int delta = max3 - min3;
+                    if (l <= edgeLimit && min3 <= DARK_CORE_REQ && delta >= DELTA_REQ) {
+                        isBlack = true;
+                    } else {
+                        int blackness = 255 - l;
+                        isBlack = (blackness > bayerRow[x & 7]);
                     }
                 }
+
+                currentByte = (currentByte << 1) | (isBlack ? 1 : 0);
+                bitCount++;
+                if (bitCount == 8) {
+                    lineBytes[byteIndex++] = (byte) currentByte;
+                    currentByte = 0;
+                    bitCount = 0;
+                }
             }
-            rasterOut.write(lineBytes, 0, lineByteOffset);
+
+            rasterOut.write(lineBytes, 0, bytesPerLine);
+
+            // Rotate ring buffers for next scanline
+            int[] temp = ring[0];
+            ring[0] = ring[1];
+            ring[1] = ring[2];
+            ring[2] = temp;
         }
+
         rasterOut.flush();
+    }
+
+    private static void readRowLuma(Bitmap bitmap, int y, int width, int[] rawBuf, int[] lumaBuf) {
+        bitmap.getPixels(rawBuf, 0, width, 0, y, width, 1);
+        for (int x = 0; x < width; x++) {
+            int c = rawBuf[x];
+            int r = (c >> 16) & 0xFF;
+            int g = (c >> 8) & 0xFF;
+            int b = c & 0xFF;
+            lumaBuf[x] = (r * 306 + g * 601 + b * 117) >> 10;
+        }
     }
 }

@@ -57,7 +57,10 @@ public class MainActivity extends Activity {
     private Button btnPickFile;
     private TextView tvFileInfo;
     private LinearLayout layoutPreviewContainer;
-    private ImageView ivPagePreview;
+    private ZoomableImageView ivPagePreview;
+    private TextView tvPreviewModeBadge;
+    private Button btnTogglePreviewMode;
+    private Button btnQuickZoom;
     private Button btnPrevPage;
     private Button btnNextPage;
     private TextView tvPageIndicator;
@@ -70,8 +73,8 @@ public class MainActivity extends Activity {
     private Button btnPresetDeep;
     private Button btnPresetUltra;
 
-    private RadioGroup rgDpi;
-    private RadioButton rbDpi600;
+    private Bitmap toneAdjustedBitmap;
+    private boolean isShowingOriginal = false;
 
     private RadioGroup rgPages;
     private RadioButton rbPagesAll;
@@ -161,6 +164,9 @@ public class MainActivity extends Activity {
         btnPickFile = findViewById(com.dodopress.R.id.btn_pick_file);
         tvFileInfo = findViewById(com.dodopress.R.id.tv_file_info);
         layoutPreviewContainer = findViewById(com.dodopress.R.id.layout_preview_container);
+        tvPreviewModeBadge = findViewById(com.dodopress.R.id.tv_preview_mode_badge);
+        btnTogglePreviewMode = findViewById(com.dodopress.R.id.btn_toggle_preview_mode);
+        btnQuickZoom = findViewById(com.dodopress.R.id.btn_quick_zoom);
         ivPagePreview = findViewById(com.dodopress.R.id.iv_page_preview);
         btnPrevPage = findViewById(com.dodopress.R.id.btn_prev_page);
         btnNextPage = findViewById(com.dodopress.R.id.btn_next_page);
@@ -173,9 +179,6 @@ public class MainActivity extends Activity {
         btnPresetNormal = findViewById(com.dodopress.R.id.btn_preset_normal);
         btnPresetDeep = findViewById(com.dodopress.R.id.btn_preset_deep);
         btnPresetUltra = findViewById(com.dodopress.R.id.btn_preset_ultra);
-
-        rgDpi = findViewById(com.dodopress.R.id.rg_dpi);
-        rbDpi600 = findViewById(com.dodopress.R.id.rb_dpi_600);
 
         rgPages = findViewById(com.dodopress.R.id.rg_pages);
         rbPagesAll = findViewById(com.dodopress.R.id.rb_pages_all);
@@ -200,6 +203,32 @@ public class MainActivity extends Activity {
 
     private void setupListeners() {
         btnPickFile.setOnClickListener(v -> pickPdf());
+
+        btnTogglePreviewMode.setOnClickListener(v -> {
+            isShowingOriginal = !isShowingOriginal;
+            if (isShowingOriginal) {
+                tvPreviewModeBadge.setText("📄 Original PDF (Raw)");
+                tvPreviewModeBadge.setTextColor(Color.parseColor("#94A3B8"));
+                btnTogglePreviewMode.setText("View: Deep Ink");
+                if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
+                    ivPagePreview.setImageBitmap(rawPageBitmap);
+                }
+            } else {
+                tvPreviewModeBadge.setText("⚡ Deep Laser Ink Preview");
+                tvPreviewModeBadge.setTextColor(Color.parseColor("#38BDF8"));
+                btnTogglePreviewMode.setText("Compare: Original");
+                if (toneAdjustedBitmap != null && !toneAdjustedBitmap.isRecycled()) {
+                    ivPagePreview.setImageBitmap(toneAdjustedBitmap);
+                } else {
+                    scheduleDarknessPreview(seekDarkness.getProgress());
+                }
+            }
+        });
+
+        btnQuickZoom.setOnClickListener(v -> {
+            ivPagePreview.toggleZoom();
+            btnQuickZoom.setText(ivPagePreview.isCurrentlyZoomed() ? "↺ Fit" : "🔍 Zoom");
+        });
 
         btnPrevPage.setOnClickListener(v -> {
             if (currentPageIndex > 0) {
@@ -299,9 +328,14 @@ public class MainActivity extends Activity {
         previewExecutor.execute(() -> {
             int target = pendingDarkness.getAndSet(-1);
             if (target != -1 && rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
-                Bitmap toneAdjusted = ToneEngine.processPreviewBitmap(rawPageBitmap, target);
-                if (toneAdjusted != null) {
-                    mainHandler.post(() -> ivPagePreview.setImageBitmap(toneAdjusted));
+                Bitmap updated = ToneEngine.processPreviewBitmap(rawPageBitmap, target);
+                if (updated != null) {
+                    mainHandler.post(() -> {
+                        toneAdjustedBitmap = updated;
+                        if (!isShowingOriginal) {
+                            ivPagePreview.setImageBitmap(updated);
+                        }
+                    });
                 }
             }
         });
@@ -355,13 +389,13 @@ public class MainActivity extends Activity {
         tvDarknessPct.setText(progress + "%");
         String desc;
         if (progress <= 35) {
-            desc = progress + "% — Light / Draft (Toner Saver)";
-        } else if (progress <= 60) {
-            desc = progress + "% — Normal (Standard)";
+            desc = progress + "% — Draft / Toner Saver (Light)";
+        } else if (progress <= 65) {
+            desc = progress + "% — Standard Laser Print";
         } else if (progress <= 85) {
-            desc = progress + "% — Deep Black (PC Match)";
+            desc = progress + "% — Deep Black (PC Match — Locked Default)";
         } else {
-            desc = progress + "% — Ultra Deep Black";
+            desc = progress + "% — Max Deep (Anti-Blackout Protected)";
         }
         tvDarknessLabel.setText(desc);
     }
@@ -423,11 +457,11 @@ public class MainActivity extends Activity {
             PdfRenderer.Page page = pdfRenderer.openPage(currentPageIndex);
             int pw = page.getWidth();
             int ph = page.getHeight();
-            float scale = 400.0f / (float) pw;
-            int previewW = 400;
+            float scale = 800.0f / (float) pw;
+            int previewW = 800;
             int previewH = (int) (ph * scale);
 
-            if (rawPageBitmap != null) {
+            if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
                 rawPageBitmap.recycle();
             }
             rawPageBitmap = Bitmap.createBitmap(previewW, previewH, Bitmap.Config.ARGB_8888);
@@ -439,6 +473,7 @@ public class MainActivity extends Activity {
             tvPageIndicator.setText("Page " + (currentPageIndex + 1) + " of " + totalPages);
             btnPrevPage.setEnabled(currentPageIndex > 0);
             btnNextPage.setEnabled(currentPageIndex < totalPages - 1);
+            btnQuickZoom.setText("🔍 Zoom");
 
             updatePageRangeLabels();
             scheduleDarknessPreview(seekDarkness.getProgress());
@@ -630,7 +665,7 @@ public class MainActivity extends Activity {
         }
 
         int darkness = seekDarkness.getProgress();
-        int dpi = rbDpi600.isChecked() ? 600 : 300;
+        int dpi = 300;
         boolean collate = cbCollate.isChecked();
 
         btnPrintNow.setEnabled(false);
@@ -677,6 +712,10 @@ public class MainActivity extends Activity {
 
     private void closePdf() {
         try {
+            if (toneAdjustedBitmap != null) {
+                toneAdjustedBitmap.recycle();
+                toneAdjustedBitmap = null;
+            }
             if (rawPageBitmap != null) {
                 rawPageBitmap.recycle();
                 rawPageBitmap = null;

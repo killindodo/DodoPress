@@ -12,6 +12,9 @@
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/usb/UsbPrinterConnection$BulkOutputStream.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/usb/UsbPrinterConnection$PermissionReceiver.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$3.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView$ScaleListener.class
+/mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/ZoomableImageView$GestureListener.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$2.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity$4.class
 /mnt/HDD-Storage/DodoPress/build/obj/classes/com/dodopress/ui/MainActivity.class

@@ -3,11 +3,11 @@
     <string name="status_offline">Connect USB OTG Cable</string>
     <string name="status_online">HP LaserJet M1005 Online</string>
     <string name="btn_select_document">Choose PDF Document</string>
-    <string name="ink_density_title">Ink Darkness / Density Control</string>
-    <string name="ink_density_desc">Adjust tone curve to eliminate faint prints and achieve rich, deep PC-quality black.</string>
+    <string name="ink_density_title">Toner Density (PC Match Engine)</string>
+    <string name="ink_density_desc">Deep laser boldening calibrated to PC output. Anti-blackout protected.</string>
     <string name="preset_draft">Draft (25%)</string>
-    <string name="preset_normal">Normal (50%)</string>
-    <string name="preset_deep">Deep Black (75%)</string>
+    <string name="preset_normal">Standard (50%)</string>
+    <string name="preset_deep">Deep (PC Match ★)</string>
     <string name="preset_ultra">Max Deep (100%)</string>
     <string name="quality_title">Laser Resolution (DPI)</string>
     <string name="dpi_600">600 DPI (Crisp / Hardware Native)</string>

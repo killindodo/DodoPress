@@ -102,13 +102,71 @@
                 android:visibility="gone"
                 android:layout_marginTop="12dp">
 
-                <ImageView
-                    android:id="@+id/iv_page_preview"
+                <!-- Preview Header & Interactive Tools -->
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="240dp"
-                    android:background="#0B132B"
-                    android:scaleType="fitCenter"
-                    android:padding="4dp"/>
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/tv_preview_mode_badge"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="⚡ Deep Ink Preview"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_primary"/>
+
+                    <Button
+                        android:id="@+id/btn_toggle_preview_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/text_high"
+                        android:textSize="11sp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:text="Compare: Original"/>
+
+                    <Button
+                        android:id="@+id/btn_quick_zoom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="6dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:text="🔍 Zoom"/>
+                </LinearLayout>
+
+                <!-- High-Resolution Paper Sheet Frame -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="320dp"
+                    android:background="#0A0F1D"
+                    android:padding="6dp">
+
+                    <com.dodopress.ui.ZoomableImageView
+                        android:id="@+id/iv_page_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#FFFFFF"/>
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginTop="6dp"
+                    android:text="💡 Tip: Pinch or double-tap anywhere on the preview to zoom and inspect font sharpness"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_med"/>
 
                 <!-- Pagination Stepper -->
                 <LinearLayout
@@ -116,7 +174,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:layout_marginTop="10dp">
+                    android:layout_marginTop="8dp">
 
                     <Button
                         android:id="@+id/btn_prev_page"
@@ -223,8 +281,8 @@
                     android:layout_weight="1"
                     android:layout_marginRight="4dp"
                     android:background="@drawable/btn_chip"
-                    android:text="Draft"
-                    android:textSize="11sp"
+                    android:text="Draft (25%)"
+                    android:textSize="10sp"
                     android:textColor="@color/text_med"/>
 
                 <Button
@@ -234,19 +292,19 @@
                     android:layout_weight="1"
                     android:layout_marginRight="4dp"
                     android:background="@drawable/btn_chip"
-                    android:text="Normal"
-                    android:textSize="11sp"
+                    android:text="Standard (50%)"
+                    android:textSize="10sp"
                     android:textColor="@color/text_med"/>
 
                 <Button
                     android:id="@+id/btn_preset_deep"
                     android:layout_width="0dp"
                     android:layout_height="36dp"
-                    android:layout_weight="1.2"
+                    android:layout_weight="1.3"
                     android:layout_marginRight="4dp"
                     android:background="@drawable/btn_primary"
-                    android:text="Deep Black"
-                    android:textSize="11sp"
+                    android:text="Deep (PC Match ★)"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"/>
 
@@ -254,11 +312,12 @@
                     android:id="@+id/btn_preset_ultra"
                     android:layout_width="0dp"
                     android:layout_height="36dp"
-                    android:layout_weight="1"
+                    android:layout_weight="1.1"
                     android:background="@drawable/btn_chip"
-                    android:text="Max Deep"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_med"/>
+                    android:text="Max Deep (100%)"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/brand_primary"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -271,38 +330,36 @@
             android:padding="16dp"
             android:layout_marginBottom="16dp">
 
-            <!-- Resolution Section -->
-            <TextView
+            <!-- Hardware Laser Engine Info -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/quality_title"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_high"/>
-
-            <RadioGroup
-                android:id="@+id/rg_dpi"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/status_badge_connected"
+                android:paddingLeft="12dp"
+                android:paddingTop="8dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="8dp"
                 android:layout_marginBottom="12dp">
 
-                <RadioButton
-                    android:id="@+id/rb_dpi_600"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:textColor="@color/text_high"
-                    android:text="@string/dpi_600"/>
+                    android:layout_weight="1"
+                    android:text="⚡ 300 DPI Native Laser Engine"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/status_connected_text"/>
 
-                <RadioButton
-                    android:id="@+id/rb_dpi_300"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/text_med"
-                    android:text="@string/dpi_300"/>
-            </RadioGroup>
+                    android:text="FAST &amp; SOLID TONER"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/status_connected_text"/>
+            </LinearLayout>
 
             <!-- Divider -->
             <View
