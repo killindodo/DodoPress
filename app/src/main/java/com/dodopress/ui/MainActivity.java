@@ -1,5 +1,6 @@
 package com.dodopress.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -8,6 +9,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,6 +26,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -44,12 +47,14 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.dodopress.engine.DocumentScannerEngine;
 import com.dodopress.engine.IdCardEngine;
 import com.dodopress.engine.PrintEngine;
 import com.dodopress.engine.SheetGeometry;
 import com.dodopress.engine.SpoolManager;
 import com.dodopress.engine.ToneEngine;
 import com.dodopress.usb.UsbPrinterConnection;
+import com.dodopress.util.DodoFileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -68,10 +73,17 @@ public class MainActivity extends Activity {
     private static final int REQUEST_PICK_PDF = 2001;
     private static final int REQUEST_PICK_ID_FRONT = 2002;
     private static final int REQUEST_PICK_ID_BACK = 2003;
+    private static final int REQUEST_CAMERA_SCAN = 2004;
+    private static final int PERMISSION_CAMERA_REQ = 3001;
 
     private UsbPrinterConnection usbPrinterConnection;
     private PrintEngine printEngine;
     private BroadcastReceiver usbHotplugReceiver;
+
+    // Camera document scanner & Quick Settings shortcut state
+    private boolean isDirectInstantPhotocopy = false;
+    private File tempScanFile;
+    private PrinterCutawayView.PrinterState currentPrinterCutawayState = PrinterCutawayView.PrinterState.OFFLINE;
 
     // Multi-page navigation tabs
     private View pagePrintStudio;
@@ -155,6 +167,7 @@ public class MainActivity extends Activity {
     // Preview Controls
     private TextView tvPrinterStatus;
     private Button btnPickFile;
+    private Button btnScanDocument;
     private TextView tvFileInfo;
     private LinearLayout layoutPreviewContainer;
     private ZoomableImageView ivPagePreview;
@@ -168,6 +181,12 @@ public class MainActivity extends Activity {
     private SeekBar seekDarkness;
     private TextView tvDarknessLabel;
     private TextView tvDarknessPct;
+
+    // Blank Page Remover Banner
+    private LinearLayout layoutBlankPageBanner;
+    private TextView tvBlankPageText;
+    private Button btnSkipBlankPage;
+    private TextView btnDismissBlankBanner;
 
     private Button btnPresetDraft;
     private Button btnPresetNormal;
@@ -221,6 +240,7 @@ public class MainActivity extends Activity {
     private TextView tvUpiId;
     private Button btnCopyUpi;
     private Button btnFeedbackRequest;
+    private CheckBox cbSoundEffects;
     private int devAvatarTapCount = 0;
 
     private File currentPdfFile;
@@ -243,6 +263,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(com.dodopress.R.layout.activity_main);
 
+        SoundManager.init(this);
         usbPrinterConnection = new UsbPrinterConnection(this);
         printEngine = new PrintEngine(this, usbPrinterConnection);
 
@@ -269,6 +290,15 @@ public class MainActivity extends Activity {
     private void handleIncomingIntent(Intent intent) {
         if (intent == null) return;
         String action = intent.getAction();
+
+        // 1-Touch Instant Photocopy trigger from Quick Settings Tile or Launcher Shortcut
+        if (intent.getBooleanExtra(InstantCopyTileService.EXTRA_INSTANT_PHOTOCOPY, false)
+            || InstantCopyTileService.ACTION_INSTANT_PHOTOCOPY.equals(action)) {
+            showPage(0);
+            launchCameraScanner(true);
+            return;
+        }
+
         if (Intent.ACTION_VIEW.equals(action) || Intent.ACTION_SEND.equals(action)) {
             Uri uri = null;
             if (Intent.ACTION_SEND.equals(action)) {
@@ -381,9 +411,14 @@ public class MainActivity extends Activity {
 
         tvPrinterStatus = findViewById(com.dodopress.R.id.tv_printer_status);
         btnPickFile = findViewById(com.dodopress.R.id.btn_pick_file);
+        btnScanDocument = findViewById(com.dodopress.R.id.btn_scan_document);
         tvFileInfo = findViewById(com.dodopress.R.id.tv_file_info);
         layoutPreviewContainer = findViewById(com.dodopress.R.id.layout_preview_container);
         ivPagePreview = findViewById(com.dodopress.R.id.iv_page_preview);
+        layoutBlankPageBanner = findViewById(com.dodopress.R.id.layout_blank_page_banner);
+        tvBlankPageText = findViewById(com.dodopress.R.id.tv_blank_page_text);
+        btnSkipBlankPage = findViewById(com.dodopress.R.id.btn_skip_blank_page);
+        btnDismissBlankBanner = findViewById(com.dodopress.R.id.btn_dismiss_blank_banner);
         tvPreviewModeBadge = findViewById(com.dodopress.R.id.tv_preview_mode_badge);
         btnRotatePage = findViewById(com.dodopress.R.id.btn_rotate_page);
         btnTogglePreviewMode = findViewById(com.dodopress.R.id.btn_toggle_preview_mode);
@@ -441,6 +476,7 @@ public class MainActivity extends Activity {
         tvUpiId = findViewById(com.dodopress.R.id.tv_upi_id);
         btnCopyUpi = findViewById(com.dodopress.R.id.btn_copy_upi);
         btnFeedbackRequest = findViewById(com.dodopress.R.id.btn_feedback_request);
+        cbSoundEffects = findViewById(com.dodopress.R.id.cb_sound_effects);
     }
 
     private void showPage(int index) {
@@ -484,44 +520,58 @@ public class MainActivity extends Activity {
 
         // Floating Action Dock Print Button
         dockBtnPrint.setOnClickListener(v -> {
+            SoundManager.playClick();
             v.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
             startPrinting();
         });
 
-        btnDiagnostics.setOnClickListener(v -> DiagnosticLogManager.showDiagnosticDialog(this));
+        btnDiagnostics.setOnClickListener(v -> {
+            SoundManager.playClick();
+            DiagnosticLogManager.showDiagnosticDialog(this, getCurrentPrinterCutawayState());
+        });
 
         btnClearRecents.setOnClickListener(v -> {
+            SoundManager.playClick();
             RecentDocsManager.clearRecents(this);
             renderRecentsShelf();
         });
 
         // 5 Themes Switching
-        btnThemeXp.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.WINDOWS_XP));
-        btnThemeCyber.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.CYBERPUNK));
-        btnThemeSlate.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.DEEP_SLATE));
-        btnThemeMatrix.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.MATRIX));
-        btnThemeStudio.setOnClickListener(v -> applyAppTheme(ThemeManager.AppTheme.STUDIO_LIGHT));
+        btnThemeXp.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.WINDOWS_XP); });
+        btnThemeCyber.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.CYBERPUNK); });
+        btnThemeSlate.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.DEEP_SLATE); });
+        btnThemeMatrix.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.MATRIX); });
+        btnThemeStudio.setOnClickListener(v -> { SoundManager.playClick(); applyAppTheme(ThemeManager.AppTheme.STUDIO_LIGHT); });
 
         // Paper Size Selection
-        btnPaperA4.setOnClickListener(v -> setPaperSize(SheetGeometry.PaperSize.A4));
-        btnPaperLetter.setOnClickListener(v -> setPaperSize(SheetGeometry.PaperSize.LETTER));
-        btnPaperLegal.setOnClickListener(v -> setPaperSize(SheetGeometry.PaperSize.LEGAL));
-        btnPaperA5.setOnClickListener(v -> setPaperSize(SheetGeometry.PaperSize.A5));
+        btnPaperA4.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.A4); });
+        btnPaperLetter.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.LETTER); });
+        btnPaperLegal.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.LEGAL); });
+        btnPaperA5.setOnClickListener(v -> { SoundManager.playClick(); setPaperSize(SheetGeometry.PaperSize.A5); });
 
         // Placement Region Selection
-        btnPlaceFull.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.FULL_PAGE));
-        btnPlaceTopHalf.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.TOP_HALF));
-        btnPlaceBottomHalf.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.BOTTOM_HALF));
-        btnPlaceLeftHalf.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.LEFT_HALF));
-        btnPlaceRightHalf.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.RIGHT_HALF));
-        btnPlaceQuadTl.setOnClickListener(v -> setPlacementRegion(SheetGeometry.PlacementRegion.QUAD_TOP_LEFT));
+        btnPlaceFull.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.FULL_PAGE); });
+        btnPlaceTopHalf.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.TOP_HALF); });
+        btnPlaceBottomHalf.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.BOTTOM_HALF); });
+        btnPlaceLeftHalf.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.LEFT_HALF); });
+        btnPlaceRightHalf.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.RIGHT_HALF); });
+        btnPlaceQuadTl.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.QUAD_TOP_LEFT); });
 
         viewSheetGeometry.setOnRegionSelectedListener(this::setPlacementRegion);
 
-        btnPickFile.setOnClickListener(v -> pickPdf());
+        btnPickFile.setOnClickListener(v -> {
+            SoundManager.playClick();
+            pickPdf();
+        });
+
+        btnScanDocument.setOnClickListener(v -> {
+            SoundManager.playClick();
+            launchCameraScanner(false);
+        });
 
         // 1-Tap 90° Page Rotation
         btnRotatePage.setOnClickListener(v -> {
+            SoundManager.playClick();
             v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
             currentPageRotation = (currentPageRotation + 90f) % 360f;
             renderPageThumb();
@@ -529,6 +579,7 @@ public class MainActivity extends Activity {
 
         // Smart Toner Shield (Dark PDF Invert)
         cbInvertDark.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            SoundManager.playClick();
             buttonView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
             renderPageThumb();
         });
@@ -692,12 +743,21 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Sound Effects Toggle
+        cbSoundEffects.setChecked(SoundManager.isSoundEnabled());
+        cbSoundEffects.setOnCheckedChangeListener((btn, isChecked) -> {
+            SoundManager.setSoundEnabled(this, isChecked);
+            if (isChecked) SoundManager.playClick();
+        });
+
         // Secret Easter Egg: Tap avatar 7 times
         frameDevAvatar.setOnClickListener(v -> {
             devAvatarTapCount++;
+            SoundManager.playClick();
             v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
             if (devAvatarTapCount == 7) {
                 devAvatarTapCount = 0;
+                SoundManager.playXpPrintChime();
                 v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                 new AlertDialog.Builder(this)
                     .setTitle("🎉 Easter Egg Unlocked!")
@@ -709,7 +769,7 @@ public class MainActivity extends Activity {
 
         // Universal Tactile Spring Micro-Interactions
         TouchFeedback.applyAll(
-            btnPickFile, btnPrintNow, dockBtnPrint, btnDiagnostics,
+            btnPickFile, btnScanDocument, btnPrintNow, dockBtnPrint, btnDiagnostics,
             btnTogglePreviewMode, btnQuickZoom, btnRotatePage, btnPrevPage, btnNextPage,
             btnPresetDraft, btnPresetNormal, btnPresetDeep, btnPresetUltra,
             btnCopiesMinus, btnCopiesPlus, btnQueueJob,
@@ -936,6 +996,8 @@ public class MainActivity extends Activity {
 
             btnPickFile.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
             btnPickFile.setTextColor(Color.parseColor("#000000"));
+            btnScanDocument.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp);
+            btnScanDocument.setTextColor(Color.parseColor("#000000"));
 
             btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.theme_btn_xp_primary);
             btnPrintNow.setTextColor(Color.parseColor("#000000"));
@@ -991,6 +1053,8 @@ public class MainActivity extends Activity {
 
             btnPickFile.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
             btnPickFile.setTextColor(Color.parseColor("#FFFFFF"));
+            btnScanDocument.setBackgroundResource(com.dodopress.R.drawable.btn_secondary);
+            btnScanDocument.setTextColor(p.textHighColor);
 
             btnPrintNow.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
             btnPrintNow.setTextColor(Color.parseColor("#FFFFFF"));
@@ -1164,6 +1228,7 @@ public class MainActivity extends Activity {
     private void refreshPrinterStatus() {
         UsbDevice printer = usbPrinterConnection.findPrinter();
         if (printer != null) {
+            currentPrinterCutawayState = PrinterCutawayView.PrinterState.READY;
             String displayName = usbPrinterConnection.getPrinterDisplayName(printer);
             tvPrinterStatus.setText(displayName);
             dockTvStatus.setText(displayName + " (Online)");
@@ -1178,6 +1243,7 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "HP LaserJet connected: " + queued.size() + " queued job(s) waiting in Queue tab!", Toast.LENGTH_LONG).show();
             }
         } else {
+            currentPrinterCutawayState = PrinterCutawayView.PrinterState.OFFLINE;
             tvPrinterStatus.setText("Connect USB OTG");
             dockTvStatus.setText("Printer Offline (OTG Cable Needed)");
             if (viewBeacon != null) viewBeacon.setBeaconColor(Color.parseColor("#F59E0B"));
@@ -1185,6 +1251,14 @@ public class MainActivity extends Activity {
             tvPrinterStatus.setTextColor(Color.parseColor("#FBBF24"));
             DiagnosticLogManager.log("USB", "Waiting for USB OTG cable connection...");
         }
+    }
+
+    private PrinterCutawayView.PrinterState getCurrentPrinterCutawayState() {
+        UsbDevice printer = usbPrinterConnection.findPrinter();
+        if (printer == null) {
+            return PrinterCutawayView.PrinterState.OFFLINE;
+        }
+        return currentPrinterCutawayState;
     }
 
     private void updateDarknessDisplay(int progress) {
@@ -1209,10 +1283,92 @@ public class MainActivity extends Activity {
         startActivityForResult(intent, REQUEST_PICK_PDF);
     }
 
+    private void launchCameraScanner(boolean directPrint) {
+        this.isDirectInstantPhotocopy = directPrint;
+        if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, PERMISSION_CAMERA_REQ);
+            return;
+        }
+
+        try {
+            tempScanFile = new File(getCacheDir(), "scan_capture.jpg");
+            if (tempScanFile.exists()) tempScanFile.delete();
+
+            Uri photoUri = Uri.parse("content://" + DodoFileProvider.AUTHORITY + "/scan_capture.jpg");
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA_SCAN);
+        } catch (Exception e) {
+            Toast.makeText(this, "Camera error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_CAMERA_REQ) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                launchCameraScanner(isDirectInstantPhotocopy);
+            } else {
+                Toast.makeText(this, "Camera permission needed for document scanner.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void processScannedDocument() {
+        new Thread(() -> {
+            try {
+                if (tempScanFile == null || !tempScanFile.exists() || tempScanFile.length() == 0) {
+                    runOnUiThread(() -> Toast.makeText(this, "No photo captured.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                runOnUiThread(() -> Toast.makeText(this, "Enhancing document & removing shadows...", Toast.LENGTH_SHORT).show());
+
+                BitmapFactory.Options opts = new BitmapFactory.Options();
+                opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                Bitmap raw = BitmapFactory.decodeFile(tempScanFile.getAbsolutePath(), opts);
+                if (raw == null) {
+                    runOnUiThread(() -> Toast.makeText(this, "Failed to decode photo.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
+                Bitmap enhanced = DocumentScannerEngine.enhanceDocument(raw);
+                File scanPdf = new File(getCacheDir(), "scan_" + System.currentTimeMillis() + ".pdf");
+                DocumentScannerEngine.saveBitmapAsA4Pdf(enhanced, scanPdf);
+
+                enhanced.recycle();
+                raw.recycle();
+
+                runOnUiThread(() -> {
+                    SoundManager.playClick();
+                    showPage(0);
+                    loadPdfFromUri(Uri.fromFile(scanPdf));
+                    Toast.makeText(this, "Document enhanced! Ready to print.", Toast.LENGTH_SHORT).show();
+
+                    if (isDirectInstantPhotocopy) {
+                        isDirectInstantPhotocopy = false;
+                        startPrinting();
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Scan processing error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK || data == null) return;
+        if (resultCode != RESULT_OK) return;
+
+        if (requestCode == REQUEST_CAMERA_SCAN) {
+            processScannedDocument();
+            return;
+        }
+
+        if (data == null) return;
 
         if (requestCode == REQUEST_PICK_PDF) {
             Uri uri = data.getData();
@@ -1360,6 +1516,25 @@ public class MainActivity extends Activity {
             updatePageRangeLabels();
             scheduleDarknessPreview(seekDarkness.getProgress());
 
+            // Auto-Blank Page Detection
+            boolean isBlank = ToneEngine.isPageBlank(rawPageBitmap);
+            if (isBlank) {
+                layoutBlankPageBanner.setVisibility(View.VISIBLE);
+                tvBlankPageText.setText("⚠️ Page " + (currentPageIndex + 1) + " appears blank. Skip printing?");
+                btnSkipBlankPage.setOnClickListener(v -> {
+                    SoundManager.playClick();
+                    excludePageFromPrint(currentPageIndex);
+                    layoutBlankPageBanner.setVisibility(View.GONE);
+                    Toast.makeText(this, "Page " + (currentPageIndex + 1) + " excluded from print run.", Toast.LENGTH_SHORT).show();
+                });
+                btnDismissBlankBanner.setOnClickListener(v -> {
+                    SoundManager.playClick();
+                    layoutBlankPageBanner.setVisibility(View.GONE);
+                });
+            } else {
+                layoutBlankPageBanner.setVisibility(View.GONE);
+            }
+
             if (laserScanView != null) {
                 laserScanView.triggerScan();
             }
@@ -1438,6 +1613,22 @@ public class MainActivity extends Activity {
         List<Integer> list = new ArrayList<>(set);
         Collections.sort(list);
         return list;
+    }
+
+    private void excludePageFromPrint(int pageIdx) {
+        List<Integer> currentSelected = resolveSelectedPages();
+        currentSelected.remove(Integer.valueOf(pageIdx));
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < currentSelected.size(); i++) {
+            int pageNum = currentSelected.get(i) + 1;
+            if (i > 0) sb.append(", ");
+            sb.append(pageNum);
+        }
+        rgPages.check(com.dodopress.R.id.rb_pages_custom);
+        layoutCustomRange.setVisibility(View.VISIBLE);
+        etCustomPages.setText(sb.toString());
+        updatePageSummary();
     }
 
     private void updatePageSummary() {
@@ -1539,6 +1730,7 @@ public class MainActivity extends Activity {
 
         DiagnosticLogManager.log("PRINT", "Initiating print job: " + pagesToPrint.size() + " pages, " + copies + " copies, darkness=" + darkness + "%, placement=" + currentPlacementRegion.title);
 
+        currentPrinterCutawayState = PrinterCutawayView.PrinterState.PRINTING;
         btnPrintNow.setEnabled(false);
         dockBtnPrint.setEnabled(false);
         pbPrintProgress.setVisibility(View.VISIBLE);
@@ -1571,7 +1763,9 @@ public class MainActivity extends Activity {
             @Override
             public void onComplete() {
                 DiagnosticLogManager.log("PRINT", "Print job finished successfully!");
+                currentPrinterCutawayState = PrinterCutawayView.PrinterState.READY;
                 runOnUiThread(() -> {
+                    SoundManager.playXpPrintChime();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);
                     dockBtnPrint.setEnabled(true);
@@ -1592,7 +1786,9 @@ public class MainActivity extends Activity {
             @Override
             public void onError(Exception e) {
                 DiagnosticLogManager.logError("PRINT", "Printing failed", e);
+                currentPrinterCutawayState = PrinterCutawayView.PrinterState.PAPER_EMPTY;
                 runOnUiThread(() -> {
+                    SoundManager.playAlert();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     btnPrintNow.setEnabled(true);
                     dockBtnPrint.setEnabled(true);

@@ -356,15 +356,35 @@
                         android:visibility="gone"
                         android:layout_marginBottom="6dp"/>
 
-                    <Button
-                        android:id="@+id/btn_pick_file"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:background="@drawable/btn_primary"
-                        android:text="@string/btn_select_document"
-                        android:textColor="#FFFFFF"
-                        android:textSize="14sp"
-                        android:textStyle="bold"/>
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btn_pick_file"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_primary"
+                            android:text="@string/btn_select_document"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="6dp"/>
+
+                        <Button
+                            android:id="@+id/btn_scan_document"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_secondary"
+                            android:text="@string/btn_scan_document"
+                            android:textColor="@color/text_high"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:layout_marginStart="6dp"/>
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tv_file_info"
@@ -459,6 +479,51 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:visibility="gone"/>
+
+                            <!-- Auto-Blank Page Detection Chip / Banner -->
+                            <LinearLayout
+                                android:id="@+id/layout_blank_page_banner"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_gravity="top"
+                                android:background="#E6DC2626"
+                                android:padding="8dp"
+                                android:gravity="center_vertical"
+                                android:visibility="gone">
+
+                                <TextView
+                                    android:id="@+id/tv_blank_page_text"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="⚠️ Page appears blank. Skip printing?"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+
+                                <Button
+                                    android:id="@+id/btn_skip_blank_page"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="28dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="Skip Page"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="10sp"
+                                    android:paddingLeft="10dp"
+                                    android:paddingRight="10dp" />
+
+                                <TextView
+                                    android:id="@+id/btn_dismiss_blank_banner"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text=" ✕ "
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:paddingLeft="8dp"
+                                    android:paddingRight="4dp" />
+                            </LinearLayout>
                         </FrameLayout>
 
                         <!-- Pagination Stepper -->
@@ -1417,6 +1482,34 @@
                         android:text="• Native 300 DPI 1-bit CUPS bitonal engine\n• Native libhplip.so ARM64-v8a filter\n• Pure offline USB OTG bulk-out streaming\n• Anti-blackout contrast gating + Bayer 8x8 halftoning"
                         android:textColor="@color/text_med"
                         android:textSize="12sp"/>
+                </LinearLayout>
+
+                <!-- Sound Pack & Sensory Polish Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_bg"
+                    android:padding="16dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔊 Sound Pack &amp; Sensory Polish"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_high"
+                        android:layout_marginBottom="6dp"/>
+
+                    <CheckBox
+                        android:id="@+id/cb_sound_effects"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Windows XP Ding &amp; Mechanical Clicks"
+                        android:textColor="@color/text_med"
+                        android:textSize="12sp"
+                        android:checked="true"/>
                 </LinearLayout>
 
                 <!-- Feedback / Support Request -->

@@ -6,6 +6,8 @@
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.usb.host" android:required="false"/>
 
     <application
@@ -48,7 +50,31 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="application/pdf" />
             </intent-filter>
+
+            <!-- App Shortcuts for Instant Photocopy -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- DodoPress File Provider for Camera Capture -->
+        <provider
+            android:name="com.dodopress.util.DodoFileProvider"
+            android:authorities="com.dodopress.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
+        <!-- Quick Settings Instant Copy Tile -->
+        <service
+            android:name="com.dodopress.ui.InstantCopyTileService"
+            android:label="Instant Copy"
+            android:icon="@mipmap/ic_launcher"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
     </application>
 

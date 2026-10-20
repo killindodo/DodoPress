@@ -64,6 +64,10 @@ public class DiagnosticLogManager {
     }
 
     public static void showDiagnosticDialog(Activity activity) {
+        showDiagnosticDialog(activity, PrinterCutawayView.PrinterState.READY);
+    }
+
+    public static void showDiagnosticDialog(Activity activity, PrinterCutawayView.PrinterState printerState) {
         if (activity == null || activity.isFinishing()) return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
@@ -71,30 +75,41 @@ public class DiagnosticLogManager {
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.parseColor("#0F172A"));
-        int pad = (int) (18 * activity.getResources().getDisplayMetrics().density);
+        int pad = (int) (16 * activity.getResources().getDisplayMetrics().density);
         root.setPadding(pad, pad, pad, pad);
 
         // Header Title
         TextView tvTitle = new TextView(activity);
-        tvTitle.setText("⚡ Hardware Diagnostics & Telemetry");
-        tvTitle.setTextSize(16);
+        tvTitle.setText("⚡ HP LaserJet M1005 Diagnostic Wizard");
+        tvTitle.setTextSize(15);
         tvTitle.setTypeface(Typeface.DEFAULT_BOLD);
         tvTitle.setTextColor(Color.parseColor("#38BDF8"));
         root.addView(tvTitle);
 
         // Subtitle / Hardware status
         TextView tvSub = new TextView(activity);
-        tvSub.setText("HP LaserJet M1005 MFP • USB OTG Class 7 • 300 DPI 1-Bit Pipeline");
+        tvSub.setText("Live Hardware Cutaway & Telemetry Registers");
         tvSub.setTextSize(11);
         tvSub.setTextColor(Color.parseColor("#94A3B8"));
-        tvSub.setPadding(0, 4, 0, 16);
+        tvSub.setPadding(0, 2, 0, 8);
         root.addView(tvSub);
+
+        // Visual Cutaway View
+        PrinterCutawayView cutaway = new PrinterCutawayView(activity);
+        cutaway.setPrinterState(printerState != null ? printerState : PrinterCutawayView.PrinterState.OFFLINE);
+        LinearLayout.LayoutParams cutawayParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            (int) (140 * activity.getResources().getDisplayMetrics().density)
+        );
+        cutawayParams.setMargins(0, 0, 0, (int) (10 * activity.getResources().getDisplayMetrics().density));
+        cutaway.setLayoutParams(cutawayParams);
+        root.addView(cutaway);
 
         // Monospace Log Console Box
         ScrollView sv = new ScrollView(activity);
         LinearLayout.LayoutParams svParams = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
-            (int) (320 * activity.getResources().getDisplayMetrics().density)
+            (int) (200 * activity.getResources().getDisplayMetrics().density)
         );
         sv.setLayoutParams(svParams);
         sv.setBackgroundColor(Color.parseColor("#020617"));
@@ -112,7 +127,7 @@ public class DiagnosticLogManager {
         LinearLayout btnBar = new LinearLayout(activity);
         btnBar.setOrientation(LinearLayout.HORIZONTAL);
         btnBar.setGravity(Gravity.RIGHT);
-        btnBar.setPadding(0, 16, 0, 0);
+        btnBar.setPadding(0, 12, 0, 0);
 
         Button btnClear = new Button(activity);
         btnClear.setText("🧹 Clear");

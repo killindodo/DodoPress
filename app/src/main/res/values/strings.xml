@@ -23,4 +23,7 @@
     <string name="order_reverse">Print in Reverse Order (Back to Front)</string>
     <string name="order_collate">Collate Copies (1,2,3... 1,2,3...)</string>
     <string name="btn_print_now">START PRINTING</string>
+    <string name="shortcut_instant_copy_short">Instant Copy</string>
+    <string name="shortcut_instant_copy_long">Instant Photocopy</string>
+    <string name="btn_scan_document">📷 Scan Paper Doc</string>
 </resources>
