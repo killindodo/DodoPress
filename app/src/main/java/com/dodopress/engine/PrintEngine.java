@@ -56,6 +56,13 @@ public class PrintEngine {
     public void printPdf(File pdfFile, int darkness, int dpi, int copies, boolean collate, List<Integer> pageIndices,
                          SheetGeometry.PaperSize paperSize, SheetGeometry.PlacementRegion placementRegion,
                          PrintProgressListener listener) {
+        printPdf(pdfFile, darkness, dpi, copies, collate, pageIndices, paperSize, placementRegion, false, null, 0f, listener);
+    }
+
+    public void printPdf(File pdfFile, int darkness, int dpi, int copies, boolean collate, List<Integer> pageIndices,
+                         SheetGeometry.PaperSize paperSize, SheetGeometry.PlacementRegion placementRegion,
+                         boolean invertDark, String watermark, float rotation,
+                         PrintProgressListener listener) {
         new Thread(() -> {
             ParcelFileDescriptor pfd = null;
             PdfRenderer renderer = null;
@@ -191,7 +198,7 @@ public class PrintEngine {
                             if (listener != null) {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
-                            Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, metrics);
+                            Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, invertDark, watermark, rotation, metrics);
                             CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3]);
                             filterIn.flush();
                             ToneEngine.streamBitmapTo1BitRaster(sheetBitmap, darkness, filterIn);
@@ -202,7 +209,7 @@ public class PrintEngine {
                 } else {
                     // Uncollated: Page 1 (Copy 1, Copy 2...), then Page 2 (Copy 1, Copy 2...)...
                     for (int pageIdx : validPages) {
-                        Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, metrics);
+                        Bitmap sheetBitmap = createPageOrSheetBitmap(renderer, pageIdx, dpi, paperSize, placementRegion, invertDark, watermark, rotation, metrics);
 
                         for (int c = 1; c <= numCopies; c++) {
                             currentSheet++;
@@ -278,11 +285,13 @@ public class PrintEngine {
 
     private Bitmap createPageOrSheetBitmap(PdfRenderer renderer, int pageIdx, int dpi,
                                            SheetGeometry.PaperSize paperSize, SheetGeometry.PlacementRegion region,
+                                           boolean invertDark, String watermark, float rotation,
                                            int[] outMetrics) {
         PdfRenderer.Page page = renderer.openPage(pageIdx);
         int pagePtsW = page.getWidth();
         int pagePtsH = page.getHeight();
 
+        Bitmap finalBitmap;
         if (paperSize == null || region == null || region == SheetGeometry.PlacementRegion.FULL_PAGE) {
             int targetW = (int) Math.round((pagePtsW / 72.0) * dpi);
             int pixelW = (targetW + 31) & ~31;
@@ -297,7 +306,7 @@ public class PrintEngine {
             pageBitmap.eraseColor(0xFFFFFFFF);
             page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
             page.close();
-            return pageBitmap;
+            finalBitmap = pageBitmap;
         } else {
             int sheetPixelW = paperSize.getPixelWidth(dpi);
             int sheetPixelH = paperSize.getPixelHeight(dpi);
@@ -325,8 +334,36 @@ public class PrintEngine {
             canvas.drawBitmap(docBitmap, destRect.left, destRect.top, null);
             docBitmap.recycle();
 
-            return sheetBitmap;
+            finalBitmap = sheetBitmap;
         }
+
+        // Apply rotation if needed
+        if (rotation != 0) {
+            Bitmap rotated = ToneEngine.rotateBitmap(finalBitmap, rotation);
+            if (rotated != finalBitmap) {
+                finalBitmap.recycle();
+                finalBitmap = rotated;
+                outMetrics[0] = finalBitmap.getWidth();
+                outMetrics[1] = finalBitmap.getHeight();
+            }
+        }
+
+        // Apply dark-background inversion (ink shield)
+        if (invertDark) {
+            Bitmap inverted = ToneEngine.invertDarkDocument(finalBitmap);
+            if (inverted != finalBitmap) {
+                finalBitmap.recycle();
+                finalBitmap = inverted;
+            }
+        }
+
+        // Apply watermark stamp if provided
+        if (watermark != null && !watermark.trim().isEmpty()) {
+            Canvas c = new Canvas(finalBitmap);
+            ToneEngine.applyWatermark(c, outMetrics[0], outMetrics[1], watermark);
+        }
+
+        return finalBitmap;
     }
 
     private File prepareNativeLibrary() throws IOException {

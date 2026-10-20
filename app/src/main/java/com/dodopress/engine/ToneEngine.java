@@ -271,4 +271,77 @@ public class ToneEngine {
             lumaBuf[x] = (r * 306 + g * 601 + b * 117) >> 10;
         }
     }
+
+    /**
+     * Inverts a dark-mode PDF/document so black backgrounds become pure white paper
+     * and white text becomes deep black text, saving 80%+ toner.
+     */
+    public static Bitmap invertDarkDocument(Bitmap src) {
+        int w = src.getWidth();
+        int h = src.getHeight();
+        Bitmap out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        int[] pixels = new int[w * h];
+        src.getPixels(pixels, 0, w, 0, 0, w, h);
+
+        for (int i = 0; i < pixels.length; i++) {
+            int c = pixels[i];
+            int r = (c >> 16) & 0xFF;
+            int g = (c >> 8) & 0xFF;
+            int b = c & 0xFF;
+            pixels[i] = (0xFF << 24) | ((255 - r) << 16) | ((255 - g) << 8) | (255 - b);
+        }
+        out.setPixels(pixels, 0, w, 0, 0, w, h);
+        return out;
+    }
+
+    /**
+     * Applies a subtle watermark across a document page.
+     */
+    public static void applyWatermark(android.graphics.Canvas canvas, int w, int h, String watermarkText) {
+        if (watermarkText == null || watermarkText.trim().isEmpty()) return;
+        android.graphics.Paint wmPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        wmPaint.setColor(0x28000000); // 16% opacity light gray watermark
+        wmPaint.setTextSize(Math.max(48f, w * 0.08f));
+        wmPaint.setTextAlign(android.graphics.Paint.Align.CENTER);
+        wmPaint.setFakeBoldText(true);
+
+        canvas.save();
+        canvas.rotate(-35f, w / 2f, h / 2f);
+        canvas.drawText(watermarkText.toUpperCase(), w / 2f, h / 2f, wmPaint);
+        canvas.restore();
+    }
+
+    /**
+     * Checks if a page is effectively blank (>99% white/blank pixels).
+     */
+    public static boolean isPageBlank(Bitmap bm) {
+        if (bm == null) return true;
+        int w = bm.getWidth();
+        int h = bm.getHeight();
+        int nonWhite = 0;
+        for (int y = 0; y < h; y += 12) {
+            for (int x = 0; x < w; x += 12) {
+                int c = bm.getPixel(x, y);
+                int r = (c >> 16) & 0xFF;
+                int g = (c >> 8) & 0xFF;
+                int b = c & 0xFF;
+                int lum = (r * 299 + g * 587 + b * 114) / 1000;
+                if (lum < 240) {
+                    nonWhite++;
+                    if (nonWhite > 30) return false;
+                }
+            }
+        }
+        return nonWhite <= 30;
+    }
+
+    /**
+     * Rotates a bitmap by a given angle (90, 180, 270 degrees).
+     */
+    public static Bitmap rotateBitmap(Bitmap src, float angle) {
+        if (src == null || angle == 0) return src;
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+    }
 }
