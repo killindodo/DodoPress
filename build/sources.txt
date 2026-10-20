@@ -1,0 +1,7 @@
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/engine/ToneEngine.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/engine/PrintEngine.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/usb/UsbPrinterConnection.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/ui/MainActivity.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dodopress/cups/CupsRasterWriter.java
+/mnt/HDD-Storage/DodoPress/app/src/main/java/com/dynamixsoftware/drv/DrvRuntime.java
+/mnt/HDD-Storage/DodoPress/build/obj/gen/com/dodopress/R.java

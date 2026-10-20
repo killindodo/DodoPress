@@ -1,0 +1,26 @@
+<resources>
+    <color name="bg_dark">#0F172A</color>
+    <color name="surface_card">#1E293B</color>
+    <color name="surface_card_border">#334155</color>
+    <color name="surface_secondary">#283548</color>
+    
+    <color name="brand_primary">#38BDF8</color>
+    <color name="brand_primary_dark">#0284C7</color>
+    <color name="brand_accent">#818CF8</color>
+    
+    <color name="text_high">#F8FAFC</color>
+    <color name="text_med">#94A3B8</color>
+    <color name="text_muted">#64748B</color>
+    
+    <color name="status_connected_text">#34D399</color>
+    <color name="status_connected_bg">#064E3B</color>
+    <color name="status_connected_stroke">#059669</color>
+    
+    <color name="status_waiting_text">#FBBF24</color>
+    <color name="status_waiting_bg">#451A03</color>
+    <color name="status_waiting_stroke">#D97706</color>
+
+    <color name="chip_selected_bg">#0284C7</color>
+    <color name="chip_unselected_bg">#334155</color>
+    <color name="slider_track">#475569</color>
+</resources>
