@@ -1008,6 +1008,125 @@
                             android:textSize="10sp"
                             android:textColor="@color/text_med"/>
                     </LinearLayout>
+
+                    <!-- Print Margin Selection Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="4dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/badge_section_tag"
+                            android:paddingStart="6dp"
+                            android:paddingTop="2dp"
+                            android:paddingEnd="6dp"
+                            android:paddingBottom="2dp"
+                            android:text="MARGINS"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"
+                            android:letterSpacing="0.08"
+                            android:layout_marginEnd="8dp"/>
+
+                        <TextView
+                            android:id="@+id/tv_margin_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Print Margin (Page Padding)"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_high"/>
+
+                        <TextView
+                            android:id="@+id/tv_margin_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="12 mm (Normal)"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_margin_desc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Set physical edge distance. Real-time preview updates instantly."
+                        android:textSize="11sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="8dp"/>
+
+                    <!-- Glowing Margin Slider (0 to 40 mm) -->
+                    <SeekBar
+                        android:id="@+id/seek_margin"
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:max="40"
+                        android:progress="12"
+                        android:progressDrawable="@drawable/custom_seekbar_track"
+                        android:thumb="@drawable/custom_seekbar_thumb"
+                        android:splitTrack="false"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"/>
+
+                    <!-- Margin Preset Chips (0mm, 5mm, 12mm, 24mm) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp">
+
+                        <Button
+                            android:id="@+id/btn_margin_zero"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="0 mm (None)"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"/>
+
+                        <Button
+                            android:id="@+id/btn_margin_narrow"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="5 mm (Narrow)"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"/>
+
+                        <Button
+                            android:id="@+id/btn_margin_normal"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/btn_primary"
+                            android:text="12 mm (Normal)"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+
+                        <Button
+                            android:id="@+id/btn_margin_wide"
+                            android:layout_width="0dp"
+                            android:layout_height="34dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="24 mm (Wide)"
+                            android:textSize="10sp"
+                            android:textColor="@color/text_med"/>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- Output Configuration Card -->
