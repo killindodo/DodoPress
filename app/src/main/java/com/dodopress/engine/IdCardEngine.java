@@ -56,10 +56,20 @@ public class IdCardEngine {
             IdCardConfig config,
             int sheetW, int sheetH
     ) {
+        return composeIdCardSheet(id1Front, id1Back, id2Front, id2Back, config, sheetW, sheetH, 210.0f, 297.0f);
+    }
+
+    public static Bitmap composeIdCardSheet(
+            Bitmap id1Front, Bitmap id1Back,
+            Bitmap id2Front, Bitmap id2Back,
+            IdCardConfig config,
+            int sheetW, int sheetH,
+            float sheetWidthMm, float sheetHeightMm
+    ) {
         if (config == null) config = new IdCardConfig();
 
         Bitmap sheet = Bitmap.createBitmap(sheetW, sheetH, Bitmap.Config.ARGB_8888);
-        sheet.eraseColor(0xFFFFFFFF); // Pure white A4 sheet
+        sheet.eraseColor(0xFFFFFFFF); // Pure white physical sheet
 
         Canvas canvas = new Canvas(sheet);
 
@@ -90,8 +100,8 @@ public class IdCardEngine {
         subTextPaint.setTextSize(Math.max(14f, sheetW / 110f));
         subTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        // Calculate px per mm based on sheet width (A4 is 210mm wide)
-        float pxPerMm = (float) sheetW / 210.0f;
+        // Calculate px per mm based on actual sheet width
+        float pxPerMm = (float) sheetW / Math.max(1.0f, sheetWidthMm);
 
         int cardW = Math.round(STANDARD_CARD_WIDTH_MM * pxPerMm * config.scale);
         int cardH = Math.round(STANDARD_CARD_HEIGHT_MM * pxPerMm * config.scale);

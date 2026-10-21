@@ -280,6 +280,7 @@ public class MainActivity extends Activity {
     private Button btnRotatePage;
     private Button btnTogglePreviewMode;
     private Button btnQuickZoom;
+    private Button btnStageExpand;
     private Button btnPrevPage;
     private Button btnNextPage;
     private TextView tvPageIndicator;
@@ -300,6 +301,7 @@ public class MainActivity extends Activity {
     private CheckBox cbInvertDark;
 
     private Bitmap toneAdjustedBitmap;
+    private Bitmap cleanPreviewBitmap;
     private boolean isShowingOriginal = false;
     private float currentPageRotation = 0f;
 
@@ -624,6 +626,7 @@ public class MainActivity extends Activity {
         btnRotatePage = findViewById(com.dodopress.R.id.btn_rotate_page);
         btnTogglePreviewMode = findViewById(com.dodopress.R.id.btn_toggle_preview_mode);
         btnQuickZoom = findViewById(com.dodopress.R.id.btn_quick_zoom);
+        btnStageExpand = findViewById(com.dodopress.R.id.btn_stage_expand);
         btnPrevPage = findViewById(com.dodopress.R.id.btn_prev_page);
         btnNextPage = findViewById(com.dodopress.R.id.btn_next_page);
         tvPageIndicator = findViewById(com.dodopress.R.id.tv_page_indicator);
@@ -1075,6 +1078,10 @@ public class MainActivity extends Activity {
             btnQuickZoom.setText(ivPagePreview.isCurrentlyZoomed() ? "↺ Fit" : "🔍 Zoom");
         });
 
+        if (btnStageExpand != null) {
+            btnStageExpand.setOnClickListener(v -> toggleOptionsPanel());
+        }
+
         btnPrevPage.setOnClickListener(v -> {
             int nUp = (currentTilingMode != null) ? currentTilingMode.pagesPerSheet : 1;
             int currentSheet = currentPageIndex / nUp;
@@ -1098,6 +1105,7 @@ public class MainActivity extends Activity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 updateDarknessDisplay(progress);
+                updatePresetChipHighlight(progress);
                 scheduleDarknessPreview(progress);
             }
 
@@ -1551,6 +1559,13 @@ public class MainActivity extends Activity {
                 if (f.exists()) {
                     showPage(0);
                     loadPdfFromUri(Uri.fromFile(f));
+                    if (job.darkness > 0) {
+                        setDarkness(job.darkness);
+                    }
+                    if (job.copies > 0) {
+                        copies = job.copies;
+                        if (tvCopiesCount != null) tvCopiesCount.setText(String.valueOf(copies));
+                    }
                 }
             });
 
@@ -1847,6 +1862,10 @@ public class MainActivity extends Activity {
             btnQuickZoom.setBackgroundResource(chipBg);
             btnQuickZoom.setTextColor(p.brandPrimaryColor);
         }
+        if (btnStageExpand != null) {
+            btnStageExpand.setBackgroundResource(chipBg);
+            btnStageExpand.setTextColor(p.brandPrimaryColor);
+        }
 
         // Text Colors
         if (tvAppTitle != null) tvAppTitle.setTextColor(p.textHighColor);
@@ -1892,19 +1911,42 @@ public class MainActivity extends Activity {
         if (isPanelCollapsed) {
             scrollOptions.setVisibility(View.GONE);
             btnTogglePanel.setText("▲ EXPAND");
+            if (btnStageExpand != null) {
+                btnStageExpand.setText("⛶ Fit");
+            }
+            if (layoutSlidingPanel != null) {
+                LinearLayout.LayoutParams panelLp = (LinearLayout.LayoutParams) layoutSlidingPanel.getLayoutParams();
+                panelLp.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+                panelLp.weight = 0f;
+                layoutSlidingPanel.setLayoutParams(panelLp);
+            }
             if (cardDocPreview != null) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardDocPreview.getLayoutParams();
-                lp.height = (int) (430 * density);
+                lp.height = 0;
+                lp.weight = 1.0f;
                 cardDocPreview.setLayoutParams(lp);
             }
         } else {
             scrollOptions.setVisibility(View.VISIBLE);
             btnTogglePanel.setText("▼ RETRACT");
+            if (btnStageExpand != null) {
+                btnStageExpand.setText("⛶ Max");
+            }
             if (cardDocPreview != null) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardDocPreview.getLayoutParams();
-                lp.height = (int) (290 * density);
+                lp.height = (int) (385 * density);
+                lp.weight = 0f;
                 cardDocPreview.setLayoutParams(lp);
             }
+            if (layoutSlidingPanel != null) {
+                LinearLayout.LayoutParams panelLp = (LinearLayout.LayoutParams) layoutSlidingPanel.getLayoutParams();
+                panelLp.height = 0;
+                panelLp.weight = 1.0f;
+                layoutSlidingPanel.setLayoutParams(panelLp);
+            }
+        }
+        if (ivPagePreview != null) {
+            ivPagePreview.post(() -> ivPagePreview.resetZoom());
         }
     }
 
@@ -2183,20 +2225,22 @@ public class MainActivity extends Activity {
 
         float printW_mm = Math.max(0f, sheetW_mm - (2f * mm));
         float printH_mm = Math.max(0f, sheetH_mm - (2f * mm));
+        float printW_pt = (printW_mm / 25.4f) * 72.0f;
+        float printH_pt = (printH_mm / 25.4f) * 72.0f;
         float areaPct = Math.max(0f, Math.min(100f, ((printW_mm * printH_mm) / (sheetW_mm * sheetH_mm)) * 100f));
 
         if (tvMarginCalcSheet != null) {
             tvMarginCalcSheet.setText(String.format(Locale.US, "%.1f × %.1f mm (%d × %d pt)", sheetW_mm, sheetH_mm, sheetW_pt, sheetH_pt));
         }
         if (tvMarginCalcPrintable != null) {
-            tvMarginCalcPrintable.setText(String.format(Locale.US, "%.1f × %.1f mm (%.1f%% of sheet)", printW_mm, printH_mm, areaPct));
+            tvMarginCalcPrintable.setText(String.format(Locale.US, "%.1f × %.1f mm (%.0f × %.0f pt • %.1f%%)", printW_mm, printH_mm, printW_pt, printH_pt, areaPct));
         }
         if (tvMarginCalcHardware != null) {
             tvMarginCalcHardware.setText("4.5 mm (12.8 pt) Drum Non-Printable Edge");
         }
         if (tvMarginHwStatus != null) {
             if (SheetGeometry.isHardwareClipped(mm)) {
-                float clipMm = SheetGeometry.HARDWARE_MIN_MARGIN_MM - mm;
+                float clipMm = SheetGeometry.getHardwareCutoffDeltaMm(mm);
                 tvMarginHwStatus.setText(String.format(Locale.US, "⚠️ HARDWARE CLIPPING RISK: Drum cannot print in 4.5mm gray area! Outer %.1f mm will be cut off.", clipMm));
                 tvMarginHwStatus.setBackgroundColor(0xFF2E1616);
                 tvMarginHwStatus.setTextColor(0xFFF87171);
@@ -2268,7 +2312,7 @@ public class MainActivity extends Activity {
     }
 
     private void scheduleDarknessPreview(int darkness) {
-        if (rawPageBitmap == null || rawPageBitmap.isRecycled()) return;
+        if (cleanPreviewBitmap == null || cleanPreviewBitmap.isRecycled()) return;
 
         pendingDarkness.set(darkness);
         final int token = previewRenderToken.get();
@@ -2277,13 +2321,19 @@ public class MainActivity extends Activity {
             if (d >= 0 && token == previewRenderToken.get()) {
                 Bitmap source;
                 synchronized (pdfRendererLock) {
-                    if (rawPageBitmap == null || rawPageBitmap.isRecycled()) return;
-                    source = rawPageBitmap.copy(Bitmap.Config.ARGB_8888, false);
+                    if (cleanPreviewBitmap == null || cleanPreviewBitmap.isRecycled()) return;
+                    source = cleanPreviewBitmap.copy(Bitmap.Config.ARGB_8888, false);
                 }
                 if (source == null) return;
                 Bitmap updated = ToneEngine.processPreviewBitmap(source, d);
                 source.recycle();
                 if (updated != null) {
+                    SheetGeometry.PaperSize targetPaper = (currentPaperSize != null) ? currentPaperSize : SheetGeometry.PaperSize.A4;
+                    float sheetW_mm = targetPaper.getWidthMm(currentOrientation);
+                    float sheetH_mm = targetPaper.getHeightMm(currentOrientation);
+                    Canvas canvasTone = new Canvas(updated);
+                    drawSheetDecorations(canvasTone, updated.getWidth(), updated.getHeight(), sheetW_mm, sheetH_mm, currentMarginMm, targetPaper, currentOrientation, false);
+
                     mainHandler.post(() -> {
                         if (token != previewRenderToken.get()) {
                             updated.recycle();
@@ -3043,61 +3093,37 @@ public class MainActivity extends Activity {
                     baseBm.eraseColor(0xFFFFFFFF); // Clean sheet of paper
                     Canvas canvas = new Canvas(baseBm);
 
-                    Rect printableBox = new Rect(marginPxX, marginPxY, sheetPreviewW - marginPxX, sheetPreviewH - marginPxY);
-
                     if (targetTilingMode == null || targetTilingMode == SheetGeometry.TilingMode.ONE_UP) {
                         PdfRenderer.Page page = pdfRenderer.openPage(targetPageIndex);
                         int pw = page.getWidth();
                         int ph = page.getHeight();
 
-                        if (targetRegion == null || targetRegion == SheetGeometry.PlacementRegion.FULL_PAGE) {
-                            if (targetMarginMm <= 0) {
-                                // Full-bleed borderless
-                                Rect fullBox = new Rect(0, 0, sheetPreviewW, sheetPreviewH);
-                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, fullBox, 0);
+                        Rect targetBox = SheetGeometry.getPlacementBoundingBox(targetRegion, sheetPreviewW, sheetPreviewH, marginPxX, marginPxY);
 
-                                Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
-                                docBm.eraseColor(0xFFFFFFFF);
-                                page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                                page.close();
+                        int fitDocW = (targetRotation == 90f || targetRotation == 270f) ? ph : pw;
+                        int fitDocH = (targetRotation == 90f || targetRotation == 270f) ? pw : ph;
 
-                                canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
-                                docBm.recycle();
-                            } else {
-                                // Full page fitted inside user margins
-                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, printableBox, 0);
+                        Rect destRect = SheetGeometry.calculateAspectFit(fitDocW, fitDocH, targetBox, 0);
 
-                                Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
-                                docBm.eraseColor(0xFFFFFFFF);
-                                page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                                page.close();
+                        if (destRect.width() > 0 && destRect.height() > 0) {
+                            int renderW = (targetRotation == 90f || targetRotation == 270f) ? destRect.height() : destRect.width();
+                            int renderH = (targetRotation == 90f || targetRotation == 270f) ? destRect.width() : destRect.height();
 
-                                canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
-                                docBm.recycle();
-                            }
-                        } else {
-                            // Partial-page placement inside printableBox
-                            int slotW = printableBox.width();
-                            int slotH = printableBox.height();
-                            int subLeft = printableBox.left + (int) (targetRegion.relX * slotW);
-                            int subTop = printableBox.top + (int) (targetRegion.relY * slotH);
-                            int subW = (int) (targetRegion.relW * slotW);
-                            int subH = (int) (targetRegion.relH * slotH);
-                            Rect subBox = new Rect(subLeft, subTop, subLeft + subW, subTop + subH);
-
-                            Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, subBox, 0);
-
-                            Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                            Bitmap docBm = Bitmap.createBitmap(renderW, renderH, Bitmap.Config.ARGB_8888);
                             docBm.eraseColor(0xFFFFFFFF);
                             page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                            page.close();
 
-                            canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
+                            Bitmap finalDoc = (targetRotation != 0f) ? ToneEngine.rotateBitmap(docBm, targetRotation) : docBm;
+
+                            canvas.drawBitmap(finalDoc, destRect.left, destRect.top, null);
+
+                            if (finalDoc != docBm) finalDoc.recycle();
                             docBm.recycle();
                         }
+                        page.close();
                     } else {
                         // Tiled Multi-Page Preview (2-Up or 4-Up)
-                        Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(targetTilingMode, sheetPreviewW, sheetPreviewH, Math.max(marginPxX, marginPxY));
+                        Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(targetTilingMode, sheetPreviewW, sheetPreviewH, marginPxX, marginPxY, sheetW_mm, sheetH_mm);
                         int tileNUp = targetTilingMode.pagesPerSheet;
                         int startPage = (targetPageIndex / tileNUp) * tileNUp;
 
@@ -3114,15 +3140,25 @@ public class MainActivity extends Activity {
                                 int ph = page.getHeight();
 
                                 Rect tileBox = tileBoxes[i];
-                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, tileBox, 0);
+                                int fitDocW = (targetRotation == 90f || targetRotation == 270f) ? ph : pw;
+                                int fitDocH = (targetRotation == 90f || targetRotation == 270f) ? pw : ph;
+
+                                Rect destRect = SheetGeometry.calculateAspectFit(fitDocW, fitDocH, tileBox, 0);
 
                                 if (destRect.width() > 0 && destRect.height() > 0) {
-                                    Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                                    int renderW = (targetRotation == 90f || targetRotation == 270f) ? destRect.height() : destRect.width();
+                                    int renderH = (targetRotation == 90f || targetRotation == 270f) ? destRect.width() : destRect.height();
+
+                                    Bitmap docBm = Bitmap.createBitmap(renderW, renderH, Bitmap.Config.ARGB_8888);
                                     docBm.eraseColor(0xFFFFFFFF);
                                     page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
-                                    canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
+                                    Bitmap finalDoc = (targetRotation != 0f) ? ToneEngine.rotateBitmap(docBm, targetRotation) : docBm;
+
+                                    canvas.drawBitmap(finalDoc, destRect.left, destRect.top, null);
                                     canvas.drawRect(destRect, borderPaint);
+
+                                    if (finalDoc != docBm) finalDoc.recycle();
                                     docBm.recycle();
                                 }
                                 page.close();
@@ -3142,15 +3178,6 @@ public class MainActivity extends Activity {
             if (token != previewRenderToken.get() || baseBm == null) {
                 if (baseBm != null && !baseBm.isRecycled()) baseBm.recycle();
                 return;
-            }
-
-            // 1. Rotation (applies strictly to document content)
-            if (targetRotation != 0) {
-                Bitmap rot = ToneEngine.rotateBitmap(baseBm, targetRotation);
-                if (rot != baseBm) {
-                    baseBm.recycle();
-                    baseBm = rot;
-                }
             }
 
             if (token != previewRenderToken.get()) {
@@ -3190,8 +3217,11 @@ public class MainActivity extends Activity {
             // 3. Auto-blank page detection (runs on clean document without UI border interference)
             final boolean isBlank = ToneEngine.isPageBlank(baseBm);
 
+            // Keep clean undecorated document bitmap for high-performance dynamic darkness updates
+            final Bitmap cleanCopy = baseBm.copy(Bitmap.Config.ARGB_8888, false);
+
             // 4. Tone adjusted bitmap for real-time laser preview
-            final Bitmap toneAdjusted = ToneEngine.processPreviewBitmap(baseBm, targetDarkness);
+            final Bitmap toneAdjusted = ToneEngine.processPreviewBitmap(cleanCopy, targetDarkness);
             final Bitmap finalRaw = baseBm;
 
             // 5. Draw UI sheet decorations (4.5mm hardware gray area, margin guides, sheet border)
@@ -3210,12 +3240,18 @@ public class MainActivity extends Activity {
 
             mainHandler.post(() -> {
                 if (token != previewRenderToken.get()) {
+                    if (cleanCopy != null && !cleanCopy.isRecycled()) cleanCopy.recycle();
                     finalRaw.recycle();
                     if (toneAdjusted != null && toneAdjusted != finalRaw && !toneAdjusted.isRecycled()) {
                         toneAdjusted.recycle();
                     }
                     return;
                 }
+
+                if (cleanPreviewBitmap != null && !cleanPreviewBitmap.isRecycled()) {
+                    cleanPreviewBitmap.recycle();
+                }
+                cleanPreviewBitmap = cleanCopy;
 
                 if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
                     rawPageBitmap.recycle();
@@ -3292,6 +3328,10 @@ public class MainActivity extends Activity {
                     sheetBm.recycle();
                     return;
                 }
+                if (cleanPreviewBitmap != null && !cleanPreviewBitmap.isRecycled()) {
+                    cleanPreviewBitmap.recycle();
+                }
+                cleanPreviewBitmap = null;
                 if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
                     rawPageBitmap.recycle();
                 }
@@ -3546,6 +3586,7 @@ public class MainActivity extends Activity {
             try {
                 if (pdfRenderer != null) pdfRenderer.close();
                 if (pdfPfd != null) pdfPfd.close();
+                if (cleanPreviewBitmap != null && !cleanPreviewBitmap.isRecycled()) cleanPreviewBitmap.recycle();
                 if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) rawPageBitmap.recycle();
                 if (toneAdjustedBitmap != null && toneAdjustedBitmap != rawPageBitmap && !toneAdjustedBitmap.isRecycled()) {
                     toneAdjustedBitmap.recycle();
@@ -3553,6 +3594,7 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) {}
             pdfRenderer = null;
             pdfPfd = null;
+            cleanPreviewBitmap = null;
             rawPageBitmap = null;
             toneAdjustedBitmap = null;
             totalPages = 0;

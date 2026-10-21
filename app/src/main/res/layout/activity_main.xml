@@ -275,7 +275,7 @@
             <LinearLayout
                 android:id="@+id/card_doc_preview"
                 android:layout_width="match_parent"
-                android:layout_height="290dp"
+                android:layout_height="385dp"
                 android:orientation="vertical"
                 android:background="@drawable/card_bg"
                 android:padding="6dp"
@@ -294,15 +294,19 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="⚡ Deep Ink Preview"
-                        android:textSize="10sp"
+                        android:text="⚡ Deep Ink"
+                        android:textSize="9.5sp"
                         android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="end"
                         android:textColor="@color/brand_primary"/>
 
                     <Button
                         android:id="@+id/btn_rotate_page"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/text_high"
                         android:textSize="9sp"
@@ -315,6 +319,8 @@
                         android:id="@+id/btn_toggle_preview_mode"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/text_high"
                         android:textSize="9sp"
@@ -327,6 +333,8 @@
                         android:id="@+id/btn_quick_orient"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/text_high"
                         android:textSize="9sp"
@@ -339,13 +347,30 @@
                         android:id="@+id/btn_quick_zoom"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/brand_primary"
                         android:textSize="9sp"
                         android:textStyle="bold"
                         android:paddingStart="6dp"
                         android:paddingEnd="6dp"
+                        android:layout_marginEnd="3dp"
                         android:text="🔍 Zoom"/>
+
+                    <Button
+                        android:id="@+id/btn_stage_expand"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:text="⛶ Max"/>
                 </LinearLayout>
 
                 <!-- Paper Frame with Laser Scan -->
@@ -427,6 +452,8 @@
                         android:id="@+id/btn_prev_page"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_secondary"
                         android:textColor="@color/text_high"
                         android:textSize="9.5sp"
@@ -449,6 +476,8 @@
                         android:id="@+id/btn_next_page"
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
                         android:background="@drawable/btn_secondary"
                         android:textColor="@color/text_high"
                         android:textSize="9.5sp"
@@ -606,7 +635,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingBottom="40dp">
+                        android:paddingBottom="12dp">
 
                         <!-- Recent Prints Shelf -->
                         <LinearLayout

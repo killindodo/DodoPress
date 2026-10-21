@@ -238,7 +238,7 @@ public class PrintEngine {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
                             Bitmap sheetBitmap = createSheetBitmap(renderer, sheetPages, dpi, paperSize, orientation, placementRegion, activeTiling, invertDark, watermark, rotation, marginMm, metrics);
-                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3]);
+                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3], paperSize != null ? paperSize.name() : "A4");
                             filterIn.flush();
                             ToneEngine.streamBitmapTo1BitRaster(sheetBitmap, darkness, filterIn);
                             sheetBitmap.recycle();
@@ -258,7 +258,7 @@ public class PrintEngine {
                             if (listener != null) {
                                 listener.onProgress(currentSheet, totalSheets, status);
                             }
-                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3]);
+                            CupsRasterWriter.writePageHeader(filterIn, metrics[0], metrics[1], dpi, metrics[2], metrics[3], paperSize != null ? paperSize.name() : "A4");
                             filterIn.flush();
                             ToneEngine.streamBitmapTo1BitRaster(sheetBitmap, darkness, filterIn);
                         }
@@ -360,7 +360,10 @@ public class PrintEngine {
         int sheetPixelH = targetPaper.getPixelHeight(dpi, targetOrient);
         int sheetPtsW = targetPaper.getWidthPts(targetOrient);
         int sheetPtsH = targetPaper.getHeightPts(targetOrient);
-        int marginPx = (marginMm > 0) ? (int) Math.round((marginMm / 25.4f) * dpi) : 0;
+        float sheetWidthMm = targetPaper.getWidthMm(targetOrient);
+        float sheetHeightMm = targetPaper.getHeightMm(targetOrient);
+        float pxPerMm = (float) dpi / 25.4f;
+        int marginPx = (marginMm > 0) ? Math.round(marginMm * pxPerMm) : 0;
 
         Bitmap finalBitmap;
 
@@ -373,37 +376,38 @@ public class PrintEngine {
             Bitmap sheetBitmap = Bitmap.createBitmap(sheetPixelW, sheetPixelH, Bitmap.Config.ARGB_8888);
             sheetBitmap.eraseColor(0xFFFFFFFF);
 
-            Rect targetBox = (region == null || region == SheetGeometry.PlacementRegion.FULL_PAGE)
-                    ? new Rect(0, 0, sheetPixelW, sheetPixelH)
-                    : SheetGeometry.getTargetBox(region, sheetPixelW, sheetPixelH);
+            Rect targetBox = SheetGeometry.getPlacementBoundingBox(region, sheetPixelW, sheetPixelH, marginPx, marginPx);
 
-            int effectiveMargin = (region == null || region == SheetGeometry.PlacementRegion.FULL_PAGE)
-                    ? marginPx
-                    : Math.max(marginPx, (int) (dpi * 0.08f));
+            int fitDocW = (rotation == 90f || rotation == 270f) ? pagePtsH : pagePtsW;
+            int fitDocH = (rotation == 90f || rotation == 270f) ? pagePtsW : pagePtsH;
 
-            Rect destRect = SheetGeometry.calculateAspectFit(pagePtsW, pagePtsH, targetBox, effectiveMargin);
+            Rect destRect = SheetGeometry.calculateAspectFit(fitDocW, fitDocH, targetBox, 0);
 
-            Bitmap docBitmap = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
-            docBitmap.eraseColor(0xFFFFFFFF);
-            page.render(docBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+            if (destRect.width() > 0 && destRect.height() > 0) {
+                int renderW = (rotation == 90f || rotation == 270f) ? destRect.height() : destRect.width();
+                int renderH = (rotation == 90f || rotation == 270f) ? destRect.width() : destRect.height();
+
+                Bitmap docBitmap = Bitmap.createBitmap(renderW, renderH, Bitmap.Config.ARGB_8888);
+                docBitmap.eraseColor(0xFFFFFFFF);
+                page.render(docBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
+
+                Bitmap finalDoc = (rotation != 0f) ? ToneEngine.rotateBitmap(docBitmap, rotation) : docBitmap;
+
+                Canvas canvas = new Canvas(sheetBitmap);
+                canvas.drawBitmap(finalDoc, destRect.left, destRect.top, null);
+
+                if (finalDoc != docBitmap) finalDoc.recycle();
+                docBitmap.recycle();
+            }
             page.close();
-
-            Canvas canvas = new Canvas(sheetBitmap);
-            canvas.drawBitmap(docBitmap, destRect.left, destRect.top, null);
-            docBitmap.recycle();
             finalBitmap = sheetBitmap;
         } else {
             // N-Up Multi-Page Sheet Tiling (TWO_UP or FOUR_UP)
-            outMetrics[0] = sheetPixelW;
-            outMetrics[1] = sheetPixelH;
-            outMetrics[2] = sheetPtsW;
-            outMetrics[3] = sheetPtsH;
-
             Bitmap sheetBitmap = Bitmap.createBitmap(sheetPixelW, sheetPixelH, Bitmap.Config.ARGB_8888);
             sheetBitmap.eraseColor(0xFFFFFFFF);
             Canvas canvas = new Canvas(sheetBitmap);
 
-            Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(tilingMode, sheetPixelW, sheetPixelH, marginPx);
+            Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(tilingMode, sheetPixelW, sheetPixelH, marginPx, marginPx, sheetWidthMm, sheetHeightMm);
 
             for (int k = 0; k < sheetPages.size() && k < tileBoxes.length; k++) {
                 int pageIdx = sheetPages.get(k);
@@ -412,30 +416,30 @@ public class PrintEngine {
                 int pagePtsH = page.getHeight();
 
                 Rect tileBox = tileBoxes[k];
-                Rect destRect = SheetGeometry.calculateAspectFit(pagePtsW, pagePtsH, tileBox, 0);
+                int fitDocW = (rotation == 90f || rotation == 270f) ? pagePtsH : pagePtsW;
+                int fitDocH = (rotation == 90f || rotation == 270f) ? pagePtsW : pagePtsH;
+
+                Rect destRect = SheetGeometry.calculateAspectFit(fitDocW, fitDocH, tileBox, 0);
 
                 if (destRect.width() > 0 && destRect.height() > 0) {
-                    Bitmap docBitmap = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                    int renderW = (rotation == 90f || rotation == 270f) ? destRect.height() : destRect.width();
+                    int renderH = (rotation == 90f || rotation == 270f) ? destRect.width() : destRect.height();
+
+                    Bitmap docBitmap = Bitmap.createBitmap(renderW, renderH, Bitmap.Config.ARGB_8888);
                     docBitmap.eraseColor(0xFFFFFFFF);
                     page.render(docBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT);
-                    canvas.drawBitmap(docBitmap, destRect.left, destRect.top, null);
+
+                    Bitmap finalDoc = (rotation != 0f) ? ToneEngine.rotateBitmap(docBitmap, rotation) : docBitmap;
+
+                    canvas.drawBitmap(finalDoc, destRect.left, destRect.top, null);
+
+                    if (finalDoc != docBitmap) finalDoc.recycle();
                     docBitmap.recycle();
                 }
                 page.close();
             }
 
             finalBitmap = sheetBitmap;
-        }
-
-        // Apply rotation if needed
-        if (rotation != 0) {
-            Bitmap rotated = ToneEngine.rotateBitmap(finalBitmap, rotation);
-            if (rotated != finalBitmap) {
-                finalBitmap.recycle();
-                finalBitmap = rotated;
-                outMetrics[0] = finalBitmap.getWidth();
-                outMetrics[1] = finalBitmap.getHeight();
-            }
         }
 
         // Apply dark-background inversion (ink shield)
@@ -465,8 +469,8 @@ public class PrintEngine {
             outMetrics[2] = targetPaper.getWidthPts(SheetGeometry.Orientation.PORTRAIT);
             outMetrics[3] = targetPaper.getHeightPts(SheetGeometry.Orientation.PORTRAIT);
         } else {
-            outMetrics[0] = finalBitmap.getWidth();
-            outMetrics[1] = finalBitmap.getHeight();
+            outMetrics[0] = targetPaper.getPixelWidth(dpi, SheetGeometry.Orientation.PORTRAIT);
+            outMetrics[1] = targetPaper.getPixelHeight(dpi, SheetGeometry.Orientation.PORTRAIT);
             outMetrics[2] = sheetPtsW;
             outMetrics[3] = sheetPtsH;
         }

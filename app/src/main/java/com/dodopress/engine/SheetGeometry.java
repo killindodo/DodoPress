@@ -21,23 +21,31 @@ public class SheetGeometry {
     }
 
     public enum PaperSize {
-        A4("A4 (210×297 mm)", 595, 842, 210.0f, 297.0f),
-        LETTER("Letter (8.5×11 in)", 612, 792, 215.9f, 279.4f),
-        LEGAL("Legal (8.5×14 in)", 612, 1008, 215.9f, 355.6f),
-        A5("A5 (148×210 mm)", 420, 595, 148.0f, 210.0f);
+        A4("A4 (210×297 mm)", 595, 842, 210.0f, 297.0f, 595.28f, 841.89f),
+        LETTER("Letter (8.5×11 in)", 612, 792, 215.9f, 279.4f, 612.0f, 792.0f),
+        LEGAL("Legal (8.5×14 in)", 612, 1008, 215.9f, 355.6f, 612.0f, 1008.0f),
+        A5("A5 (148×210 mm)", 420, 595, 148.0f, 210.0f, 419.53f, 595.28f);
 
         public final String title;
         public final int widthPts;
         public final int heightPts;
         public final float widthMm;
         public final float heightMm;
+        public final float widthPtsExact;
+        public final float heightPtsExact;
 
-        PaperSize(String title, int widthPts, int heightPts, float widthMm, float heightMm) {
+        PaperSize(String title, int widthPts, int heightPts, float widthMm, float heightMm, float widthPtsExact, float heightPtsExact) {
             this.title = title;
             this.widthPts = widthPts;
             this.heightPts = heightPts;
             this.widthMm = widthMm;
             this.heightMm = heightMm;
+            this.widthPtsExact = widthPtsExact;
+            this.heightPtsExact = heightPtsExact;
+        }
+
+        PaperSize(String title, int widthPts, int heightPts, float widthMm, float heightMm) {
+            this(title, widthPts, heightPts, widthMm, heightMm, (widthMm / 25.4f) * 72.0f, (heightMm / 25.4f) * 72.0f);
         }
 
         public float getWidthMm(Orientation orientation) {
@@ -56,6 +64,14 @@ public class SheetGeometry {
             return (orientation == Orientation.LANDSCAPE) ? Math.min(widthPts, heightPts) : Math.max(widthPts, heightPts);
         }
 
+        public float getWidthPtsExact(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.max(widthPtsExact, heightPtsExact) : Math.min(widthPtsExact, heightPtsExact);
+        }
+
+        public float getHeightPtsExact(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.min(widthPtsExact, heightPtsExact) : Math.max(widthPtsExact, heightPtsExact);
+        }
+
         public int getPixelWidth(int dpi) {
             return getPixelWidth(dpi, Orientation.PORTRAIT);
         }
@@ -64,13 +80,22 @@ public class SheetGeometry {
             return getPixelHeight(dpi, Orientation.PORTRAIT);
         }
 
+        public int getRawPixelWidth(int dpi, Orientation orientation) {
+            return Math.round((getWidthMm(orientation) / 25.4f) * dpi);
+        }
+
+        public int getRawPixelHeight(int dpi, Orientation orientation) {
+            return Math.round((getHeightMm(orientation) / 25.4f) * dpi);
+        }
+
         public int getPixelWidth(int dpi, Orientation orientation) {
-            int targetW = (int) Math.round((getWidthPts(orientation) / 72.0) * dpi);
-            return (targetW + 31) & ~31; // Word-aligned for raster
+            int targetW = Math.round((getWidthMm(orientation) / 25.4f) * dpi);
+            return (targetW + 31) & ~31; // 32-bit word-aligned for raster scanlines
         }
 
         public int getPixelHeight(int dpi, Orientation orientation) {
-            return ((int) Math.round((getHeightPts(orientation) / 72.0) * dpi)) & ~1;
+            int targetH = Math.round((getHeightMm(orientation) / 25.4f) * dpi);
+            return (targetH + 31) & ~31; // 32-bit word-aligned for raster scanlines (ensures exact dimension parity under rotation)
         }
     }
 
@@ -115,82 +140,108 @@ public class SheetGeometry {
     }
 
     /**
-     * Calculates the target bounding box on the sheet for the selected region.
+     * Calculates the exact target bounding box on the sheet for the selected region,
+     * taking into account independent horizontal and vertical margins.
+     * Guarantees 100% mathematical parity between UI preview and CUPS raster generation.
      */
-    public static Rect getTargetBox(PlacementRegion region, int sheetW, int sheetH) {
-        int x = (int) (region.relX * sheetW);
-        int y = (int) (region.relY * sheetH);
-        int w = (int) (region.relW * sheetW);
-        int h = (int) (region.relH * sheetH);
-        return new Rect(x, y, x + w, y + h);
+    public static Rect getPlacementBoundingBox(PlacementRegion region, int sheetW, int sheetH, int marginPxX, int marginPxY) {
+        if (region == null || region == PlacementRegion.FULL_PAGE) {
+            int left = Math.min(marginPxX, sheetW / 2);
+            int top = Math.min(marginPxY, sheetH / 2);
+            int right = Math.max(left + 1, sheetW - marginPxX);
+            int bottom = Math.max(top + 1, sheetH - marginPxY);
+            return new Rect(left, top, right, bottom);
+        }
+
+        int rawLeft = Math.round(region.relX * sheetW);
+        int rawTop = Math.round(region.relY * sheetH);
+        int rawW = Math.round(region.relW * sheetW);
+        int rawH = Math.round(region.relH * sheetH);
+        int rawRight = rawLeft + rawW;
+        int rawBottom = rawTop + rawH;
+
+        int left = rawLeft + marginPxX;
+        int top = rawTop + marginPxY;
+        int right = Math.max(left + 1, rawRight - marginPxX);
+        int bottom = Math.max(top + 1, rawBottom - marginPxY);
+
+        return new Rect(left, top, right, bottom);
+    }
+
+    public static Rect getPlacementBoundingBox(PlacementRegion region, int sheetW, int sheetH, int marginPx) {
+        return getPlacementBoundingBox(region, sheetW, sheetH, marginPx, marginPx);
     }
 
     /**
-     * Calculates tile bounding boxes for N-Up multi-page printing.
-     * ONE_UP: Single full-page bounding box inside sheet margins.
-     * TWO_UP: Two stacked boxes (portrait) or side-by-side (landscape) with 2mm gutter.
-     * FOUR_UP: 2x2 grid of 4 bounding boxes with 2mm gutter.
+     * Backward-compatible raw region bounding box without margins.
      */
-    public static Rect[] calculateNUpBoxes(TilingMode mode, int sheetW, int sheetH, int marginPx) {
+    public static Rect getTargetBox(PlacementRegion region, int sheetW, int sheetH) {
+        return getPlacementBoundingBox(region, sheetW, sheetH, 0, 0);
+    }
+
+    /**
+     * Calculates tile bounding boxes for N-Up multi-page printing with physical mm gutters.
+     * ONE_UP: Single full-page bounding box inside sheet margins.
+     * TWO_UP: Two stacked boxes (portrait) or side-by-side (landscape) with exact 2mm physical gutter.
+     * FOUR_UP: 2x2 grid of 4 bounding boxes with exact 2mm physical gutters.
+     */
+    public static Rect[] calculateNUpBoxes(TilingMode mode, int sheetW, int sheetH, int marginPxX, int marginPxY, float sheetWidthMm, float sheetHeightMm) {
         if (mode == null || mode == TilingMode.ONE_UP) {
-            int left = Math.min(marginPx, sheetW / 2);
-            int top = Math.min(marginPx, sheetH / 2);
-            int right = Math.max(left + 1, sheetW - marginPx);
-            int bottom = Math.max(top + 1, sheetH - marginPx);
-            return new Rect[] { new Rect(left, top, right, bottom) };
+            return new Rect[] { getPlacementBoundingBox(PlacementRegion.FULL_PAGE, sheetW, sheetH, marginPxX, marginPxY) };
         }
 
-        // 2mm physical gutter scaled to sheet resolution (based on standard 210mm width for portrait)
-        float sheetBaseDim = (sheetH >= sheetW) ? 210.0f : 297.0f;
-        float pxPerMm = (float) sheetW / sheetBaseDim;
-        int gutterPx = Math.max(2, Math.round(pxPerMm * 2.0f));
+        float pxPerMmX = (float) sheetW / Math.max(1f, sheetWidthMm);
+        float pxPerMmY = (float) sheetH / Math.max(1f, sheetHeightMm);
+        int gutterPxX = Math.max(2, Math.round(pxPerMmX * 2.0f)); // Exact 2.0 mm physical gutter
+        int gutterPxY = Math.max(2, Math.round(pxPerMmY * 2.0f));
 
-        int effectiveMargin = Math.max(0, marginPx);
-        int availW = Math.max(1, sheetW - (effectiveMargin * 2));
-        int availH = Math.max(1, sheetH - (effectiveMargin * 2));
+        int effectiveMarginX = Math.max(0, marginPxX);
+        int effectiveMarginY = Math.max(0, marginPxY);
+        int availW = Math.max(1, sheetW - (effectiveMarginX * 2));
+        int availH = Math.max(1, sheetH - (effectiveMarginY * 2));
 
         if (mode == TilingMode.TWO_UP) {
             if (sheetH >= sheetW) {
-                // Stacked vertically: Top Half and Bottom Half
-                int slotH = Math.max(1, (availH - gutterPx) / 2);
-                int top0 = effectiveMargin;
+                // Stacked vertically: Top Half and Bottom Half with 2mm gutter
+                int slotH = Math.max(1, (availH - gutterPxY) / 2);
+                int top0 = effectiveMarginY;
                 int bottom0 = top0 + slotH;
-                Rect box0 = new Rect(effectiveMargin, top0, sheetW - effectiveMargin, bottom0);
+                Rect box0 = new Rect(effectiveMarginX, top0, sheetW - effectiveMarginX, bottom0);
 
-                int top1 = bottom0 + gutterPx;
-                int bottom1 = Math.min(sheetH - effectiveMargin, top1 + slotH);
-                Rect box1 = new Rect(effectiveMargin, top1, sheetW - effectiveMargin, bottom1);
+                int top1 = bottom0 + gutterPxY;
+                int bottom1 = Math.min(sheetH - effectiveMarginY, top1 + slotH);
+                Rect box1 = new Rect(effectiveMarginX, top1, sheetW - effectiveMarginX, bottom1);
 
                 return new Rect[] { box0, box1 };
             } else {
-                // Side-by-side: Left Half and Right Half
-                int slotW = Math.max(1, (availW - gutterPx) / 2);
-                int left0 = effectiveMargin;
+                // Side-by-side: Left Half and Right Half with 2mm gutter
+                int slotW = Math.max(1, (availW - gutterPxX) / 2);
+                int left0 = effectiveMarginX;
                 int right0 = left0 + slotW;
-                Rect box0 = new Rect(left0, effectiveMargin, right0, sheetH - effectiveMargin);
+                Rect box0 = new Rect(left0, effectiveMarginY, right0, sheetH - effectiveMarginY);
 
-                int left1 = right0 + gutterPx;
-                int right1 = Math.min(sheetW - effectiveMargin, left1 + slotW);
-                Rect box1 = new Rect(left1, effectiveMargin, right1, sheetH - effectiveMargin);
+                int left1 = right0 + gutterPxX;
+                int right1 = Math.min(sheetW - effectiveMarginX, left1 + slotW);
+                Rect box1 = new Rect(left1, effectiveMarginY, right1, sheetH - effectiveMarginY);
 
                 return new Rect[] { box0, box1 };
             }
         }
 
         if (mode == TilingMode.FOUR_UP) {
-            // 2x2 Grid of 4 boxes
-            int slotW = Math.max(1, (availW - gutterPx) / 2);
-            int slotH = Math.max(1, (availH - gutterPx) / 2);
+            // 2x2 Grid of 4 boxes with 2mm gutters
+            int slotW = Math.max(1, (availW - gutterPxX) / 2);
+            int slotH = Math.max(1, (availH - gutterPxY) / 2);
 
-            int left0 = effectiveMargin;
+            int left0 = effectiveMarginX;
             int right0 = left0 + slotW;
-            int left1 = right0 + gutterPx;
-            int right1 = Math.min(sheetW - effectiveMargin, left1 + slotW);
+            int left1 = right0 + gutterPxX;
+            int right1 = Math.min(sheetW - effectiveMarginX, left1 + slotW);
 
-            int top0 = effectiveMargin;
+            int top0 = effectiveMarginY;
             int bottom0 = top0 + slotH;
-            int top1 = bottom0 + gutterPx;
-            int bottom1 = Math.min(sheetH - effectiveMargin, top1 + slotH);
+            int top1 = bottom0 + gutterPxY;
+            int bottom1 = Math.min(sheetH - effectiveMarginY, top1 + slotH);
 
             return new Rect[] {
                 new Rect(left0, top0, right0, bottom0), // Tile 0: Top-Left
@@ -200,20 +251,27 @@ public class SheetGeometry {
             };
         }
 
-        return new Rect[] { new Rect(effectiveMargin, effectiveMargin, sheetW - effectiveMargin, sheetH - effectiveMargin) };
+        return new Rect[] { getPlacementBoundingBox(PlacementRegion.FULL_PAGE, sheetW, sheetH, marginPxX, marginPxY) };
+    }
+
+    public static Rect[] calculateNUpBoxes(TilingMode mode, int sheetW, int sheetH, int marginPx) {
+        float baseW = (sheetH >= sheetW) ? 210.0f : 297.0f;
+        float baseH = (sheetH >= sheetW) ? 297.0f : 210.0f;
+        return calculateNUpBoxes(mode, sheetW, sheetH, marginPx, marginPx, baseW, baseH);
     }
 
     /**
      * Uniformly scales docW/docH to fit inside targetBox with aspect-ratio preservation (FIT_CENTER).
-     * Guarantees ZERO distortion, stretching, or compression.
+     * Guarantees ZERO distortion, stretching, or compression, and exact integer subpixel centering.
      */
     public static Rect calculateAspectFit(int docW, int docH, Rect targetBox, int marginPx) {
+        if (docW <= 0 || docH <= 0 || targetBox == null) return new Rect(0, 0, 1, 1);
         int availW = Math.max(1, targetBox.width() - (marginPx * 2));
         int availH = Math.max(1, targetBox.height() - (marginPx * 2));
 
         float scale = Math.min((float) availW / (float) docW, (float) availH / (float) docH);
-        int drawW = Math.max(1, (int) (docW * scale));
-        int drawH = Math.max(1, (int) (docH * scale));
+        int drawW = Math.max(1, Math.round(docW * scale));
+        int drawH = Math.max(1, Math.round(docH * scale));
 
         int left = targetBox.left + marginPx + (availW - drawW) / 2;
         int top = targetBox.top + marginPx + (availH - drawH) / 2;
@@ -233,10 +291,29 @@ public class SheetGeometry {
     }
 
     /**
-     * Checks if current margin setting encroaches on the mechanical unprintable hardware zone.
+     * Mathematical exact calculation of printable dimensions in PostScript points.
+     */
+    public static float[] getPrintableDimensionsPts(PaperSize paper, Orientation orientation, float marginMm) {
+        float[] dimsMm = getPrintableDimensionsMm(paper, orientation, marginMm);
+        return new float[] {
+            (dimsMm[0] / 25.4f) * 72.0f,
+            (dimsMm[1] / 25.4f) * 72.0f
+        };
+    }
+
+    /**
+     * Checks if current margin setting encroaches on the mechanical unprintable hardware zone (< 4.5 mm).
      */
     public static boolean isHardwareClipped(float marginMm) {
         return marginMm < HARDWARE_MIN_MARGIN_MM;
+    }
+
+    /**
+     * Calculates the exact mechanical cutoff depth in millimeters when margin < 4.5 mm.
+     * Cutoff delta = 4.5 mm - user_margin. If user_margin >= 4.5 mm, delta is 0.0 mm.
+     */
+    public static float getHardwareCutoffDeltaMm(float marginMm) {
+        return Math.max(0f, HARDWARE_MIN_MARGIN_MM - marginMm);
     }
 
     /**

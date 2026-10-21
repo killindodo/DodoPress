@@ -40,10 +40,11 @@ public class ToneEngine {
     }
 
     public static int calculateThreshold(int darkness) {
-        if (darkness <= 50) {
-            return 90 + (int) ((darkness / 50.0) * 50); // 90..140
+        int d = Math.min(100, Math.max(0, darkness));
+        if (d <= 50) {
+            return 90 + (int) ((d / 50.0) * 50); // 90..140
         } else {
-            return 140 + (int) (((darkness - 50) / 50.0) * 55); // 140..195
+            return 140 + (int) (((d - 50) / 50.0) * 55); // 140..195
         }
     }
 
@@ -52,11 +53,12 @@ public class ToneEngine {
     }
 
     private static int getEdgeLimit(int darkness) {
-        if (darkness <= 50) {
-            return 120 + (int) ((darkness / 50.0) * 55); // 120..175
+        int d = Math.min(100, Math.max(0, darkness));
+        if (d <= 50) {
+            return 120 + (int) ((d / 50.0) * 55); // 120..175
         } else {
             // Strictly capped at 215 so backgrounds (>= 220) are NEVER treated as text edges!
-            return 175 + (int) (((darkness - 50) / 50.0) * 40); // 175..215
+            return 175 + (int) (((d - 50) / 50.0) * 40); // 175..215
         }
     }
 
@@ -147,7 +149,7 @@ public class ToneEngine {
     public static void streamBitmapTo1BitRaster(Bitmap bitmap, int darkness, OutputStream rasterOut) throws IOException {
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
-        int bytesPerLine = width / 8; // Guaranteed multiple of 32
+        int bytesPerLine = (width + 7) / 8; // Guaranteed multiple of 32 for page sheets, padded safely
 
         int coreLimit = getCoreBlackLimit(darkness);
         int edgeLimit = getEdgeLimit(darkness);
@@ -247,6 +249,13 @@ public class ToneEngine {
                     currentByte = 0;
                     bitCount = 0;
                 }
+            }
+
+            if (bitCount > 0) {
+                currentByte <<= (8 - bitCount);
+                lineBytes[byteIndex++] = (byte) currentByte;
+                currentByte = 0;
+                bitCount = 0;
             }
 
             rasterOut.write(lineBytes, 0, bytesPerLine);

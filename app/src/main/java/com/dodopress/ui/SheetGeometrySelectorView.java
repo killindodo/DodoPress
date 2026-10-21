@@ -193,7 +193,7 @@ public class SheetGeometrySelectorView extends View {
 
                 SheetGeometry.PlacementRegion newRegion;
 
-                if (relY < 0.5f) {
+                if (relY < 0.35f) {
                     if (relX < 0.33f) {
                         newRegion = (activeRegion == SheetGeometry.PlacementRegion.QUAD_TOP_LEFT) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.QUAD_TOP_LEFT;
                     } else if (relX > 0.66f) {
@@ -201,13 +201,21 @@ public class SheetGeometrySelectorView extends View {
                     } else {
                         newRegion = (activeRegion == SheetGeometry.PlacementRegion.TOP_HALF) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.TOP_HALF;
                     }
-                } else {
+                } else if (relY > 0.65f) {
                     if (relX < 0.33f) {
                         newRegion = (activeRegion == SheetGeometry.PlacementRegion.QUAD_BOTTOM_LEFT) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.QUAD_BOTTOM_LEFT;
                     } else if (relX > 0.66f) {
                         newRegion = (activeRegion == SheetGeometry.PlacementRegion.QUAD_BOTTOM_RIGHT) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.QUAD_BOTTOM_RIGHT;
                     } else {
                         newRegion = (activeRegion == SheetGeometry.PlacementRegion.BOTTOM_HALF) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.BOTTOM_HALF;
+                    }
+                } else {
+                    if (relX < 0.33f) {
+                        newRegion = (activeRegion == SheetGeometry.PlacementRegion.LEFT_HALF) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.LEFT_HALF;
+                    } else if (relX > 0.66f) {
+                        newRegion = (activeRegion == SheetGeometry.PlacementRegion.RIGHT_HALF) ? SheetGeometry.PlacementRegion.FULL_PAGE : SheetGeometry.PlacementRegion.RIGHT_HALF;
+                    } else {
+                        newRegion = SheetGeometry.PlacementRegion.FULL_PAGE;
                     }
                 }
 

@@ -13,25 +13,47 @@ public class CupsRasterWriter {
     }
 
     public static void writePageHeader(OutputStream out, int width, int height, int dpi, int pageWidthPts, int pageHeightPts) throws IOException {
+        writePageHeader(out, width, height, dpi, pageWidthPts, pageHeightPts, null);
+    }
+
+    public static void writePageHeader(OutputStream out, int width, int height, int dpi, int pageWidthPts, int pageHeightPts, String paperName) throws IOException {
         int bitsPerColor = 1;
         int numColors = 1;
         int bitsPerPixel = 1;
-        int bytesPerLine = width / 8; // width is guaranteed multiple of 32
+        int bytesPerLine = width / 8; // width is guaranteed multiple of 32 (word-aligned)
 
         int shortEdge = Math.min(pageWidthPts, pageHeightPts);
         int longEdge = Math.max(pageWidthPts, pageHeightPts);
 
         int paperCode = 9; // A4 default
         String pageSizeName = "A4";
-        if (shortEdge > 600 && longEdge > 950) {
-            paperCode = 5; // Legal
-            pageSizeName = "Legal";
-        } else if (shortEdge > 600) {
-            paperCode = 1; // Letter
-            pageSizeName = "Letter";
-        } else if (shortEdge < 500) {
-            paperCode = 25; // A5
-            pageSizeName = "A5";
+
+        if (paperName != null && !paperName.trim().isEmpty()) {
+            String p = paperName.trim().toUpperCase(java.util.Locale.US);
+            if (p.contains("LETTER")) {
+                paperCode = 1;
+                pageSizeName = "Letter";
+            } else if (p.contains("LEGAL")) {
+                paperCode = 5;
+                pageSizeName = "Legal";
+            } else if (p.contains("A5")) {
+                paperCode = 11; // cupsInteger0 = 11 for A5 in hp-laserjet_m1005.ppd
+                pageSizeName = "A5";
+            } else {
+                paperCode = 9;
+                pageSizeName = "A4";
+            }
+        } else {
+            if (shortEdge > 600 && longEdge > 950) {
+                paperCode = 5; // Legal
+                pageSizeName = "Legal";
+            } else if (shortEdge > 600) {
+                paperCode = 1; // Letter
+                pageSizeName = "Letter";
+            } else if (shortEdge < 500) {
+                paperCode = 11; // A5 (cupsInteger0 = 11 in hp-laserjet_m1005.ppd)
+                pageSizeName = "A5";
+            }
         }
 
         writeString(out, ""); // MediaClass
