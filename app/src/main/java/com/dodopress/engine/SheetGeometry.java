@@ -4,29 +4,73 @@ import android.graphics.Rect;
 
 public class SheetGeometry {
 
+    // HP LaserJet M1005 MFP Physical Hardware Margin Limits
+    public static final float HARDWARE_MIN_MARGIN_MM = 4.5f;   // Physical minimum unprintable margin (laser drum grip limit)
+    public static final float HARDWARE_LEAD_TRAIL_MM = 4.5f;  // Lead & trail mechanical edge grip limit (~12.8 pt)
+    public static final float HARDWARE_SIDES_MM = 4.23f;       // Lateral mechanical margins (~12.0 pt)
+
+    public enum Orientation {
+        PORTRAIT("Portrait"),
+        LANDSCAPE("Landscape");
+
+        public final String title;
+
+        Orientation(String title) {
+            this.title = title;
+        }
+    }
+
     public enum PaperSize {
-        A4("A4 (210×297 mm)", 595, 842),
-        LETTER("Letter (8.5×11 in)", 612, 792),
-        LEGAL("Legal (8.5×14 in)", 612, 1008),
-        A5("A5 (148×210 mm)", 420, 595);
+        A4("A4 (210×297 mm)", 595, 842, 210.0f, 297.0f),
+        LETTER("Letter (8.5×11 in)", 612, 792, 215.9f, 279.4f),
+        LEGAL("Legal (8.5×14 in)", 612, 1008, 215.9f, 355.6f),
+        A5("A5 (148×210 mm)", 420, 595, 148.0f, 210.0f);
 
         public final String title;
         public final int widthPts;
         public final int heightPts;
+        public final float widthMm;
+        public final float heightMm;
 
-        PaperSize(String title, int widthPts, int heightPts) {
+        PaperSize(String title, int widthPts, int heightPts, float widthMm, float heightMm) {
             this.title = title;
             this.widthPts = widthPts;
             this.heightPts = heightPts;
+            this.widthMm = widthMm;
+            this.heightMm = heightMm;
+        }
+
+        public float getWidthMm(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.max(widthMm, heightMm) : Math.min(widthMm, heightMm);
+        }
+
+        public float getHeightMm(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.min(widthMm, heightMm) : Math.max(widthMm, heightMm);
+        }
+
+        public int getWidthPts(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.max(widthPts, heightPts) : Math.min(widthPts, heightPts);
+        }
+
+        public int getHeightPts(Orientation orientation) {
+            return (orientation == Orientation.LANDSCAPE) ? Math.min(widthPts, heightPts) : Math.max(widthPts, heightPts);
         }
 
         public int getPixelWidth(int dpi) {
-            int targetW = (int) Math.round((widthPts / 72.0) * dpi);
-            return (targetW + 31) & ~31; // Word-aligned for raster
+            return getPixelWidth(dpi, Orientation.PORTRAIT);
         }
 
         public int getPixelHeight(int dpi) {
-            return ((int) Math.round((heightPts / 72.0) * dpi)) & ~1;
+            return getPixelHeight(dpi, Orientation.PORTRAIT);
+        }
+
+        public int getPixelWidth(int dpi, Orientation orientation) {
+            int targetW = (int) Math.round((getWidthPts(orientation) / 72.0) * dpi);
+            return (targetW + 31) & ~31; // Word-aligned for raster
+        }
+
+        public int getPixelHeight(int dpi, Orientation orientation) {
+            return ((int) Math.round((getHeightPts(orientation) / 72.0) * dpi)) & ~1;
         }
     }
 
@@ -175,5 +219,39 @@ public class SheetGeometry {
         int top = targetBox.top + marginPx + (availH - drawH) / 2;
 
         return new Rect(left, top, left + drawW, top + drawH);
+    }
+
+    /**
+     * Mathematical exact calculation of printable dimensions in millimeters.
+     */
+    public static float[] getPrintableDimensionsMm(PaperSize paper, Orientation orientation, float marginMm) {
+        float sheetW = paper.getWidthMm(orientation);
+        float sheetH = paper.getHeightMm(orientation);
+        float printW = Math.max(0f, sheetW - (2f * marginMm));
+        float printH = Math.max(0f, sheetH - (2f * marginMm));
+        return new float[] { printW, printH };
+    }
+
+    /**
+     * Checks if current margin setting encroaches on the mechanical unprintable hardware zone.
+     */
+    public static boolean isHardwareClipped(float marginMm) {
+        return marginMm < HARDWARE_MIN_MARGIN_MM;
+    }
+
+    /**
+     * Converts a millimeter dimension to horizontal pixels based on actual sheet width.
+     */
+    public static int mmToPixelsX(float mm, int sheetPixelW, float sheetWidthMm) {
+        if (sheetWidthMm <= 0) return 0;
+        return Math.round((mm / sheetWidthMm) * sheetPixelW);
+    }
+
+    /**
+     * Converts a millimeter dimension to vertical pixels based on actual sheet height.
+     */
+    public static int mmToPixelsY(float mm, int sheetPixelH, float sheetHeightMm) {
+        if (sheetHeightMm <= 0) return 0;
+        return Math.round((mm / sheetHeightMm) * sheetPixelH);
     }
 }

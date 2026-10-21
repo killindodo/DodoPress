@@ -18,14 +18,20 @@ public class CupsRasterWriter {
         int bitsPerPixel = 1;
         int bytesPerLine = width / 8; // width is guaranteed multiple of 32
 
+        int shortEdge = Math.min(pageWidthPts, pageHeightPts);
+        int longEdge = Math.max(pageWidthPts, pageHeightPts);
+
         int paperCode = 9; // A4 default
         String pageSizeName = "A4";
-        if (pageWidthPts > 600 && pageHeightPts > 950) {
+        if (shortEdge > 600 && longEdge > 950) {
             paperCode = 5; // Legal
             pageSizeName = "Legal";
-        } else if (pageWidthPts > 600) {
+        } else if (shortEdge > 600) {
             paperCode = 1; // Letter
             pageSizeName = "Letter";
+        } else if (shortEdge < 500) {
+            paperCode = 25; // A5
+            pageSizeName = "A5";
         }
 
         writeString(out, ""); // MediaClass

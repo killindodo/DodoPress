@@ -16,8 +16,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
 import android.graphics.pdf.PdfRenderer;
 import android.animation.ValueAnimator;
@@ -44,6 +47,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -76,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,6 +92,12 @@ public class MainActivity extends Activity {
     private static final int REQUEST_PICK_ID_FRONT = 2002;
     private static final int REQUEST_PICK_ID_BACK = 2003;
     private static final int REQUEST_CAMERA_SCAN = 2004;
+    private static final int REQUEST_SCAN_ID_FRONT = 2005;
+    private static final int REQUEST_SCAN_ID_BACK = 2006;
+    private static final int REQUEST_PICK_ID2_FRONT = 2007;
+    private static final int REQUEST_PICK_ID2_BACK = 2008;
+    private static final int REQUEST_SCAN_ID2_FRONT = 2009;
+    private static final int REQUEST_SCAN_ID2_BACK = 2010;
     private static final int PERMISSION_CAMERA_REQ = 3001;
 
     private UsbPrinterConnection usbPrinterConnection;
@@ -149,10 +160,23 @@ public class MainActivity extends Activity {
 
     private View btnThemeMenu;
 
-    // Retractable Sliding Options Panel
+    // Retractable Sliding Options Panel & Section Control
+    public enum ControlSection {
+        RECENTS,
+        TONE,
+        GEOMETRY,
+        MARGINS,
+        PAGES,
+        WATERMARK
+    }
+
+    private ControlSection currentControlSection = ControlSection.TONE;
+
     private View layoutSlidingPanel;
     private TextView tvPanelHandle;
     private Button btnTogglePanel;
+    private HorizontalScrollView scrollCategoryTabs;
+    private Button btnTabRecents;
     private Button btnTabTone;
     private Button btnTabGeometry;
     private Button btnTabMargins;
@@ -215,28 +239,42 @@ public class MainActivity extends Activity {
     private Button btnPlaceRightHalf;
     private Button btnPlaceQuadTl;
 
-    // Margin Controls
+    // Margin Controls & Mathematical Readout
     private TextView tvMarginTitle;
     private TextView tvMarginLabel;
     private TextView tvMarginDesc;
     private SeekBar seekMargin;
+    private Button btnMarginMinus;
+    private Button btnMarginPlus;
     private Button btnMarginZero;
+    private Button btnMarginHwMin;
     private Button btnMarginNarrow;
     private Button btnMarginNormal;
     private Button btnMarginWide;
-    private int currentMarginMm = 12;
+    private TextView tvMarginCalcSheet;
+    private TextView tvMarginCalcPrintable;
+    private TextView tvMarginCalcHardware;
+    private TextView tvMarginHwStatus;
+    private float currentMarginMm = 12.0f;
 
+    // Sheet Geometry & Orientation
     private SheetGeometry.PaperSize currentPaperSize = SheetGeometry.PaperSize.A4;
+    private SheetGeometry.Orientation currentOrientation = SheetGeometry.Orientation.PORTRAIT;
     private SheetGeometry.PlacementRegion currentPlacementRegion = SheetGeometry.PlacementRegion.FULL_PAGE;
+    private Button btnQuickOrient;
+    private TextView tvOrientLabel;
+    private Button btnOrientPortrait;
+    private Button btnOrientLandscape;
 
-    // Preview Controls
+    // Preview & Header Controls
     private TextView tvPrinterStatus;
+    private TextView tvConnectionSymbol;
     private Button btnPickFile;
     private Button btnScanDocument;
     private Button btnQrLabel;
     private Button btnAiAssistant;
     private TextView tvFileInfo;
-    private LinearLayout layoutPreviewContainer;
+    private FrameLayout layoutPreviewContainer;
     private ZoomableImageView ivPagePreview;
     private TextView tvPreviewModeBadge;
     private Button btnRotatePage;
@@ -287,23 +325,41 @@ public class MainActivity extends Activity {
     private TextView tvPrintStatus;
     private Button btnPrintNow;
 
-    // ID Copier Tab Views
+    // ID Copier Tab Views & Config
+    private ImageView ivIdSheetPreview;
+    private TextView tvIdPreviewInfo;
+    private Button btnIdCount1, btnIdCount2;
+    private Button btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40;
+    private Button btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130;
+    private Button btnIdPlaceTop, btnIdPlaceCenter;
     private ImageView ivIdFrontPreview;
     private ImageView ivIdBackPreview;
-    private Button btnIdPickFront;
-    private Button btnIdPickBack;
+    private Button btnIdScanFront, btnIdPickFront;
+    private Button btnIdScanBack, btnIdPickBack;
+    private View layoutId2Container;
+    private ImageView ivId2FrontPreview, ivId2BackPreview;
+    private Button btnId2ScanFront, btnId2PickFront;
+    private Button btnId2ScanBack, btnId2PickBack;
     private Button btnIdPrintNow;
+    private Button btnIdSendStudio;
+
     private Bitmap idFrontBitmap;
     private Bitmap idBackBitmap;
+    private Bitmap id2FrontBitmap;
+    private Bitmap id2BackBitmap;
+    private IdCardEngine.IdCardConfig idConfig = new IdCardEngine.IdCardConfig();
 
     // Spool Queue Tab Views
     private Button btnSpoolClearAll;
     private LinearLayout layoutSpoolItemsContainer;
     private TextView tvSpoolEmpty;
 
-    // Developer Tab Views
+    // Developer & Support Tab Views
     private FrameLayout frameDevAvatar;
     private TextView tvDevName;
+    private Button btnStarGithub;
+    private Button btnOpenTelegram;
+    private Button btnCopyTelegram;
     private TextView tvUpiId;
     private Button btnCopyUpi;
     private Button btnPrintUpiQr;
@@ -350,6 +406,9 @@ public class MainActivity extends Activity {
 
         currentTheme = ThemeManager.getTheme(this);
         applyAppTheme(currentTheme);
+        updateOrientationButtonsHighlight();
+        updateMarginDisplay(currentMarginMm);
+        renderPageThumb();
 
         showPage(0); // Default to Print Studio
         renderRecentsShelf();
@@ -403,8 +462,10 @@ public class MainActivity extends Activity {
         super.onDestroy();
         unregisterUsbHotplugReceiver();
         closeCurrentPdf();
-        if (idFrontBitmap != null) idFrontBitmap.recycle();
-        if (idBackBitmap != null) idBackBitmap.recycle();
+        if (idFrontBitmap != null && !idFrontBitmap.isRecycled()) idFrontBitmap.recycle();
+        if (idBackBitmap != null && !idBackBitmap.isRecycled()) idBackBitmap.recycle();
+        if (id2FrontBitmap != null && !id2FrontBitmap.isRecycled()) id2FrontBitmap.recycle();
+        if (id2BackBitmap != null && !id2BackBitmap.isRecycled()) id2BackBitmap.recycle();
         previewExecutor.shutdownNow();
     }
 
@@ -463,6 +524,8 @@ public class MainActivity extends Activity {
         layoutSlidingPanel = findViewById(com.dodopress.R.id.layout_sliding_panel);
         tvPanelHandle = findViewById(com.dodopress.R.id.tv_panel_handle);
         btnTogglePanel = findViewById(com.dodopress.R.id.btn_toggle_panel);
+        scrollCategoryTabs = findViewById(com.dodopress.R.id.scroll_category_tabs);
+        btnTabRecents = findViewById(com.dodopress.R.id.btn_tab_recents);
         btnTabTone = findViewById(com.dodopress.R.id.btn_tab_tone);
         btnTabGeometry = findViewById(com.dodopress.R.id.btn_tab_geometry);
         btnTabMargins = findViewById(com.dodopress.R.id.btn_tab_margins);
@@ -492,7 +555,6 @@ public class MainActivity extends Activity {
         btnWmClear = findViewById(com.dodopress.R.id.btn_wm_clear);
 
         tvAppTitle = findViewById(com.dodopress.R.id.tv_app_title);
-        tvAppSubtitle = findViewById(com.dodopress.R.id.tv_app_subtitle);
         tvProBadge = findViewById(com.dodopress.R.id.tv_pro_badge);
         tvDensityTitle = findViewById(com.dodopress.R.id.tv_density_title);
         tvDensityDesc = findViewById(com.dodopress.R.id.tv_density_desc);
@@ -522,17 +584,31 @@ public class MainActivity extends Activity {
         btnPlaceRightHalf = findViewById(com.dodopress.R.id.btn_place_right_half);
         btnPlaceQuadTl = findViewById(com.dodopress.R.id.btn_place_quad_tl);
 
-        // Margin Controls
+        // Margin Controls & Mathematical Readout
         tvMarginTitle = findViewById(com.dodopress.R.id.tv_margin_title);
         tvMarginLabel = findViewById(com.dodopress.R.id.tv_margin_label);
         tvMarginDesc = findViewById(com.dodopress.R.id.tv_margin_desc);
         seekMargin = findViewById(com.dodopress.R.id.seek_margin);
+        btnMarginMinus = findViewById(com.dodopress.R.id.btn_margin_minus);
+        btnMarginPlus = findViewById(com.dodopress.R.id.btn_margin_plus);
         btnMarginZero = findViewById(com.dodopress.R.id.btn_margin_zero);
+        btnMarginHwMin = findViewById(com.dodopress.R.id.btn_margin_hw_min);
         btnMarginNarrow = findViewById(com.dodopress.R.id.btn_margin_narrow);
         btnMarginNormal = findViewById(com.dodopress.R.id.btn_margin_normal);
         btnMarginWide = findViewById(com.dodopress.R.id.btn_margin_wide);
+        tvMarginCalcSheet = findViewById(com.dodopress.R.id.tv_margin_calc_sheet);
+        tvMarginCalcPrintable = findViewById(com.dodopress.R.id.tv_margin_calc_printable);
+        tvMarginCalcHardware = findViewById(com.dodopress.R.id.tv_margin_calc_hardware);
+        tvMarginHwStatus = findViewById(com.dodopress.R.id.tv_margin_hw_status);
+
+        // Sheet Orientation Controls
+        btnQuickOrient = findViewById(com.dodopress.R.id.btn_quick_orient);
+        tvOrientLabel = findViewById(com.dodopress.R.id.tv_orient_label);
+        btnOrientPortrait = findViewById(com.dodopress.R.id.btn_orient_portrait);
+        btnOrientLandscape = findViewById(com.dodopress.R.id.btn_orient_landscape);
 
         tvPrinterStatus = findViewById(com.dodopress.R.id.tv_printer_status);
+        tvConnectionSymbol = findViewById(com.dodopress.R.id.tv_connection_symbol);
         btnPickFile = findViewById(com.dodopress.R.id.btn_pick_file);
         btnScanDocument = findViewById(com.dodopress.R.id.btn_scan_document);
         btnQrLabel = findViewById(com.dodopress.R.id.btn_qr_label);
@@ -580,24 +656,54 @@ public class MainActivity extends Activity {
         tvCopiesCount = findViewById(com.dodopress.R.id.tv_copies_count);
 
         pbPrintProgress = findViewById(com.dodopress.R.id.pb_print_progress);
-        tvPrintStatus = findViewById(com.dodopress.R.id.tv_print_status);
-        btnPrintNow = findViewById(com.dodopress.R.id.btn_print_now);
+        tvPrintStatus = null;
+        btnPrintNow = null;
 
         // ID Card Copier
+        ivIdSheetPreview = findViewById(com.dodopress.R.id.iv_id_sheet_preview);
+        tvIdPreviewInfo = findViewById(com.dodopress.R.id.tv_id_preview_info);
+        btnIdCount1 = findViewById(com.dodopress.R.id.btn_id_count_1);
+        btnIdCount2 = findViewById(com.dodopress.R.id.btn_id_count_2);
+        btnIdSpace10 = findViewById(com.dodopress.R.id.btn_id_space_10);
+        btnIdSpace20 = findViewById(com.dodopress.R.id.btn_id_space_20);
+        btnIdSpace30 = findViewById(com.dodopress.R.id.btn_id_space_30);
+        btnIdSpace40 = findViewById(com.dodopress.R.id.btn_id_space_40);
+        btnIdScale85 = findViewById(com.dodopress.R.id.btn_id_scale_85);
+        btnIdScale100 = findViewById(com.dodopress.R.id.btn_id_scale_100);
+        btnIdScale115 = findViewById(com.dodopress.R.id.btn_id_scale_115);
+        btnIdScale130 = findViewById(com.dodopress.R.id.btn_id_scale_130);
+        btnIdPlaceTop = findViewById(com.dodopress.R.id.btn_id_place_top);
+        btnIdPlaceCenter = findViewById(com.dodopress.R.id.btn_id_place_center);
+
         ivIdFrontPreview = findViewById(com.dodopress.R.id.iv_id_front_preview);
         ivIdBackPreview = findViewById(com.dodopress.R.id.iv_id_back_preview);
+        btnIdScanFront = findViewById(com.dodopress.R.id.btn_id_scan_front);
         btnIdPickFront = findViewById(com.dodopress.R.id.btn_id_pick_front);
+        btnIdScanBack = findViewById(com.dodopress.R.id.btn_id_scan_back);
         btnIdPickBack = findViewById(com.dodopress.R.id.btn_id_pick_back);
+
+        layoutId2Container = findViewById(com.dodopress.R.id.layout_id2_container);
+        ivId2FrontPreview = findViewById(com.dodopress.R.id.iv_id2_front_preview);
+        ivId2BackPreview = findViewById(com.dodopress.R.id.iv_id2_back_preview);
+        btnId2ScanFront = findViewById(com.dodopress.R.id.btn_id2_scan_front);
+        btnId2PickFront = findViewById(com.dodopress.R.id.btn_id2_pick_front);
+        btnId2ScanBack = findViewById(com.dodopress.R.id.btn_id2_scan_back);
+        btnId2PickBack = findViewById(com.dodopress.R.id.btn_id2_pick_back);
+
         btnIdPrintNow = findViewById(com.dodopress.R.id.btn_id_print_now);
+        btnIdSendStudio = findViewById(com.dodopress.R.id.btn_id_send_studio);
 
         // Spool Queue
         btnSpoolClearAll = findViewById(com.dodopress.R.id.btn_spool_clear_all);
         layoutSpoolItemsContainer = findViewById(com.dodopress.R.id.layout_spool_items_container);
         tvSpoolEmpty = findViewById(com.dodopress.R.id.tv_spool_empty);
 
-        // Developer Page
+        // Developer & Support Page
         frameDevAvatar = findViewById(com.dodopress.R.id.frame_dev_avatar);
         tvDevName = findViewById(com.dodopress.R.id.tv_dev_name);
+        btnStarGithub = findViewById(com.dodopress.R.id.btn_star_github);
+        btnOpenTelegram = findViewById(com.dodopress.R.id.btn_open_telegram);
+        btnCopyTelegram = findViewById(com.dodopress.R.id.btn_copy_telegram);
         tvUpiId = findViewById(com.dodopress.R.id.tv_upi_id);
         btnCopyUpi = findViewById(com.dodopress.R.id.btn_copy_upi);
         btnPrintUpiQr = findViewById(com.dodopress.R.id.btn_print_upi_qr);
@@ -714,7 +820,9 @@ public class MainActivity extends Activity {
 
         previousPageIndex = index;
 
-        if (index == 2) {
+        if (index == 1) {
+            renderIdCardPreview();
+        } else if (index == 2) {
             renderSpoolQueue();
         } else if (index == 3) {
             updateAiKeyDisplay();
@@ -745,8 +853,24 @@ public class MainActivity extends Activity {
         dockBtnPrint.setOnClickListener(v -> {
             SoundManager.playClick();
             v.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
-            startPrinting();
+            UsbDevice printer = usbPrinterConnection.findPrinter();
+            if (printer == null) {
+                showOfflinePrinterDialog();
+                return;
+            }
+            if (activePageIndex == 1) {
+                printIdCardDirect();
+            } else {
+                startPrinting();
+            }
         });
+
+        if (layoutStatusCapsule != null) {
+            layoutStatusCapsule.setOnClickListener(v -> {
+                SoundManager.playClick();
+                DiagnosticLogManager.showDiagnosticDialog(this, getCurrentPrinterCutawayState());
+            });
+        }
 
         btnDiagnostics.setOnClickListener(v -> {
             SoundManager.playClick();
@@ -775,12 +899,13 @@ public class MainActivity extends Activity {
             tvPanelHandle.setOnClickListener(v -> toggleOptionsPanel());
         }
 
-        // Category Fast-Scroll Tabs
-        if (btnTabTone != null) btnTabTone.setOnClickListener(v -> scrollToCard(cardTonerDensity, btnTabTone));
-        if (btnTabGeometry != null) btnTabGeometry.setOnClickListener(v -> scrollToCard(cardGeometry, btnTabGeometry));
-        if (btnTabMargins != null) btnTabMargins.setOnClickListener(v -> scrollToCard(cardMargins, btnTabMargins));
-        if (btnTabPages != null) btnTabPages.setOnClickListener(v -> scrollToCard(cardPageConfig, btnTabPages));
-        if (btnTabWatermark != null) btnTabWatermark.setOnClickListener(v -> scrollToCard(cardWatermark, btnTabWatermark));
+        // Category Section Switch Tabs (Mutually exclusive sections: only selected section shown)
+        if (btnTabRecents != null) btnTabRecents.setOnClickListener(v -> showControlSection(ControlSection.RECENTS));
+        if (btnTabTone != null) btnTabTone.setOnClickListener(v -> showControlSection(ControlSection.TONE));
+        if (btnTabGeometry != null) btnTabGeometry.setOnClickListener(v -> showControlSection(ControlSection.GEOMETRY));
+        if (btnTabMargins != null) btnTabMargins.setOnClickListener(v -> showControlSection(ControlSection.MARGINS));
+        if (btnTabPages != null) btnTabPages.setOnClickListener(v -> showControlSection(ControlSection.PAGES));
+        if (btnTabWatermark != null) btnTabWatermark.setOnClickListener(v -> showControlSection(ControlSection.WATERMARK));
 
         // Watermark live update & presets
         if (etWatermark != null) {
@@ -817,13 +942,33 @@ public class MainActivity extends Activity {
         btnPlaceRightHalf.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.RIGHT_HALF); });
         btnPlaceQuadTl.setOnClickListener(v -> { SoundManager.playClick(); setPlacementRegion(SheetGeometry.PlacementRegion.QUAD_TOP_LEFT); });
 
-        // Print Margin Listeners
+        // Sheet Orientation Listeners
+        if (btnQuickOrient != null) {
+            btnQuickOrient.setOnClickListener(v -> {
+                SoundManager.playClick();
+                toggleOrientation();
+            });
+        }
+        if (btnOrientPortrait != null) {
+            btnOrientPortrait.setOnClickListener(v -> {
+                SoundManager.playClick();
+                setOrientation(SheetGeometry.Orientation.PORTRAIT);
+            });
+        }
+        if (btnOrientLandscape != null) {
+            btnOrientLandscape.setOnClickListener(v -> {
+                SoundManager.playClick();
+                setOrientation(SheetGeometry.Orientation.LANDSCAPE);
+            });
+        }
+
+        // Print Margin Precision Listeners
         seekMargin.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                currentMarginMm = progress;
-                updateMarginDisplay(progress);
                 if (fromUser) {
+                    currentMarginMm = (float) progress;
+                    updateMarginDisplay(currentMarginMm);
                     renderPageThumb();
                 }
             }
@@ -838,10 +983,26 @@ public class MainActivity extends Activity {
             }
         });
 
-        btnMarginZero.setOnClickListener(v -> setMarginPreset(0));
-        btnMarginNarrow.setOnClickListener(v -> setMarginPreset(5));
-        btnMarginNormal.setOnClickListener(v -> setMarginPreset(12));
-        btnMarginWide.setOnClickListener(v -> setMarginPreset(24));
+        if (btnMarginMinus != null) {
+            btnMarginMinus.setOnClickListener(v -> {
+                SoundManager.playClick();
+                setMarginPreset(Math.max(0f, currentMarginMm - 1.0f));
+            });
+        }
+        if (btnMarginPlus != null) {
+            btnMarginPlus.setOnClickListener(v -> {
+                SoundManager.playClick();
+                setMarginPreset(Math.min(40f, currentMarginMm + 1.0f));
+            });
+        }
+
+        btnMarginZero.setOnClickListener(v -> setMarginPreset(0f));
+        if (btnMarginHwMin != null) {
+            btnMarginHwMin.setOnClickListener(v -> setMarginPreset(SheetGeometry.HARDWARE_MIN_MARGIN_MM));
+        }
+        btnMarginNarrow.setOnClickListener(v -> setMarginPreset(8f));
+        btnMarginNormal.setOnClickListener(v -> setMarginPreset(12f));
+        btnMarginWide.setOnClickListener(v -> setMarginPreset(20f));
 
         viewSheetGeometry.setOnRegionSelectedListener(this::setPlacementRegion);
 
@@ -1007,36 +1168,94 @@ public class MainActivity extends Activity {
             }
         });
 
-        btnPrintNow.setOnClickListener(v -> startPrinting());
+        if (btnPrintNow != null) {
+            btnPrintNow.setOnClickListener(v -> startPrinting());
+        }
 
-        // ID Card Copier Listeners
-        btnIdPickFront.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("image/*");
-            startActivityForResult(intent, REQUEST_PICK_ID_FRONT);
-        });
+        // ID Card Copier Layout Controls
+        if (btnIdCount1 != null) btnIdCount1.setOnClickListener(v -> updateIdCount(1));
+        if (btnIdCount2 != null) btnIdCount2.setOnClickListener(v -> updateIdCount(2));
 
-        btnIdPickBack.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("image/*");
-            startActivityForResult(intent, REQUEST_PICK_ID_BACK);
-        });
+        if (btnIdSpace10 != null) btnIdSpace10.setOnClickListener(v -> updateIdSpacing(10));
+        if (btnIdSpace20 != null) btnIdSpace20.setOnClickListener(v -> updateIdSpacing(20));
+        if (btnIdSpace30 != null) btnIdSpace30.setOnClickListener(v -> updateIdSpacing(30));
+        if (btnIdSpace40 != null) btnIdSpace40.setOnClickListener(v -> updateIdSpacing(40));
 
-        btnIdPrintNow.setOnClickListener(v -> printIdCardDirect());
+        if (btnIdScale85 != null) btnIdScale85.setOnClickListener(v -> updateIdScale(0.85f));
+        if (btnIdScale100 != null) btnIdScale100.setOnClickListener(v -> updateIdScale(1.0f));
+        if (btnIdScale115 != null) btnIdScale115.setOnClickListener(v -> updateIdScale(1.15f));
+        if (btnIdScale130 != null) btnIdScale130.setOnClickListener(v -> updateIdScale(1.30f));
+
+        if (btnIdPlaceTop != null) btnIdPlaceTop.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.TOP_HALF));
+        if (btnIdPlaceCenter != null) btnIdPlaceCenter.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.CENTERED));
+
+        // ID #1 Scan & Pick
+        if (btnIdScanFront != null) btnIdScanFront.setOnClickListener(v -> launchCameraScanner(false, REQUEST_SCAN_ID_FRONT));
+        if (btnIdPickFront != null) btnIdPickFront.setOnClickListener(v -> pickImage(REQUEST_PICK_ID_FRONT));
+        if (btnIdScanBack != null) btnIdScanBack.setOnClickListener(v -> launchCameraScanner(false, REQUEST_SCAN_ID_BACK));
+        if (btnIdPickBack != null) btnIdPickBack.setOnClickListener(v -> pickImage(REQUEST_PICK_ID_BACK));
+
+        // ID #2 Scan & Pick
+        if (btnId2ScanFront != null) btnId2ScanFront.setOnClickListener(v -> launchCameraScanner(false, REQUEST_SCAN_ID2_FRONT));
+        if (btnId2PickFront != null) btnId2PickFront.setOnClickListener(v -> pickImage(REQUEST_PICK_ID2_FRONT));
+        if (btnId2ScanBack != null) btnId2ScanBack.setOnClickListener(v -> launchCameraScanner(false, REQUEST_SCAN_ID2_BACK));
+        if (btnId2PickBack != null) btnId2PickBack.setOnClickListener(v -> pickImage(REQUEST_PICK_ID2_BACK));
+
+        // ID Actions
+        if (btnIdPrintNow != null) btnIdPrintNow.setOnClickListener(v -> printIdCardDirect());
+        if (btnIdSendStudio != null) btnIdSendStudio.setOnClickListener(v -> sendIdCardToStudio());
 
         // Spool Queue Listeners
-        btnSpoolClearAll.setOnClickListener(v -> {
-            SpoolManager.clearQueue(this);
-            renderSpoolQueue();
-        });
+        if (btnSpoolClearAll != null) {
+            btnSpoolClearAll.setOnClickListener(v -> {
+                SpoolManager.clearQueue(this);
+                renderSpoolQueue();
+            });
+        }
 
-        // Developer Page & Easter Egg Listeners
-        btnCopyUpi.setOnClickListener(v -> {
-            ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText("UPI ID", "killindodo@upi");
-            if (cm != null) cm.setPrimaryClip(clip);
-            Toast.makeText(this, "UPI ID copied! Thank you for supporting DodoPress ❤️", Toast.LENGTH_LONG).show();
-        });
+        // Support & Developer Page
+        if (btnStarGithub != null) {
+            btnStarGithub.setOnClickListener(v -> {
+                SoundManager.playClick();
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/killindodo/DodoPress"));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Could not open browser: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (btnOpenTelegram != null) {
+            btnOpenTelegram.setOnClickListener(v -> {
+                SoundManager.playClick();
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/killindod0"));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(this, "Could not open Telegram: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (btnCopyTelegram != null) {
+            btnCopyTelegram.setOnClickListener(v -> {
+                SoundManager.playClick();
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Telegram Handle", "@killindod0");
+                if (cm != null) cm.setPrimaryClip(clip);
+                Toast.makeText(this, "Telegram handle @killindod0 copied! Send your feature requests directly.", Toast.LENGTH_LONG).show();
+            });
+        }
+
+        if (btnCopyUpi != null) {
+            btnCopyUpi.setOnClickListener(v -> {
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("UPI ID", "killindodo@upi");
+                if (cm != null) cm.setPrimaryClip(clip);
+                Toast.makeText(this, "UPI ID copied!", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         if (btnPrintUpiQr != null) {
             btnPrintUpiQr.setOnClickListener(v -> {
@@ -1059,40 +1278,46 @@ public class MainActivity extends Activity {
             });
         }
 
-        btnFeedbackRequest.setOnClickListener(v -> {
-            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto:support@dodopress.org"));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "DodoPress Pro - Feature / Support Request");
-            try {
-                startActivity(Intent.createChooser(emailIntent, "Send Request"));
-            } catch (Exception e) {
-                Toast.makeText(this, "No email client installed.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (btnFeedbackRequest != null) {
+            btnFeedbackRequest.setOnClickListener(v -> {
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:support@dodopress.org"));
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "DodoPress Pro - Feature / Support Request");
+                try {
+                    startActivity(Intent.createChooser(emailIntent, "Send Request"));
+                } catch (Exception e) {
+                    Toast.makeText(this, "No email client installed.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
         // Sound Effects Toggle
-        cbSoundEffects.setChecked(SoundManager.isSoundEnabled());
-        cbSoundEffects.setOnCheckedChangeListener((btn, isChecked) -> {
-            SoundManager.setSoundEnabled(this, isChecked);
-            if (isChecked) SoundManager.playClick();
-        });
+        if (cbSoundEffects != null) {
+            cbSoundEffects.setChecked(SoundManager.isSoundEnabled());
+            cbSoundEffects.setOnCheckedChangeListener((btn, isChecked) -> {
+                SoundManager.setSoundEnabled(this, isChecked);
+                if (isChecked) SoundManager.playClick();
+            });
+        }
 
         // Secret Easter Egg: Tap avatar 7 times
-        frameDevAvatar.setOnClickListener(v -> {
-            devAvatarTapCount++;
-            SoundManager.playClick();
-            v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
-            if (devAvatarTapCount == 7) {
-                devAvatarTapCount = 0;
-                SoundManager.playXpPrintChime();
-                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-                new AlertDialog.Builder(this)
-                    .setTitle("🎉 Easter Egg Unlocked!")
-                    .setMessage("⚡ Dodo Quantum Print Mode Activated!\n\nEngineered with love and relentless passion by killindodo.\nKeep on hacking and printing offline!")
-                    .setPositiveButton("Awesome!", (dialog, which) -> dialog.dismiss())
-                    .show();
-            }
-        });
+        if (frameDevAvatar != null) {
+            frameDevAvatar.setOnClickListener(v -> {
+                devAvatarTapCount++;
+                SoundManager.playClick();
+                v.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                if (devAvatarTapCount == 7) {
+                    devAvatarTapCount = 0;
+                    SoundManager.playXpPrintChime();
+                    v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                    new AlertDialog.Builder(this)
+                        .setTitle("🎉 Easter Egg Unlocked!")
+                        .setMessage("⚡ Dodo Quantum Print Mode Activated!\n\nEngineered with love and relentless passion by killindodo.\nKeep on hacking and printing offline!")
+                        .setPositiveButton("Awesome!", (dialog, which) -> dialog.dismiss())
+                        .show();
+                }
+            });
+        }
 
         // Universal Tactile Spring Micro-Interactions
         TouchFeedback.applyAll(
@@ -1100,25 +1325,118 @@ public class MainActivity extends Activity {
             btnTogglePreviewMode, btnQuickZoom, btnRotatePage, btnPrevPage, btnNextPage,
             btnPresetDraft, btnPresetNormal, btnPresetDeep, btnPresetUltra,
             btnCopiesMinus, btnCopiesPlus, btnQueueJob,
-            btnThemeMenu, btnTogglePanel, btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark,
+            btnThemeMenu, btnTogglePanel, btnTabRecents, btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark,
             btnWmConfidential, btnWmDraft, btnWmPaid, btnWmOriginal, btnWmClear,
             btnPaperA4, btnPaperLetter, btnPaperLegal, btnPaperA5,
             btnTile1Up, btnTile2Up, btnTile4Up,
             btnPlaceFull, btnPlaceTopHalf, btnPlaceBottomHalf, btnPlaceLeftHalf, btnPlaceRightHalf, btnPlaceQuadTl,
             btnMarginZero, btnMarginNarrow, btnMarginNormal, btnMarginWide,
-            btnIdPickFront, btnIdPickBack, btnIdPrintNow, btnCopyUpi, btnPrintUpiQr, btnSaveAiKey, btnTestAiKey, btnFeedbackRequest
+            btnIdCount1, btnIdCount2, btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40,
+            btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130, btnIdPlaceTop, btnIdPlaceCenter,
+            btnIdScanFront, btnIdPickFront, btnIdScanBack, btnIdPickBack,
+            btnId2ScanFront, btnId2PickFront, btnId2ScanBack, btnId2PickBack,
+            btnIdPrintNow, btnIdSendStudio, btnStarGithub, btnOpenTelegram, btnCopyTelegram
         );
     }
 
+    private void updateIdCount(int count) {
+        SoundManager.playClick();
+        idConfig.idCount = count;
+        if (layoutId2Container != null) {
+            layoutId2Container.setVisibility(count == 2 ? View.VISIBLE : View.GONE);
+        }
+        updateButtonSelection(btnIdCount1, count == 1);
+        updateButtonSelection(btnIdCount2, count == 2);
+        renderIdCardPreview();
+    }
+
+    private void updateIdSpacing(int spacingMm) {
+        SoundManager.playClick();
+        idConfig.spacingMm = spacingMm;
+        updateButtonSelection(btnIdSpace10, spacingMm == 10);
+        updateButtonSelection(btnIdSpace20, spacingMm == 20);
+        updateButtonSelection(btnIdSpace30, spacingMm == 30);
+        updateButtonSelection(btnIdSpace40, spacingMm == 40);
+        renderIdCardPreview();
+    }
+
+    private void updateIdScale(float scale) {
+        SoundManager.playClick();
+        idConfig.scale = scale;
+        updateButtonSelection(btnIdScale85, Math.abs(scale - 0.85f) < 0.01f);
+        updateButtonSelection(btnIdScale100, Math.abs(scale - 1.0f) < 0.01f);
+        updateButtonSelection(btnIdScale115, Math.abs(scale - 1.15f) < 0.01f);
+        updateButtonSelection(btnIdScale130, Math.abs(scale - 1.30f) < 0.01f);
+        renderIdCardPreview();
+    }
+
+    private void updateIdPlacement(IdCardEngine.IdPlacement placement) {
+        SoundManager.playClick();
+        idConfig.placement = placement;
+        updateButtonSelection(btnIdPlaceTop, placement == IdCardEngine.IdPlacement.TOP_HALF);
+        updateButtonSelection(btnIdPlaceCenter, placement == IdCardEngine.IdPlacement.CENTERED);
+        renderIdCardPreview();
+    }
+
+    private void updateButtonSelection(Button btn, boolean selected) {
+        if (btn == null) return;
+        if (selected) {
+            btn.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
+            btn.setTextColor(Color.WHITE);
+            btn.setTypeface(null, android.graphics.Typeface.BOLD);
+        } else {
+            btn.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
+            btn.setTextColor(Color.parseColor("#94A3B8"));
+            btn.setTypeface(null, android.graphics.Typeface.NORMAL);
+        }
+    }
+
+    private void renderIdCardPreview() {
+        if (ivIdSheetPreview == null) return;
+        new Thread(() -> {
+            try {
+                Bitmap previewBm = IdCardEngine.composeIdCardSheet(
+                    idFrontBitmap, idBackBitmap,
+                    id2FrontBitmap, id2BackBitmap,
+                    idConfig, 595, 842
+                );
+                runOnUiThread(() -> {
+                    ivIdSheetPreview.setImageBitmap(previewBm);
+                    if (tvIdPreviewInfo != null) {
+                        String info = idConfig.idCount + " ID" + (idConfig.idCount > 1 ? "s" : "")
+                            + " • " + idConfig.spacingMm + "mm Gap • "
+                            + Math.round(idConfig.scale * 100) + "% Scale • "
+                            + (idConfig.placement == IdCardEngine.IdPlacement.TOP_HALF ? "Top Half" : "Centered");
+                        tvIdPreviewInfo.setText(info);
+                    }
+                });
+            } catch (Exception e) {
+                DiagnosticLogManager.log("ID_CARD", "Preview error: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    private void pickImage(int requestCode) {
+        SoundManager.playClick();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        startActivityForResult(intent, requestCode);
+    }
+
     private void printIdCardDirect() {
-        if (idFrontBitmap == null && idBackBitmap == null) {
-            Toast.makeText(this, "Please pick Front or Back of ID Card first.", Toast.LENGTH_SHORT).show();
+        SoundManager.playClick();
+        if (idFrontBitmap == null && idBackBitmap == null && id2FrontBitmap == null && id2BackBitmap == null) {
+            Toast.makeText(this, "Please scan or select at least one ID card photo first.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
-            // Compose onto A4 sheet top half (2480 x 3508 px @ 300 DPI)
-            Bitmap composedSheet = IdCardEngine.composeIdCardSheet(idFrontBitmap, idBackBitmap, 2480, 3508);
+            // Compose onto A4 sheet at 300 DPI (2480 x 3508 px)
+            Bitmap composedSheet = IdCardEngine.composeIdCardSheet(
+                idFrontBitmap, idBackBitmap,
+                id2FrontBitmap, id2BackBitmap,
+                idConfig, 2480, 3508
+            );
             File idCardPdf = new File(getCacheDir(), "id_card_" + System.currentTimeMillis() + ".pdf");
 
             PdfDocument document = new PdfDocument();
@@ -1135,13 +1453,51 @@ public class MainActivity extends Activity {
             document.close();
             composedSheet.recycle();
 
-            // Load into Print Studio and start print
             showPage(0);
             loadPdfFromUri(Uri.fromFile(idCardPdf));
-            Toast.makeText(this, "ID Card ready on A4 top half!", Toast.LENGTH_SHORT).show();
+
+            UsbDevice printer = usbPrinterConnection.findPrinter();
+            if (printer != null) {
+                Toast.makeText(this, "ID Card ready! Starting 1-pass direct print...", Toast.LENGTH_SHORT).show();
+                mainHandler.postDelayed(this::startPrinting, 500);
+            } else {
+                Toast.makeText(this, "ID Card loaded! Connect USB printer to print.", Toast.LENGTH_LONG).show();
+            }
 
         } catch (Exception e) {
             Toast.makeText(this, "Failed to compose ID card: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void sendIdCardToStudio() {
+        SoundManager.playClick();
+        if (idFrontBitmap == null && idBackBitmap == null && id2FrontBitmap == null && id2BackBitmap == null) {
+            Toast.makeText(this, "Please scan or select an ID card photo first.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            Bitmap composedSheet = IdCardEngine.composeIdCardSheet(
+                idFrontBitmap, idBackBitmap,
+                id2FrontBitmap, id2BackBitmap,
+                idConfig, 2480, 3508
+            );
+            File idCardPdf = new File(getCacheDir(), "id_studio_" + System.currentTimeMillis() + ".pdf");
+            PdfDocument document = new PdfDocument();
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+            PdfDocument.Page page = document.startPage(pageInfo);
+            page.getCanvas().drawBitmap(composedSheet, null, new Rect(0, 0, 595, 842), null);
+            document.finishPage(page);
+            try (FileOutputStream fos = new FileOutputStream(idCardPdf)) {
+                document.writeTo(fos);
+            }
+            document.close();
+            composedSheet.recycle();
+
+            showPage(0);
+            loadPdfFromUri(Uri.fromFile(idCardPdf));
+            Toast.makeText(this, "ID Sheet loaded into Print Studio for custom options!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to send to studio: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -1226,8 +1582,53 @@ public class MainActivity extends Activity {
         viewSheetGeometry.setPaperSize(size);
         updatePaperSizeHighlight(size);
         updateGeometryBadge();
+        updateMarginDisplay(currentMarginMm);
         updatePageSummary();
         renderPageThumb();
+    }
+
+    private void setOrientation(SheetGeometry.Orientation orientation) {
+        if (orientation == null) return;
+        this.currentOrientation = orientation;
+        if (viewSheetGeometry != null) {
+            viewSheetGeometry.setOrientation(orientation);
+        }
+        updateOrientationButtonsHighlight();
+        updateGeometryBadge();
+        updateMarginDisplay(currentMarginMm);
+        updatePageSummary();
+        renderPageThumb();
+    }
+
+    private void toggleOrientation() {
+        setOrientation(currentOrientation == SheetGeometry.Orientation.PORTRAIT
+                ? SheetGeometry.Orientation.LANDSCAPE
+                : SheetGeometry.Orientation.PORTRAIT);
+    }
+
+    private void updateOrientationButtonsHighlight() {
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        int activeBg = com.dodopress.R.drawable.btn_primary;
+        int normalBg = com.dodopress.R.drawable.btn_chip;
+        int activeText = Color.WHITE;
+        int normalText = p.textMedColor;
+
+        boolean isPortrait = (currentOrientation == SheetGeometry.Orientation.PORTRAIT);
+
+        if (btnOrientPortrait != null) {
+            btnOrientPortrait.setBackgroundResource(isPortrait ? activeBg : normalBg);
+            btnOrientPortrait.setTextColor(isPortrait ? activeText : normalText);
+        }
+        if (btnOrientLandscape != null) {
+            btnOrientLandscape.setBackgroundResource(!isPortrait ? activeBg : normalBg);
+            btnOrientLandscape.setTextColor(!isPortrait ? activeText : normalText);
+        }
+        if (tvOrientLabel != null) {
+            tvOrientLabel.setText(currentOrientation.title + (isPortrait ? " (Vertical)" : " (Horizontal)"));
+        }
+        if (btnQuickOrient != null) {
+            btnQuickOrient.setText(isPortrait ? "📄 Portrait" : "📑 Landscape");
+        }
     }
 
     private void setPlacementRegion(SheetGeometry.PlacementRegion region) {
@@ -1267,7 +1668,7 @@ public class MainActivity extends Activity {
         String modeDesc = (currentTilingMode != SheetGeometry.TilingMode.ONE_UP)
             ? currentTilingMode.title
             : currentPlacementRegion.title;
-        tvGeometryBadge.setText(currentPaperSize.name() + " • " + modeDesc);
+        tvGeometryBadge.setText(currentPaperSize.name() + " • " + currentOrientation.title + " • " + modeDesc);
     }
 
     private void updateTilingHighlight(SheetGeometry.TilingMode mode) {
@@ -1290,13 +1691,28 @@ public class MainActivity extends Activity {
 
     private void renderRecentsShelf() {
         List<RecentDocsManager.RecentItem> recents = RecentDocsManager.getRecents(this);
-        if (recents == null || recents.isEmpty()) {
-            cardRecents.setVisibility(View.GONE);
-            return;
+        int count = (recents != null) ? recents.size() : 0;
+        if (btnTabRecents != null) {
+            btnTabRecents.setText(count > 0 ? "📁 Recents (" + count + ")" : "📁 Recent Files");
         }
 
-        cardRecents.setVisibility(View.VISIBLE);
+        if (cardRecents != null) {
+            cardRecents.setVisibility(currentControlSection == ControlSection.RECENTS ? View.VISIBLE : View.GONE);
+        }
+
+        if (layoutRecentsContainer == null) return;
         layoutRecentsContainer.removeAllViews();
+
+        if (recents == null || recents.isEmpty()) {
+            TextView emptyTv = new TextView(this);
+            emptyTv.setText("No recent documents yet. Opened PDF or image files will appear here.");
+            emptyTv.setTextColor(Color.parseColor("#94A3B8"));
+            emptyTv.setTextSize(11f);
+            int p = (int) (12 * getResources().getDisplayMetrics().density);
+            emptyTv.setPadding(p, p, p, p);
+            layoutRecentsContainer.addView(emptyTv);
+            return;
+        }
 
         for (RecentDocsManager.RecentItem item : recents) {
             LinearLayout itemCard = new LinearLayout(this);
@@ -1332,6 +1748,7 @@ public class MainActivity extends Activity {
                 try {
                     Uri uri = Uri.parse(item.uriString);
                     loadPdfFromUri(uri);
+                    showControlSection(ControlSection.TONE);
                 } catch (Exception e) {
                     Toast.makeText(this, "Could not open document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -1453,47 +1870,126 @@ public class MainActivity extends Activity {
 
         // Highlight active sub-controls
         updatePaperSizeHighlight(currentPaperSize);
+        updateOrientationButtonsHighlight();
         updatePlacementPresetHighlight(currentPlacementRegion);
         updateTilingHighlight(currentTilingMode);
         if (seekDarkness != null) {
             updatePresetChipHighlight(seekDarkness.getProgress());
         }
         updateMarginButtonsHighlight(currentMarginMm);
-        updateTabHighlight(btnTabTone);
+        updateMarginMathematicalReadout(currentMarginMm);
+        updateTabHighlight(currentControlSection);
         updatePageSummary();
         showPage(activePageIndex);
+        refreshPrinterStatus();
     }
 
     private void toggleOptionsPanel() {
         SoundManager.playClick();
         if (scrollOptions == null || btnTogglePanel == null) return;
         isPanelCollapsed = !isPanelCollapsed;
+        float density = getResources().getDisplayMetrics().density;
         if (isPanelCollapsed) {
             scrollOptions.setVisibility(View.GONE);
             btnTogglePanel.setText("▲ EXPAND");
+            if (cardDocPreview != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardDocPreview.getLayoutParams();
+                lp.height = (int) (430 * density);
+                cardDocPreview.setLayoutParams(lp);
+            }
         } else {
             scrollOptions.setVisibility(View.VISIBLE);
             btnTogglePanel.setText("▼ RETRACT");
+            if (cardDocPreview != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardDocPreview.getLayoutParams();
+                lp.height = (int) (290 * density);
+                cardDocPreview.setLayoutParams(lp);
+            }
         }
     }
 
-    private void scrollToCard(View card, Button activeTab) {
+    private void showControlSection(ControlSection section) {
         SoundManager.playClick();
-        if (card == null || scrollOptions == null) return;
+        currentControlSection = section;
+
         if (isPanelCollapsed) {
             toggleOptionsPanel();
         }
-        scrollOptions.smoothScrollTo(0, card.getTop());
-        updateTabHighlight(activeTab);
+
+        // Strictly show ONLY the selected section card, and hide all others
+        if (cardRecents != null) cardRecents.setVisibility(section == ControlSection.RECENTS ? View.VISIBLE : View.GONE);
+        if (cardTonerDensity != null) cardTonerDensity.setVisibility(section == ControlSection.TONE ? View.VISIBLE : View.GONE);
+        if (cardGeometry != null) cardGeometry.setVisibility(section == ControlSection.GEOMETRY ? View.VISIBLE : View.GONE);
+        if (cardMargins != null) cardMargins.setVisibility(section == ControlSection.MARGINS ? View.VISIBLE : View.GONE);
+        if (cardPageConfig != null) cardPageConfig.setVisibility(section == ControlSection.PAGES ? View.VISIBLE : View.GONE);
+        if (cardWatermark != null) cardWatermark.setVisibility(section == ControlSection.WATERMARK ? View.VISIBLE : View.GONE);
+
+        // Reset scroll position to top of container
+        if (scrollOptions != null) {
+            scrollOptions.scrollTo(0, 0);
+        }
+
+        // Update panel handle header text to reflect the active section
+        if (tvPanelHandle != null) {
+            String title;
+            switch (section) {
+                case RECENTS:
+                    title = "RECENT DOCUMENTS";
+                    break;
+                case TONE:
+                    title = "DENSITY & TONER";
+                    break;
+                case GEOMETRY:
+                    title = "TILING & POSITION";
+                    break;
+                case MARGINS:
+                    title = "MARGINS (0-24mm)";
+                    break;
+                case PAGES:
+                    title = "RANGE & COPIES";
+                    break;
+                case WATERMARK:
+                    title = "WATERMARK & STAMP";
+                    break;
+                default:
+                    title = "PRINT CONTROLS";
+                    break;
+            }
+            tvPanelHandle.setText("── ⚙️ " + title + " ──");
+        }
+
+        updateTabHighlight(section);
     }
 
-    private void updateTabHighlight(Button activeTab) {
-        Button[] tabs = {btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark};
-        for (Button b : tabs) {
+    private void updateTabHighlight(ControlSection section) {
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        Button[] tabs = {btnTabRecents, btnTabTone, btnTabGeometry, btnTabMargins, btnTabPages, btnTabWatermark};
+        ControlSection[] sections = {
+            ControlSection.RECENTS,
+            ControlSection.TONE,
+            ControlSection.GEOMETRY,
+            ControlSection.MARGINS,
+            ControlSection.PAGES,
+            ControlSection.WATERMARK
+        };
+
+        Button activeTab = null;
+        for (int i = 0; i < tabs.length; i++) {
+            Button b = tabs[i];
             if (b == null) continue;
-            boolean isAct = (b == activeTab);
+            boolean isAct = (sections[i] == section);
+            if (isAct) activeTab = b;
             b.setTextColor(isAct ? Color.WHITE : Color.parseColor("#94A3B8"));
-            b.setBackgroundResource(isAct ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+            b.setTypeface(null, isAct ? Typeface.BOLD : Typeface.NORMAL);
+            b.setBackgroundResource(isAct ? p.primaryButtonDrawableRes : p.chipButtonDrawableRes);
+        }
+
+        if (scrollCategoryTabs != null && activeTab != null) {
+            final View finalActive = activeTab;
+            scrollCategoryTabs.post(() -> {
+                int targetX = finalActive.getLeft() - (int) (20 * getResources().getDisplayMetrics().density);
+                scrollCategoryTabs.smoothScrollTo(Math.max(0, targetX), 0);
+            });
         }
     }
 
@@ -1649,32 +2145,70 @@ public class MainActivity extends Activity {
         btnPlaceQuadTl.setTextColor(region == SheetGeometry.PlacementRegion.QUAD_TOP_LEFT ? Color.WHITE : Color.parseColor("#94A3B8"));
     }
 
-    private void setMarginPreset(int mm) {
+    private void setMarginPreset(float mm) {
         SoundManager.playClick();
         if (seekMargin != null) {
             seekMargin.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
-            seekMargin.setProgress(mm);
+            seekMargin.setProgress(Math.round(mm));
         }
         currentMarginMm = mm;
         updateMarginDisplay(mm);
         renderPageThumb();
     }
 
-    private void updateMarginDisplay(int mm) {
+    private void updateMarginDisplay(float mm) {
         if (tvMarginLabel != null) {
             String desc;
-            if (mm == 0) desc = "0 mm (Edge-to-Edge / Borderless)";
-            else if (mm == 5) desc = "5 mm (Narrow)";
-            else if (mm == 12) desc = "12 mm (Normal)";
-            else if (mm == 24) desc = "24 mm (Wide)";
-            else desc = mm + " mm (Custom)";
+            if (mm == 0f) desc = "0 mm (Edge-to-Edge / Borderless)";
+            else if (Math.abs(mm - SheetGeometry.HARDWARE_MIN_MARGIN_MM) < 0.1f) desc = "4.5 mm (Laser Drum HW Limit)";
+            else if (Math.abs(mm - 8.0f) < 0.1f) desc = "8 mm (Narrow)";
+            else if (Math.abs(mm - 12.0f) < 0.1f) desc = "12 mm (★ Standard)";
+            else if (Math.abs(mm - 20.0f) < 0.1f) desc = "20 mm (Wide / Binder)";
+            else desc = String.format(Locale.US, "%.1f mm (Custom)", mm);
             tvMarginLabel.setText(desc);
         }
         updateMarginButtonsHighlight(mm);
+        updateMarginMathematicalReadout(mm);
         updatePageSummary();
     }
 
-    private void updateMarginButtonsHighlight(int mm) {
+    private void updateMarginMathematicalReadout(float mm) {
+        SheetGeometry.PaperSize paper = (currentPaperSize != null) ? currentPaperSize : SheetGeometry.PaperSize.A4;
+        SheetGeometry.Orientation orient = (currentOrientation != null) ? currentOrientation : SheetGeometry.Orientation.PORTRAIT;
+
+        float sheetW_mm = paper.getWidthMm(orient);
+        float sheetH_mm = paper.getHeightMm(orient);
+        int sheetW_pt = paper.getWidthPts(orient);
+        int sheetH_pt = paper.getHeightPts(orient);
+
+        float printW_mm = Math.max(0f, sheetW_mm - (2f * mm));
+        float printH_mm = Math.max(0f, sheetH_mm - (2f * mm));
+        float areaPct = Math.max(0f, Math.min(100f, ((printW_mm * printH_mm) / (sheetW_mm * sheetH_mm)) * 100f));
+
+        if (tvMarginCalcSheet != null) {
+            tvMarginCalcSheet.setText(String.format(Locale.US, "%.1f × %.1f mm (%d × %d pt)", sheetW_mm, sheetH_mm, sheetW_pt, sheetH_pt));
+        }
+        if (tvMarginCalcPrintable != null) {
+            tvMarginCalcPrintable.setText(String.format(Locale.US, "%.1f × %.1f mm (%.1f%% of sheet)", printW_mm, printH_mm, areaPct));
+        }
+        if (tvMarginCalcHardware != null) {
+            tvMarginCalcHardware.setText("4.5 mm (12.8 pt) Drum Non-Printable Edge");
+        }
+        if (tvMarginHwStatus != null) {
+            if (SheetGeometry.isHardwareClipped(mm)) {
+                float clipMm = SheetGeometry.HARDWARE_MIN_MARGIN_MM - mm;
+                tvMarginHwStatus.setText(String.format(Locale.US, "⚠️ HARDWARE CLIPPING RISK: Drum cannot print in 4.5mm gray area! Outer %.1f mm will be cut off.", clipMm));
+                tvMarginHwStatus.setBackgroundColor(0xFF2E1616);
+                tvMarginHwStatus.setTextColor(0xFFF87171);
+            } else {
+                tvMarginHwStatus.setText("✓ 100% IN PRINTABLE BOUNDARY: Margin clears laser drum 4.5 mm limit");
+                tvMarginHwStatus.setBackgroundColor(0xFF162E20);
+                tvMarginHwStatus.setTextColor(0xFF4ADE80);
+            }
+        }
+    }
+
+    private void updateMarginButtonsHighlight(float mm) {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
         int activeBg = com.dodopress.R.drawable.btn_primary;
         int normalBg = com.dodopress.R.drawable.btn_chip;
@@ -1682,20 +2216,29 @@ public class MainActivity extends Activity {
         int normalText = p.textMedColor;
 
         if (btnMarginZero != null) {
-            btnMarginZero.setBackgroundResource(mm == 0 ? activeBg : normalBg);
-            btnMarginZero.setTextColor(mm == 0 ? activeText : normalText);
+            boolean active = (mm == 0f);
+            btnMarginZero.setBackgroundResource(active ? activeBg : normalBg);
+            btnMarginZero.setTextColor(active ? activeText : normalText);
+        }
+        if (btnMarginHwMin != null) {
+            boolean active = Math.abs(mm - SheetGeometry.HARDWARE_MIN_MARGIN_MM) < 0.1f;
+            btnMarginHwMin.setBackgroundResource(active ? activeBg : normalBg);
+            btnMarginHwMin.setTextColor(active ? activeText : normalText);
         }
         if (btnMarginNarrow != null) {
-            btnMarginNarrow.setBackgroundResource(mm == 5 ? activeBg : normalBg);
-            btnMarginNarrow.setTextColor(mm == 5 ? activeText : normalText);
+            boolean active = Math.abs(mm - 8.0f) < 0.1f;
+            btnMarginNarrow.setBackgroundResource(active ? activeBg : normalBg);
+            btnMarginNarrow.setTextColor(active ? activeText : normalText);
         }
         if (btnMarginNormal != null) {
-            btnMarginNormal.setBackgroundResource(mm == 12 ? activeBg : normalBg);
-            btnMarginNormal.setTextColor(mm == 12 ? activeText : normalText);
+            boolean active = Math.abs(mm - 12.0f) < 0.1f;
+            btnMarginNormal.setBackgroundResource(active ? activeBg : normalBg);
+            btnMarginNormal.setTextColor(active ? activeText : normalText);
         }
         if (btnMarginWide != null) {
-            btnMarginWide.setBackgroundResource(mm == 24 ? activeBg : normalBg);
-            btnMarginWide.setTextColor(mm == 24 ? activeText : normalText);
+            boolean active = Math.abs(mm - 20.0f) < 0.1f;
+            btnMarginWide.setBackgroundResource(active ? activeBg : normalBg);
+            btnMarginWide.setTextColor(active ? activeText : normalText);
         }
     }
 
@@ -1794,11 +2337,25 @@ public class MainActivity extends Activity {
         if (printer != null) {
             currentPrinterCutawayState = PrinterCutawayView.PrinterState.READY;
             String displayName = usbPrinterConnection.getPrinterDisplayName(printer);
-            tvPrinterStatus.setText(displayName);
-            dockTvStatus.setText(displayName + " (Online)");
+            if (tvPrinterStatus != null) {
+                tvPrinterStatus.setText(displayName);
+                tvPrinterStatus.setTextColor(Color.parseColor("#34D399"));
+            }
+            if (tvConnectionSymbol != null) {
+                tvConnectionSymbol.setText("🖨️");
+            }
             if (viewBeacon != null) viewBeacon.setBeaconColor(Color.parseColor("#10B981"));
-            layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_online);
-            tvPrinterStatus.setTextColor(Color.parseColor("#34D399"));
+            if (layoutStatusCapsule != null) {
+                layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_online);
+            }
+            if (dockTvStatus != null) {
+                dockTvStatus.setText(displayName + " (Online)");
+            }
+            if (dockBtnPrint != null) {
+                dockBtnPrint.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
+                dockBtnPrint.setText("⚡ PRINT NOW");
+                dockBtnPrint.setTextColor(Color.WHITE);
+            }
             DiagnosticLogManager.log("USB", "Connected: " + displayName);
 
             // Prompt if offline queue has items waiting
@@ -1808,13 +2365,39 @@ public class MainActivity extends Activity {
             }
         } else {
             currentPrinterCutawayState = PrinterCutawayView.PrinterState.OFFLINE;
-            tvPrinterStatus.setText("Connect USB OTG");
-            dockTvStatus.setText("Printer Offline (OTG Cable Needed)");
+            if (tvPrinterStatus != null) {
+                tvPrinterStatus.setText("Connect USB");
+                tvPrinterStatus.setTextColor(Color.parseColor("#FBBF24"));
+            }
+            if (tvConnectionSymbol != null) {
+                tvConnectionSymbol.setText("🔌");
+            }
             if (viewBeacon != null) viewBeacon.setBeaconColor(Color.parseColor("#F59E0B"));
-            layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_offline);
-            tvPrinterStatus.setTextColor(Color.parseColor("#FBBF24"));
+            if (layoutStatusCapsule != null) {
+                layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_offline);
+            }
+            if (dockTvStatus != null) {
+                dockTvStatus.setText("Printer Offline (OTG Cable Needed)");
+            }
+            if (dockBtnPrint != null) {
+                dockBtnPrint.setBackgroundResource(com.dodopress.R.drawable.btn_offline_dock);
+                dockBtnPrint.setText("🔌 PLUG USB TO PRINT");
+                dockBtnPrint.setTextColor(Color.parseColor("#FEF3C7"));
+            }
             DiagnosticLogManager.log("USB", "Waiting for USB OTG cable connection...");
         }
+    }
+
+    private void showOfflinePrinterDialog() {
+        SoundManager.playAlert();
+        new AlertDialog.Builder(this)
+            .setTitle("🔌 Connect USB OTG Cable")
+            .setMessage("HP LaserJet M1005 MFP requires a physical USB OTG cable connection.\n\n1. Connect USB OTG adapter to your phone\n2. Plug in the HP LaserJet USB cable\n3. Turn ON printer power\n4. Accept the Android USB permission prompt\n\nDodoPress will automatically detect the printer and illuminate green!")
+            .setPositiveButton("Open Diagnostics ⚡", (dialog, which) -> {
+                DiagnosticLogManager.showDiagnosticDialog(this, getCurrentPrinterCutawayState());
+            })
+            .setNegativeButton("OK", null)
+            .show();
     }
 
     private PrinterCutawayView.PrinterState getCurrentPrinterCutawayState() {
@@ -1848,22 +2431,29 @@ public class MainActivity extends Activity {
         startActivityForResult(intent, REQUEST_PICK_PDF);
     }
 
+    private int pendingCameraRequestCode = REQUEST_CAMERA_SCAN;
+
     private void launchCameraScanner(boolean directPrint) {
+        launchCameraScanner(directPrint, REQUEST_CAMERA_SCAN);
+    }
+
+    private void launchCameraScanner(boolean directPrint, int requestCode) {
         this.isDirectInstantPhotocopy = directPrint;
+        this.pendingCameraRequestCode = requestCode;
         if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.CAMERA}, PERMISSION_CAMERA_REQ);
             return;
         }
 
         try {
-            tempScanFile = new File(getCacheDir(), "scan_capture.jpg");
+            tempScanFile = new File(getCacheDir(), "scan_capture_" + requestCode + ".jpg");
             if (tempScanFile.exists()) tempScanFile.delete();
 
-            Uri photoUri = Uri.parse("content://" + DodoFileProvider.AUTHORITY + "/scan_capture.jpg");
+            Uri photoUri = Uri.parse("content://" + DodoFileProvider.AUTHORITY + "/" + tempScanFile.getName());
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
             takePictureIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivityForResult(takePictureIntent, REQUEST_CAMERA_SCAN);
+            startActivityForResult(takePictureIntent, requestCode);
         } catch (Exception e) {
             Toast.makeText(this, "Camera error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -1874,7 +2464,7 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_CAMERA_REQ) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                launchCameraScanner(isDirectInstantPhotocopy);
+                launchCameraScanner(isDirectInstantPhotocopy, pendingCameraRequestCode);
             } else {
                 Toast.makeText(this, "Camera permission needed for document scanner.", Toast.LENGTH_SHORT).show();
             }
@@ -1923,6 +2513,82 @@ public class MainActivity extends Activity {
         }).start();
     }
 
+    private void processScannedIdCard(int requestCode) {
+        if (tempScanFile == null || !tempScanFile.exists() || tempScanFile.length() == 0) {
+            Toast.makeText(this, "No photo captured.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bitmap bm = decodeFileScaled(tempScanFile, 1200);
+        if (bm == null) {
+            Toast.makeText(this, "Failed to decode captured ID photo.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (requestCode == REQUEST_SCAN_ID_FRONT) {
+            if (idFrontBitmap != null && !idFrontBitmap.isRecycled()) idFrontBitmap.recycle();
+            idFrontBitmap = bm;
+            if (ivIdFrontPreview != null) ivIdFrontPreview.setImageBitmap(idFrontBitmap);
+            Toast.makeText(this, "ID #1 Front scanned!", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_SCAN_ID_BACK) {
+            if (idBackBitmap != null && !idBackBitmap.isRecycled()) idBackBitmap.recycle();
+            idBackBitmap = bm;
+            if (ivIdBackPreview != null) ivIdBackPreview.setImageBitmap(idBackBitmap);
+            Toast.makeText(this, "ID #1 Back scanned!", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_SCAN_ID2_FRONT) {
+            if (id2FrontBitmap != null && !id2FrontBitmap.isRecycled()) id2FrontBitmap.recycle();
+            id2FrontBitmap = bm;
+            if (ivId2FrontPreview != null) ivId2FrontPreview.setImageBitmap(id2FrontBitmap);
+            Toast.makeText(this, "ID #2 Front scanned!", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_SCAN_ID2_BACK) {
+            if (id2BackBitmap != null && !id2BackBitmap.isRecycled()) id2BackBitmap.recycle();
+            id2BackBitmap = bm;
+            if (ivId2BackPreview != null) ivId2BackPreview.setImageBitmap(id2BackBitmap);
+            Toast.makeText(this, "ID #2 Back scanned!", Toast.LENGTH_SHORT).show();
+        }
+        renderIdCardPreview();
+    }
+
+    private Bitmap decodeUriScaled(Uri uri, int maxDim) {
+        try {
+            BitmapFactory.Options boundsOpts = new BitmapFactory.Options();
+            boundsOpts.inJustDecodeBounds = true;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                BitmapFactory.decodeStream(in, null, boundsOpts);
+            }
+            int sampleSize = 1;
+            while ((boundsOpts.outWidth / sampleSize / 2) >= maxDim || (boundsOpts.outHeight / sampleSize / 2) >= maxDim) {
+                sampleSize *= 2;
+            }
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inSampleSize = sampleSize;
+            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                return BitmapFactory.decodeStream(in, null, opts);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Bitmap decodeFileScaled(File file, int maxDim) {
+        try {
+            BitmapFactory.Options boundsOpts = new BitmapFactory.Options();
+            boundsOpts.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(file.getAbsolutePath(), boundsOpts);
+
+            int sampleSize = 1;
+            while ((boundsOpts.outWidth / sampleSize / 2) >= maxDim || (boundsOpts.outHeight / sampleSize / 2) >= maxDim) {
+                sampleSize *= 2;
+            }
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inSampleSize = sampleSize;
+            opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            return BitmapFactory.decodeFile(file.getAbsolutePath(), opts);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -1930,6 +2596,12 @@ public class MainActivity extends Activity {
 
         if (requestCode == REQUEST_CAMERA_SCAN) {
             processScannedDocument();
+            return;
+        }
+
+        if (requestCode == REQUEST_SCAN_ID_FRONT || requestCode == REQUEST_SCAN_ID_BACK ||
+            requestCode == REQUEST_SCAN_ID2_FRONT || requestCode == REQUEST_SCAN_ID2_BACK) {
+            processScannedIdCard(requestCode);
             return;
         }
 
@@ -1943,20 +2615,38 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQUEST_PICK_ID_FRONT) {
             Uri uri = data.getData();
             if (uri != null) {
-                try (InputStream in = getContentResolver().openInputStream(uri)) {
-                    idFrontBitmap = BitmapFactory.decodeStream(in);
-                    ivIdFrontPreview.setImageBitmap(idFrontBitmap);
-                    Toast.makeText(this, "ID Front loaded!", Toast.LENGTH_SHORT).show();
-                } catch (Exception ignored) {}
+                if (idFrontBitmap != null && !idFrontBitmap.isRecycled()) idFrontBitmap.recycle();
+                idFrontBitmap = decodeUriScaled(uri, 1200);
+                if (ivIdFrontPreview != null) ivIdFrontPreview.setImageBitmap(idFrontBitmap);
+                renderIdCardPreview();
+                Toast.makeText(this, "ID #1 Front loaded!", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == REQUEST_PICK_ID_BACK) {
             Uri uri = data.getData();
             if (uri != null) {
-                try (InputStream in = getContentResolver().openInputStream(uri)) {
-                    idBackBitmap = BitmapFactory.decodeStream(in);
-                    ivIdBackPreview.setImageBitmap(idBackBitmap);
-                    Toast.makeText(this, "ID Back loaded!", Toast.LENGTH_SHORT).show();
-                } catch (Exception ignored) {}
+                if (idBackBitmap != null && !idBackBitmap.isRecycled()) idBackBitmap.recycle();
+                idBackBitmap = decodeUriScaled(uri, 1200);
+                if (ivIdBackPreview != null) ivIdBackPreview.setImageBitmap(idBackBitmap);
+                renderIdCardPreview();
+                Toast.makeText(this, "ID #1 Back loaded!", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_PICK_ID2_FRONT) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                if (id2FrontBitmap != null && !id2FrontBitmap.isRecycled()) id2FrontBitmap.recycle();
+                id2FrontBitmap = decodeUriScaled(uri, 1200);
+                if (ivId2FrontPreview != null) ivId2FrontPreview.setImageBitmap(id2FrontBitmap);
+                renderIdCardPreview();
+                Toast.makeText(this, "ID #2 Front loaded!", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQUEST_PICK_ID2_BACK) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                if (id2BackBitmap != null && !id2BackBitmap.isRecycled()) id2BackBitmap.recycle();
+                id2BackBitmap = decodeUriScaled(uri, 1200);
+                if (ivId2BackPreview != null) ivId2BackPreview.setImageBitmap(id2BackBitmap);
+                renderIdCardPreview();
+                Toast.makeText(this, "ID #2 Back loaded!", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -2284,7 +2974,10 @@ public class MainActivity extends Activity {
     }
 
     private void renderPageThumb() {
-        if (totalPages <= 0) return;
+        if (totalPages <= 0) {
+            renderEmptySheetPreview();
+            return;
+        }
 
         final SheetGeometry.TilingMode targetTiling = (currentTilingMode != null) ? currentTilingMode : SheetGeometry.TilingMode.ONE_UP;
         int nUp = targetTiling.pagesPerSheet;
@@ -2310,8 +3003,9 @@ public class MainActivity extends Activity {
 
         final int token = previewRenderToken.incrementAndGet();
         final int targetPageIndex = currentPageIndex;
-        final int targetMarginMm = currentMarginMm;
+        final float targetMarginMm = currentMarginMm;
         final SheetGeometry.PaperSize targetPaper = (currentPaperSize != null) ? currentPaperSize : SheetGeometry.PaperSize.A4;
+        final SheetGeometry.Orientation targetOrientation = currentOrientation;
         final SheetGeometry.PlacementRegion targetRegion = currentPlacementRegion;
         final SheetGeometry.TilingMode targetTilingMode = currentTilingMode;
         final float targetRotation = currentPageRotation;
@@ -2327,9 +3021,29 @@ public class MainActivity extends Activity {
                     return;
                 }
                 try {
-                    int sheetPreviewW = 800;
-                    int sheetPreviewH = (int) (800.0f * (targetPaper.heightPts / (float) targetPaper.widthPts));
-                    int marginPx = (targetMarginMm > 0) ? (int) Math.round((targetMarginMm / 210.0f) * sheetPreviewW) : 0;
+                    float sheetW_mm = targetPaper.getWidthMm(targetOrientation);
+                    float sheetH_mm = targetPaper.getHeightMm(targetOrientation);
+
+                    int maxDim = 960;
+                    int sheetPreviewW, sheetPreviewH;
+                    if (sheetW_mm <= sheetH_mm) {
+                        sheetPreviewH = maxDim;
+                        sheetPreviewW = Math.round(maxDim * (sheetW_mm / sheetH_mm));
+                    } else {
+                        sheetPreviewW = maxDim;
+                        sheetPreviewH = Math.round(maxDim * (sheetH_mm / sheetW_mm));
+                    }
+
+                    float pxPerMmX = (float) sheetPreviewW / sheetW_mm;
+                    float pxPerMmY = (float) sheetPreviewH / sheetH_mm;
+                    int marginPxX = Math.round(targetMarginMm * pxPerMmX);
+                    int marginPxY = Math.round(targetMarginMm * pxPerMmY);
+
+                    baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
+                    baseBm.eraseColor(0xFFFFFFFF); // Clean sheet of paper
+                    Canvas canvas = new Canvas(baseBm);
+
+                    Rect printableBox = new Rect(marginPxX, marginPxY, sheetPreviewW - marginPxX, sheetPreviewH - marginPxY);
 
                     if (targetTilingMode == null || targetTilingMode == SheetGeometry.TilingMode.ONE_UP) {
                         PdfRenderer.Page page = pdfRenderer.openPage(targetPageIndex);
@@ -2339,56 +3053,51 @@ public class MainActivity extends Activity {
                         if (targetRegion == null || targetRegion == SheetGeometry.PlacementRegion.FULL_PAGE) {
                             if (targetMarginMm <= 0) {
                                 // Full-bleed borderless
-                                float scale = 800.0f / (float) pw;
-                                int previewW = 800;
-                                int previewH = (int) (ph * scale);
-
-                                baseBm = Bitmap.createBitmap(previewW, previewH, Bitmap.Config.ARGB_8888);
-                                baseBm.eraseColor(0xFFFFFFFF);
-                                page.render(baseBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                                page.close();
-                            } else {
-                                // Full page with margin padding
-                                baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
-                                baseBm.eraseColor(0xFFFFFFFF);
-
-                                Rect targetBox = new Rect(0, 0, sheetPreviewW, sheetPreviewH);
-                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, marginPx);
+                                Rect fullBox = new Rect(0, 0, sheetPreviewW, sheetPreviewH);
+                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, fullBox, 0);
 
                                 Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
                                 docBm.eraseColor(0xFFFFFFFF);
                                 page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
                                 page.close();
 
-                                Canvas canvas = new Canvas(baseBm);
+                                canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
+                                docBm.recycle();
+                            } else {
+                                // Full page fitted inside user margins
+                                Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, printableBox, 0);
+
+                                Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
+                                docBm.eraseColor(0xFFFFFFFF);
+                                page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                                page.close();
+
                                 canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
                                 docBm.recycle();
                             }
                         } else {
-                            // Partial-page placement (top half, bottom half, quadrant...)
-                            baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
-                            baseBm.eraseColor(0xFFFFFFFF);
+                            // Partial-page placement inside printableBox
+                            int slotW = printableBox.width();
+                            int slotH = printableBox.height();
+                            int subLeft = printableBox.left + (int) (targetRegion.relX * slotW);
+                            int subTop = printableBox.top + (int) (targetRegion.relY * slotH);
+                            int subW = (int) (targetRegion.relW * slotW);
+                            int subH = (int) (targetRegion.relH * slotH);
+                            Rect subBox = new Rect(subLeft, subTop, subLeft + subW, subTop + subH);
 
-                            Rect targetBox = SheetGeometry.getTargetBox(targetRegion, sheetPreviewW, sheetPreviewH);
-                            int effectiveMargin = Math.max(marginPx, 16);
-                            Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, targetBox, effectiveMargin);
+                            Rect destRect = SheetGeometry.calculateAspectFit(pw, ph, subBox, 0);
 
                             Bitmap docBm = Bitmap.createBitmap(destRect.width(), destRect.height(), Bitmap.Config.ARGB_8888);
                             docBm.eraseColor(0xFFFFFFFF);
                             page.render(docBm, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
                             page.close();
 
-                            Canvas canvas = new Canvas(baseBm);
                             canvas.drawBitmap(docBm, destRect.left, destRect.top, null);
                             docBm.recycle();
                         }
                     } else {
                         // Tiled Multi-Page Preview (2-Up or 4-Up)
-                        baseBm = Bitmap.createBitmap(sheetPreviewW, sheetPreviewH, Bitmap.Config.ARGB_8888);
-                        baseBm.eraseColor(0xFFFFFFFF);
-                        Canvas canvas = new Canvas(baseBm);
-
-                        Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(targetTilingMode, sheetPreviewW, sheetPreviewH, marginPx);
+                        Rect[] tileBoxes = SheetGeometry.calculateNUpBoxes(targetTilingMode, sheetPreviewW, sheetPreviewH, Math.max(marginPxX, marginPxY));
                         int tileNUp = targetTilingMode.pagesPerSheet;
                         int startPage = (targetPageIndex / tileNUp) * tileNUp;
 
@@ -2435,7 +3144,7 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            // 1. Rotation
+            // 1. Rotation (applies strictly to document content)
             if (targetRotation != 0) {
                 Bitmap rot = ToneEngine.rotateBitmap(baseBm, targetRotation);
                 if (rot != baseBm) {
@@ -2478,13 +3187,26 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            // 3. Auto-blank page detection
+            // 3. Auto-blank page detection (runs on clean document without UI border interference)
             final boolean isBlank = ToneEngine.isPageBlank(baseBm);
 
             // 4. Tone adjusted bitmap for real-time laser preview
             final Bitmap toneAdjusted = ToneEngine.processPreviewBitmap(baseBm, targetDarkness);
-
             final Bitmap finalRaw = baseBm;
+
+            // 5. Draw UI sheet decorations (4.5mm hardware gray area, margin guides, sheet border)
+            // as crisp post-filter vector overlays on both display views
+            float sheetW_mm = targetPaper.getWidthMm(targetOrientation);
+            float sheetH_mm = targetPaper.getHeightMm(targetOrientation);
+
+            if (toneAdjusted != null && !toneAdjusted.isRecycled()) {
+                Canvas canvasTone = new Canvas(toneAdjusted);
+                drawSheetDecorations(canvasTone, toneAdjusted.getWidth(), toneAdjusted.getHeight(), sheetW_mm, sheetH_mm, targetMarginMm, targetPaper, targetOrientation, false);
+            }
+            if (finalRaw != null && !finalRaw.isRecycled() && finalRaw != toneAdjusted) {
+                Canvas canvasRaw = new Canvas(finalRaw);
+                drawSheetDecorations(canvasRaw, finalRaw.getWidth(), finalRaw.getHeight(), sheetW_mm, sheetH_mm, targetMarginMm, targetPaper, targetOrientation, false);
+            }
 
             mainHandler.post(() -> {
                 if (token != previewRenderToken.get()) {
@@ -2535,6 +3257,134 @@ public class MainActivity extends Activity {
                 }
             });
         });
+    }
+
+    private void renderEmptySheetPreview() {
+        final SheetGeometry.PaperSize targetPaper = (currentPaperSize != null) ? currentPaperSize : SheetGeometry.PaperSize.A4;
+        final SheetGeometry.Orientation targetOrientation = currentOrientation;
+        final float targetMarginMm = currentMarginMm;
+        final int token = previewRenderToken.incrementAndGet();
+
+        previewExecutor.execute(() -> {
+            if (token != previewRenderToken.get()) return;
+
+            float sheetW_mm = targetPaper.getWidthMm(targetOrientation);
+            float sheetH_mm = targetPaper.getHeightMm(targetOrientation);
+
+            int maxDim = 960;
+            int sheetW, sheetH;
+            if (sheetW_mm <= sheetH_mm) {
+                sheetH = maxDim;
+                sheetW = Math.round(maxDim * (sheetW_mm / sheetH_mm));
+            } else {
+                sheetW = maxDim;
+                sheetH = Math.round(maxDim * (sheetH_mm / sheetW_mm));
+            }
+
+            Bitmap sheetBm = Bitmap.createBitmap(sheetW, sheetH, Bitmap.Config.ARGB_8888);
+            sheetBm.eraseColor(0xFFFFFFFF);
+            Canvas canvas = new Canvas(sheetBm);
+
+            drawSheetDecorations(canvas, sheetW, sheetH, sheetW_mm, sheetH_mm, targetMarginMm, targetPaper, targetOrientation, true);
+
+            mainHandler.post(() -> {
+                if (token != previewRenderToken.get()) {
+                    sheetBm.recycle();
+                    return;
+                }
+                if (rawPageBitmap != null && !rawPageBitmap.isRecycled()) {
+                    rawPageBitmap.recycle();
+                }
+                if (toneAdjustedBitmap != null && toneAdjustedBitmap != rawPageBitmap && !toneAdjustedBitmap.isRecycled()) {
+                    toneAdjustedBitmap.recycle();
+                }
+                rawPageBitmap = sheetBm;
+                toneAdjustedBitmap = sheetBm;
+
+                if (ivPagePreview != null) {
+                    ivPagePreview.setImageBitmap(sheetBm);
+                }
+            });
+        });
+    }
+
+    private void drawSheetDecorations(Canvas canvas, int sheetW, int sheetH,
+                                     float sheetW_mm, float sheetH_mm, float marginMm,
+                                     SheetGeometry.PaperSize paper, SheetGeometry.Orientation orientation,
+                                     boolean isEmptyState) {
+        float pxPerMmX = (float) sheetW / sheetW_mm;
+        float pxPerMmY = (float) sheetH / sheetH_mm;
+
+        // 1. Hardware Non-Printable Margin (4.5 mm)
+        int hwPxX = Math.round(SheetGeometry.HARDWARE_MIN_MARGIN_MM * pxPerMmX);
+        int hwPxY = Math.round(SheetGeometry.HARDWARE_MIN_MARGIN_MM * pxPerMmY);
+
+        boolean isClipped = SheetGeometry.isHardwareClipped(marginMm);
+
+        Paint grayPaint = new Paint();
+        grayPaint.setStyle(Paint.Style.FILL);
+        grayPaint.setColor(isClipped ? 0x2AEE3333 : 0x1A000000);
+
+        // Draw the 4 outer edge strips representing the physical drum grip / non-printable edge
+        canvas.drawRect(0, 0, sheetW, hwPxY, grayPaint); // Top
+        canvas.drawRect(0, sheetH - hwPxY, sheetW, sheetH, grayPaint); // Bottom
+        canvas.drawRect(0, hwPxY, hwPxX, sheetH - hwPxY, grayPaint); // Left
+        canvas.drawRect(sheetW - hwPxX, hwPxY, sheetW, sheetH - hwPxY, grayPaint); // Right
+
+        // Hairline boundary line for the 4.5mm hardware limit
+        Paint hwLinePaint = new Paint();
+        hwLinePaint.setStyle(Paint.Style.STROKE);
+        hwLinePaint.setStrokeWidth(1.5f);
+        hwLinePaint.setColor(isClipped ? 0x99EF4444 : 0x33000000);
+        canvas.drawRect(hwPxX, hwPxY, sheetW - hwPxX, sheetH - hwPxY, hwLinePaint);
+
+        // 2. User Active Margin Guideline
+        int userPxX = Math.round(marginMm * pxPerMmX);
+        int userPxY = Math.round(marginMm * pxPerMmY);
+
+        if (marginMm > 0) {
+            Paint userMarginPaint = new Paint();
+            userMarginPaint.setStyle(Paint.Style.STROKE);
+            userMarginPaint.setStrokeWidth(2.0f);
+            userMarginPaint.setPathEffect(new DashPathEffect(new float[]{8f, 6f}, 0f));
+            userMarginPaint.setColor(isClipped ? 0xCCEF4444 : 0x700284C7);
+            canvas.drawRect(userPxX, userPxY, sheetW - userPxX, sheetH - userPxY, userMarginPaint);
+        }
+
+        // 3. Physical Paper Outline
+        Paint paperBorderPaint = new Paint();
+        paperBorderPaint.setStyle(Paint.Style.STROKE);
+        paperBorderPaint.setStrokeWidth(2.0f);
+        paperBorderPaint.setColor(0xFF94A3B8);
+        canvas.drawRect(0, 0, sheetW, sheetH, paperBorderPaint);
+
+        // 4. If Empty State, draw clean blueprint watermark in sheet center
+        if (isEmptyState) {
+            Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+
+            // Icon / Sheet Title
+            textPaint.setColor(0xFF334155);
+            textPaint.setTextSize(26f);
+            String title = (orientation == SheetGeometry.Orientation.PORTRAIT ? "📄 " : "📑 ")
+                         + paper.name() + " " + orientation.title.toUpperCase(Locale.US)
+                         + " (" + String.format(Locale.US, "%.0f×%.0f mm", sheetW_mm, sheetH_mm) + ")";
+            canvas.drawText(title, sheetW / 2.0f, sheetH / 2.0f - 30f, textPaint);
+
+            // Hardware info
+            textPaint.setTextSize(18f);
+            textPaint.setColor(0xFF64748B);
+            float printW = Math.max(0f, sheetW_mm - (2f * marginMm));
+            float printH = Math.max(0f, sheetH_mm - (2f * marginMm));
+            String specs = String.format(Locale.US, "Printable: %.1f × %.1f mm (4.5mm HW Non-Printable Edge)", printW, printH);
+            canvas.drawText(specs, sheetW / 2.0f, sheetH / 2.0f + 10f, textPaint);
+
+            // Subtitle hint
+            textPaint.setTextSize(15f);
+            textPaint.setColor(0xFF94A3B8);
+            canvas.drawText("Ready for document placement", sheetW / 2.0f, sheetH / 2.0f + 45f, textPaint);
+        }
     }
 
     private void updatePageRangeLabels() {
@@ -2670,17 +3520,17 @@ public class MainActivity extends Activity {
             sb.append(" (4-in-1 Saves 75% Paper)");
         }
 
-        sb.append(" • ").append(currentPaperSize.name());
+        sb.append(" • ").append(currentPaperSize.name()).append(" ").append(currentOrientation.title);
         if (currentTilingMode != SheetGeometry.TilingMode.ONE_UP) {
             sb.append(" (").append(currentTilingMode.title).append(")");
         } else if (currentPlacementRegion != SheetGeometry.PlacementRegion.FULL_PAGE) {
             sb.append(" (").append(currentPlacementRegion.title).append(")");
         }
 
-        if (currentMarginMm == 0) {
-            sb.append(" • 0mm (Border)");
+        if (currentMarginMm == 0f) {
+            sb.append(" • 0mm (Edge-to-Edge)");
         } else {
-            sb.append(" • ").append(currentMarginMm).append("mm margin");
+            sb.append(String.format(Locale.US, " • %.1fmm margin", currentMarginMm));
         }
 
         if (cbReverseOrder.isChecked()) {
@@ -2750,11 +3600,13 @@ public class MainActivity extends Activity {
         DiagnosticLogManager.log("PRINT", "Initiating print job: " + pagesToPrint.size() + " pages, " + copies + " copies, darkness=" + darkness + "%, placement=" + currentPlacementRegion.title + ", tiling=" + currentTilingMode.title);
 
         currentPrinterCutawayState = PrinterCutawayView.PrinterState.PRINTING;
-        btnPrintNow.setEnabled(false);
-        dockBtnPrint.setEnabled(false);
-        pbPrintProgress.setVisibility(View.VISIBLE);
-        tvPrintStatus.setVisibility(View.VISIBLE);
-        pbPrintProgress.setProgress(0);
+        if (btnPrintNow != null) btnPrintNow.setEnabled(false);
+        if (dockBtnPrint != null) dockBtnPrint.setEnabled(false);
+        if (pbPrintProgress != null) {
+            pbPrintProgress.setVisibility(View.VISIBLE);
+            pbPrintProgress.setProgress(0);
+        }
+        if (tvPrintStatus != null) tvPrintStatus.setVisibility(View.VISIBLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         if (viewAnimatedLogo != null) {
@@ -2765,14 +3617,14 @@ public class MainActivity extends Activity {
             laserScanView.startScan();
         }
 
-        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, currentPaperSize, currentPlacementRegion, currentTilingMode, invertDark, watermark, rotation, currentMarginMm, new PrintEngine.PrintProgressListener() {
+        printEngine.printPdf(currentPdfFile, darkness, dpi, copies, collate, pagesToPrint, currentPaperSize, currentOrientation, currentPlacementRegion, currentTilingMode, invertDark, watermark, rotation, currentMarginMm, new PrintEngine.PrintProgressListener() {
             @Override
             public void onProgress(int currentPage, int total, String statusMessage) {
                 DiagnosticLogManager.log("PRINT", statusMessage);
                 runOnUiThread(() -> {
-                    tvPrintStatus.setText(statusMessage);
-                    dockTvStatus.setText(statusMessage);
-                    if (total > 0) {
+                    if (tvPrintStatus != null) tvPrintStatus.setText(statusMessage);
+                    if (dockTvStatus != null) dockTvStatus.setText(statusMessage);
+                    if (pbPrintProgress != null && total > 0) {
                         pbPrintProgress.setMax(total);
                         pbPrintProgress.setProgress(currentPage);
                     }
@@ -2786,11 +3638,11 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     SoundManager.playXpPrintChime();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    btnPrintNow.setEnabled(true);
-                    dockBtnPrint.setEnabled(true);
-                    pbPrintProgress.setVisibility(View.GONE);
-                    tvPrintStatus.setText("Print job finished successfully!");
-                    dockTvStatus.setText("Print Complete!");
+                    if (btnPrintNow != null) btnPrintNow.setEnabled(true);
+                    if (dockBtnPrint != null) dockBtnPrint.setEnabled(true);
+                    if (pbPrintProgress != null) pbPrintProgress.setVisibility(View.GONE);
+                    if (tvPrintStatus != null) tvPrintStatus.setText("Print job finished successfully!");
+                    if (dockTvStatus != null) dockTvStatus.setText("Print Complete!");
                     if (viewAnimatedLogo != null) {
                         viewAnimatedLogo.setPrintingActive(false);
                     }
@@ -2809,11 +3661,11 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     SoundManager.playAlert();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                    btnPrintNow.setEnabled(true);
-                    dockBtnPrint.setEnabled(true);
-                    pbPrintProgress.setVisibility(View.GONE);
-                    tvPrintStatus.setText("Printing error: " + e.getMessage());
-                    dockTvStatus.setText("Error: " + e.getMessage());
+                    if (btnPrintNow != null) btnPrintNow.setEnabled(true);
+                    if (dockBtnPrint != null) dockBtnPrint.setEnabled(true);
+                    if (pbPrintProgress != null) pbPrintProgress.setVisibility(View.GONE);
+                    if (tvPrintStatus != null) tvPrintStatus.setText("Printing error: " + e.getMessage());
+                    if (dockTvStatus != null) dockTvStatus.setText("Error: " + e.getMessage());
                     if (viewAnimatedLogo != null) {
                         viewAnimatedLogo.setPrintingActive(false);
                     }

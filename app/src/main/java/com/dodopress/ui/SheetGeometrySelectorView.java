@@ -21,6 +21,7 @@ public class SheetGeometrySelectorView extends View {
     }
 
     private SheetGeometry.PaperSize paperSize = SheetGeometry.PaperSize.A4;
+    private SheetGeometry.Orientation orientation = SheetGeometry.Orientation.PORTRAIT;
     private SheetGeometry.PlacementRegion activeRegion = SheetGeometry.PlacementRegion.FULL_PAGE;
     private SheetGeometry.TilingMode tilingMode = SheetGeometry.TilingMode.ONE_UP;
     private OnRegionSelectedListener listener;
@@ -110,6 +111,19 @@ public class SheetGeometrySelectorView extends View {
         return activeRegion;
     }
 
+    public void setOrientation(SheetGeometry.Orientation orientation) {
+        if (orientation == null || this.orientation == orientation) return;
+        this.orientation = orientation;
+        if (getWidth() > 0 && getHeight() > 0) {
+            onSizeChanged(getWidth(), getHeight(), getWidth(), getHeight());
+        }
+        invalidate();
+    }
+
+    public SheetGeometry.Orientation getOrientation() {
+        return orientation;
+    }
+
     public void setTilingMode(SheetGeometry.TilingMode mode) {
         this.tilingMode = (mode != null) ? mode : SheetGeometry.TilingMode.ONE_UP;
         invalidate();
@@ -151,7 +165,7 @@ public class SheetGeometrySelectorView extends View {
         float availW = w - (pad * 2f);
         float availH = h - (pad * 2f);
 
-        float paperAspect = paperSize.widthPts / (float) paperSize.heightPts;
+        float paperAspect = paperSize.getWidthPts(orientation) / (float) paperSize.getHeightPts(orientation);
         float drawW, drawH;
 
         if (availW / paperAspect <= availH) {

@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
@@ -186,18 +187,43 @@ public class PrinterCutawayView extends View {
             canvas.drawRoundRect(trayRect, 8 * density, 8 * density, chamberPaint);
             highlightPaint.setColor(0xFFEF4444);
             canvas.drawRoundRect(trayRect, 8 * density, 8 * density, highlightPaint);
+
+            Paint emptyLabel = new Paint(Paint.ANTI_ALIAS_FLAG);
+            emptyLabel.setColor(0xFFFFFFFF);
+            emptyLabel.setTextSize(8.5f * density);
+            emptyLabel.setTextAlign(Paint.Align.CENTER);
+            emptyLabel.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+            canvas.drawText("⚠️ LOAD PAPER IN TRAY 1", trayRect.centerX(), trayRect.centerY() + 3 * density, emptyLabel);
         } else {
             chamberPaint.setColor(0xFF1E293B);
             canvas.drawRoundRect(trayRect, 8 * density, 8 * density, chamberPaint);
             highlightPaint.setColor(0xFF475569);
             canvas.drawRoundRect(trayRect, 8 * density, 8 * density, highlightPaint);
-        }
 
-        // Paper stack representation inside tray
-        if (state != PrinterState.PAPER_EMPTY) {
-            chamberPaint.setColor(0xFFF8FAFC);
-            RectF paperSheet = new RectF(trayRect.left + 12 * density, trayRect.top + 10 * density, trayRect.right - 12 * density, trayRect.bottom - 10 * density);
-            canvas.drawRoundRect(paperSheet, 3 * density, 3 * density, chamberPaint);
+            // Technical Paper Cassette Slot
+            chamberPaint.setColor(0xFF0F172A);
+            RectF paperSlot = new RectF(trayRect.left + 8 * density, trayRect.top + 6 * density, trayRect.right - 8 * density, trayRect.bottom - 6 * density);
+            canvas.drawRoundRect(paperSlot, 4 * density, 4 * density, chamberPaint);
+
+            // Realistic multi-sheet media edge highlight (no stark white placeholder)
+            Paint paperEdge = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paperEdge.setStyle(Paint.Style.STROKE);
+            paperEdge.setStrokeWidth(1.2f * density);
+            paperEdge.setColor(0xFF64748B);
+            RectF paperSheet = new RectF(trayRect.left + 14 * density, trayRect.top + 9 * density, trayRect.right - 14 * density, trayRect.bottom - 9 * density);
+
+            Paint paperBody = new Paint(Paint.ANTI_ALIAS_FLAG);
+            paperBody.setColor(0xFF1E293B);
+            canvas.drawRoundRect(paperSheet, 3 * density, 3 * density, paperBody);
+            canvas.drawRoundRect(paperSheet, 3 * density, 3 * density, paperEdge);
+
+            // Technical Cassette Monospace Label
+            Paint trayLabel = new Paint(Paint.ANTI_ALIAS_FLAG);
+            trayLabel.setColor(0xFF94A3B8);
+            trayLabel.setTextSize(8 * density);
+            trayLabel.setTextAlign(Paint.Align.CENTER);
+            trayLabel.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
+            canvas.drawText("TRAY 1 : A4 / LTR MEDIA READY", trayRect.centerX(), trayRect.centerY() + 3 * density, trayLabel);
         }
 
         // 6. USB Status Indicator (Bottom right edge)

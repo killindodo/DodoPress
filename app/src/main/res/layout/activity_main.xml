@@ -86,10 +86,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="68dp">
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
             <!-- 1. Precision Aerospace / Telemetry Header -->
             <LinearLayout
@@ -97,137 +97,111 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginBottom="6dp">
+                android:layout_marginBottom="4dp">
 
-                <!-- Row 1: Brand Title & Action Chips -->
+                <!-- Precision Unified Header Row (Single Row with Brand, Live USB Status & Action Icons) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="3dp">
 
                     <com.dodopress.ui.AnimatedLogoView
                         android:id="@+id/view_animated_logo"
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
-                        android:layout_marginEnd="8dp"/>
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="6dp"/>
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/tv_app_title"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="DodoPress"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_high"
+                        android:letterSpacing="0.02"/>
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                    <TextView
+                        android:id="@+id/tv_pro_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/badge_pro_pill"
+                        android:paddingStart="4dp"
+                        android:paddingTop="1dp"
+                        android:paddingEnd="4dp"
+                        android:paddingBottom="1dp"
+                        android:text="PRO"
+                        android:textSize="8sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"/>
 
-                            <TextView
-                                android:id="@+id/tv_app_title"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="DodoPress"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/text_high"
-                                android:letterSpacing="0.02"/>
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"/>
 
-                            <TextView
-                                android:id="@+id/tv_pro_badge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:background="@drawable/badge_pro_pill"
-                                android:paddingStart="6dp"
-                                android:paddingTop="1dp"
-                                android:paddingEnd="6dp"
-                                android:paddingBottom="1dp"
-                                android:text="PRO"
-                                android:textSize="9sp"
-                                android:textStyle="bold"
-                                android:textColor="#FFFFFF"/>
-                        </LinearLayout>
+                    <!-- Integrated Dynamic Connection Status Pill in Remaining Space -->
+                    <LinearLayout
+                        android:id="@+id/layout_status_capsule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/badge_status_offline"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginEnd="5dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <com.dodopress.ui.PulsingBeaconView
+                            android:id="@+id/view_beacon"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:layout_marginEnd="4dp"/>
 
                         <TextView
-                            android:id="@+id/tv_app_subtitle"
+                            android:id="@+id/tv_connection_symbol"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="HP LASERJET M1005 • BITONAL"
-                            android:textSize="9sp"
+                            android:text="🔌"
+                            android:textSize="10sp"
+                            android:layout_marginEnd="3dp"/>
+
+                        <TextView
+                            android:id="@+id/tv_printer_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="NO USB"
+                            android:textSize="9.5sp"
                             android:textStyle="bold"
-                            android:letterSpacing="0.05"
-                            android:textColor="@color/brand_primary"/>
+                            android:fontFamily="monospace"
+                            android:textColor="@color/status_waiting_text"/>
                     </LinearLayout>
 
-                    <!-- Theme Menu Button -->
+                    <!-- Compact Theme Icon Chip -->
                     <Button
                         android:id="@+id/btn_theme_menu"
-                        android:layout_width="wrap_content"
-                        android:layout_height="30dp"
+                        android:layout_width="26dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_chip"
-                        android:text="🎨 Theme"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/brand_primary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:layout_marginEnd="6dp"/>
+                        android:text="🎨"
+                        android:textSize="11sp"
+                        android:padding="0dp"
+                        android:layout_marginEnd="4dp"/>
 
-                    <!-- Diagnostics Button -->
+                    <!-- Compact Telemetry Icon Chip -->
                     <Button
                         android:id="@+id/btn_diagnostics"
-                        android:layout_width="wrap_content"
-                        android:layout_height="30dp"
+                        android:layout_width="26dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_chip"
-                        android:text="⚡ Telemetry"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/brand_primary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"/>
-                </LinearLayout>
-
-                <!-- Row 2: Rock-solid Full-Width Telemetry Status Capsule HUD -->
-                <LinearLayout
-                    android:id="@+id/layout_status_capsule"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:background="@drawable/badge_status_offline"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:layout_marginBottom="6dp">
-
-                    <com.dodopress.ui.PulsingBeaconView
-                        android:id="@+id/view_beacon"
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:layout_marginEnd="6dp"/>
-
-                    <TextView
-                        android:id="@+id/tv_printer_status"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Checking USB OTG..."
+                        android:text="⚡"
                         android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:singleLine="true"
-                        android:ellipsize="end"
-                        android:textColor="@color/status_waiting_text"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="USB 0x03F0:0x3B17"
-                        android:textSize="9sp"
-                        android:textStyle="bold"
-                        android:fontFamily="monospace"
-                        android:textColor="@color/text_muted"/>
+                        android:padding="0dp"/>
                 </LinearLayout>
 
                 <!-- Row 3: Quick Document Source Strip -->
@@ -235,53 +209,53 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="2dp">
 
                     <Button
                         android:id="@+id/btn_pick_file"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="28dp"
                         android:layout_weight="1.2"
                         android:background="@drawable/btn_primary"
                         android:text="📄 PDF/Photo"
                         android:textColor="#FFFFFF"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:layout_marginEnd="3dp"/>
 
                     <Button
                         android:id="@+id/btn_scan_document"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="28dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_secondary"
                         android:text="📷 Scan"
                         android:textColor="@color/text_high"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:layout_marginEnd="3dp"/>
 
                     <Button
                         android:id="@+id/btn_qr_label"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="28dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_secondary"
                         android:text="🏁 QR"
                         android:textColor="@color/text_high"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:layout_marginEnd="3dp"/>
 
                     <Button
                         android:id="@+id/btn_ai_assistant"
                         android:layout_width="0dp"
-                        android:layout_height="36dp"
+                        android:layout_height="28dp"
                         android:layout_weight="1.2"
                         android:background="@drawable/btn_secondary"
                         android:text="✨ AI Suite"
                         android:textColor="@color/brand_primary"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"/>
                 </LinearLayout>
 
@@ -292,7 +266,7 @@
                     android:gravity="center"
                     android:text="No document selected yet"
                     android:textColor="@color/text_med"
-                    android:textSize="11sp"
+                    android:textSize="9.5sp"
                     android:singleLine="true"
                     android:ellipsize="middle"/>
             </LinearLayout>
@@ -301,11 +275,11 @@
             <LinearLayout
                 android:id="@+id/card_doc_preview"
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
+                android:layout_height="290dp"
                 android:orientation="vertical"
                 android:background="@drawable/card_bg"
-                android:padding="8dp"
-                android:layout_marginBottom="6dp">
+                android:padding="6dp"
+                android:layout_marginBottom="4dp">
 
                 <!-- Floating Toolbar -->
                 <LinearLayout
@@ -313,7 +287,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="3dp">
 
                     <TextView
                         android:id="@+id/tv_preview_mode_badge"
@@ -321,44 +295,56 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="⚡ Deep Ink Preview"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="@color/brand_primary"/>
 
                     <Button
                         android:id="@+id/btn_rotate_page"
                         android:layout_width="wrap_content"
-                        android:layout_height="28dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/text_high"
-                        android:textSize="10sp"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:textSize="9sp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:layout_marginEnd="3dp"
                         android:text="↻ 90°"/>
 
                     <Button
                         android:id="@+id/btn_toggle_preview_mode"
                         android:layout_width="wrap_content"
-                        android:layout_height="28dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/text_high"
-                        android:textSize="10sp"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:textSize="9sp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:layout_marginEnd="3dp"
                         android:text="Compare"/>
 
                     <Button
+                        android:id="@+id/btn_quick_orient"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:background="@drawable/btn_chip"
+                        android:textColor="@color/text_high"
+                        android:textSize="9sp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
+                        android:layout_marginEnd="3dp"
+                        android:text="📄 Portrait"/>
+
+                    <Button
                         android:id="@+id/btn_quick_zoom"
                         android:layout_width="wrap_content"
-                        android:layout_height="28dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_chip"
                         android:textColor="@color/brand_primary"
-                        android:textSize="10sp"
+                        android:textSize="9sp"
                         android:textStyle="bold"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:text="🔍 Zoom"/>
                 </LinearLayout>
 
@@ -375,7 +361,7 @@
                         android:id="@+id/iv_page_preview"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="#FFFFFF"/>
+                        android:background="#070C16"/>
 
                     <com.dodopress.ui.LaserScanView
                         android:id="@+id/laser_scan_view"
@@ -435,35 +421,39 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:layout_marginTop="4dp">
+                    android:layout_marginTop="3dp">
 
                     <Button
                         android:id="@+id/btn_prev_page"
                         android:layout_width="wrap_content"
-                        android:layout_height="28dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_secondary"
                         android:textColor="@color/text_high"
-                        android:textSize="11sp"
+                        android:textSize="9.5sp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:text="◀ Prev"/>
 
                     <TextView
                         android:id="@+id/tv_page_indicator"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:layout_marginEnd="14dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
                         android:text="Page 1 of 1"
                         android:textStyle="bold"
-                        android:textSize="12sp"
+                        android:textSize="10.5sp"
                         android:textColor="@color/brand_primary"/>
 
                     <Button
                         android:id="@+id/btn_next_page"
                         android:layout_width="wrap_content"
-                        android:layout_height="28dp"
+                        android:layout_height="24dp"
                         android:background="@drawable/btn_secondary"
                         android:textColor="@color/text_high"
-                        android:textSize="11sp"
+                        android:textSize="9.5sp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
                         android:text="Next ▶"/>
                 </LinearLayout>
             </LinearLayout>
@@ -482,7 +472,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="3dp">
 
                     <TextView
                         android:id="@+id/tv_panel_handle"
@@ -490,29 +480,30 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="── ⚙️ PRINT CONTROLS (REAL-TIME SLIDER) ──"
-                        android:textSize="10sp"
+                        android:textSize="9.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_muted"/>
 
                     <Button
                         android:id="@+id/btn_toggle_panel"
                         android:layout_width="wrap_content"
-                        android:layout_height="24dp"
+                        android:layout_height="22dp"
                         android:background="@drawable/btn_chip"
                         android:text="▼ RETRACT"
-                        android:textSize="9sp"
+                        android:textSize="8.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/brand_primary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"/>
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"/>
                 </LinearLayout>
 
-                <!-- Category Fast-Switch Tabs -->
+                <!-- Category Fast-Switch Tabs (Section Selector) -->
                 <HorizontalScrollView
+                    android:id="@+id/scroll_category_tabs"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="none"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="4dp">
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -520,66 +511,89 @@
                         android:orientation="horizontal">
 
                         <Button
+                            android:id="@+id/btn_tab_recents"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:background="@drawable/btn_chip"
+                            android:text="📁 Recent Files"
+                            android:textSize="9sp"
+                            android:textColor="@color/text_med"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
                             android:id="@+id/btn_tab_tone"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
-                            android:background="@drawable/btn_chip"
+                            android:layout_height="24dp"
+                            android:background="@drawable/btn_primary"
                             android:text="🎚️ Density &amp; Tone"
-                            android:textSize="10sp"
+                            android:textSize="9sp"
                             android:textStyle="bold"
-                            android:textColor="@color/brand_primary"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:layout_marginEnd="4dp"/>
+                            android:textColor="#FFFFFF"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:layout_marginEnd="3dp"/>
 
                         <Button
                             android:id="@+id/btn_tab_geometry"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="24dp"
                             android:background="@drawable/btn_chip"
                             android:text="📐 Tiling &amp; Position"
-                            android:textSize="10sp"
+                            android:textSize="9sp"
                             android:textColor="@color/text_med"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:layout_marginEnd="4dp"/>
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:layout_marginEnd="3dp"/>
 
                         <Button
                             android:id="@+id/btn_tab_margins"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="24dp"
                             android:background="@drawable/btn_chip"
                             android:text="📏 Margins (0-24mm)"
-                            android:textSize="10sp"
+                            android:textSize="9sp"
                             android:textColor="@color/text_med"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:layout_marginEnd="4dp"/>
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:layout_marginEnd="3dp"/>
 
                         <Button
                             android:id="@+id/btn_tab_pages"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="24dp"
                             android:background="@drawable/btn_chip"
                             android:text="📄 Range &amp; Copies"
-                            android:textSize="10sp"
+                            android:textSize="9sp"
                             android:textColor="@color/text_med"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:layout_marginEnd="4dp"/>
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"
+                            android:layout_marginEnd="3dp"/>
 
                         <Button
                             android:id="@+id/btn_tab_watermark"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="24dp"
                             android:background="@drawable/btn_chip"
                             android:text="🏷️ Watermark"
-                            android:textSize="10sp"
+                            android:textSize="9sp"
                             android:textColor="@color/text_med"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"/>
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp"/>
                     </LinearLayout>
                 </HorizontalScrollView>
+
+                <!-- Inline Progress & Print Status -->
+                <ProgressBar
+                    android:id="@+id/pb_print_progress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:visibility="gone"
+                    android:progressBackgroundTint="@color/slider_track"
+                    android:progressTint="@color/brand_primary"
+                    android:layout_marginBottom="4dp"/>
 
                 <!-- Scrollable Options Container -->
                 <ScrollView
@@ -652,8 +666,8 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/card_bg"
-                            android:padding="14dp"
-                            android:layout_marginBottom="12dp">
+                            android:padding="10dp"
+                            android:layout_marginBottom="8dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -803,8 +817,9 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/card_bg"
-                            android:padding="14dp"
-                            android:layout_marginBottom="12dp">
+                            android:padding="10dp"
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -906,6 +921,69 @@
                                     android:layout_weight="1"
                                     android:background="@drawable/btn_chip"
                                     android:text="A5"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- Sheet Orientation Header -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="6dp"
+                                android:layout_marginBottom="6dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_section_tag"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="2dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="2dp"
+                                    android:text="ORIENTATION"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#38BDF8"/>
+
+                                <TextView
+                                    android:id="@+id/tv_orient_label"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="Portrait (Vertical)"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- Orientation Selector Buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginBottom="10dp">
+
+                                <Button
+                                    android:id="@+id/btn_orient_portrait"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:layout_marginEnd="6dp"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="📄 Portrait"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#FFFFFF"/>
+
+                                <Button
+                                    android:id="@+id/btn_orient_landscape"
+                                    android:layout_width="0dp"
+                                    android:layout_height="34dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="📑 Landscape"
                                     android:textSize="11sp"
                                     android:textColor="@color/text_med"/>
                             </LinearLayout>
@@ -1079,8 +1157,9 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/card_bg"
-                            android:padding="14dp"
-                            android:layout_marginBottom="12dp">
+                            android:padding="10dp"
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -1133,18 +1212,47 @@
                                 android:textColor="@color/text_med"
                                 android:layout_marginBottom="6dp"/>
 
-                            <!-- Glowing Margin Slider (0 to 40 mm) -->
-                            <SeekBar
-                                android:id="@+id/seek_margin"
+                            <!-- Fine-Tuning Margin Stepper (- 1mm / SeekBar / + 1mm) -->
+                            <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="30dp"
-                                android:max="40"
-                                android:progress="12"
-                                android:progressDrawable="@drawable/custom_seekbar_track"
-                                android:thumb="@drawable/custom_seekbar_thumb"
-                                android:splitTrack="false"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp"/>
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="6dp">
+
+                                <Button
+                                    android:id="@+id/btn_margin_minus"
+                                    android:layout_width="44dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="-1"
+                                    android:textStyle="bold"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_high"/>
+
+                                <SeekBar
+                                    android:id="@+id/seek_margin"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:max="40"
+                                    android:progress="12"
+                                    android:progressDrawable="@drawable/custom_seekbar_track"
+                                    android:thumb="@drawable/custom_seekbar_thumb"
+                                    android:splitTrack="false"
+                                    android:paddingStart="8dp"
+                                    android:paddingEnd="8dp"/>
+
+                                <Button
+                                    android:id="@+id/btn_margin_plus"
+                                    android:layout_width="44dp"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="+1"
+                                    android:textStyle="bold"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_high"/>
+                            </LinearLayout>
 
                             <!-- Margin Preset Chips -->
                             <LinearLayout
@@ -1152,51 +1260,169 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center"
-                                android:layout_marginTop="6dp">
+                                android:layout_marginBottom="8dp">
 
                                 <Button
                                     android:id="@+id/btn_margin_zero"
                                     android:layout_width="0dp"
-                                    android:layout_height="32dp"
+                                    android:layout_height="30dp"
                                     android:layout_weight="1"
-                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginEnd="3dp"
                                     android:background="@drawable/btn_chip"
-                                    android:text="0 mm (None)"
-                                    android:textSize="10sp"
+                                    android:text="0 mm"
+                                    android:textSize="9.5sp"
                                     android:textColor="@color/text_med"/>
+
+                                <Button
+                                    android:id="@+id/btn_margin_hw_min"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1.2"
+                                    android:layout_marginEnd="3dp"
+                                    android:background="@drawable/btn_chip"
+                                    android:text="4.5mm (HW)"
+                                    android:textSize="9.5sp"
+                                    android:textColor="@color/brand_primary"/>
 
                                 <Button
                                     android:id="@+id/btn_margin_narrow"
                                     android:layout_width="0dp"
-                                    android:layout_height="32dp"
+                                    android:layout_height="30dp"
                                     android:layout_weight="1"
-                                    android:layout_marginEnd="4dp"
+                                    android:layout_marginEnd="3dp"
                                     android:background="@drawable/btn_chip"
-                                    android:text="5 mm"
-                                    android:textSize="10sp"
+                                    android:text="8 mm"
+                                    android:textSize="9.5sp"
                                     android:textColor="@color/text_med"/>
 
                                 <Button
                                     android:id="@+id/btn_margin_normal"
                                     android:layout_width="0dp"
-                                    android:layout_height="32dp"
-                                    android:layout_weight="1"
-                                    android:layout_marginEnd="4dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1.2"
+                                    android:layout_marginEnd="3dp"
                                     android:background="@drawable/btn_primary"
-                                    android:text="12 mm (★)"
-                                    android:textSize="10sp"
+                                    android:text="12mm (★)"
+                                    android:textSize="9.5sp"
                                     android:textStyle="bold"
                                     android:textColor="#FFFFFF"/>
 
                                 <Button
                                     android:id="@+id/btn_margin_wide"
                                     android:layout_width="0dp"
-                                    android:layout_height="32dp"
+                                    android:layout_height="30dp"
                                     android:layout_weight="1"
                                     android:background="@drawable/btn_chip"
-                                    android:text="24 mm"
-                                    android:textSize="10sp"
+                                    android:text="20 mm"
+                                    android:textSize="9.5sp"
                                     android:textColor="@color/text_med"/>
+                            </LinearLayout>
+
+                            <!-- Live Precision Mathematical Geometry Capsule -->
+                            <LinearLayout
+                                android:id="@+id/layout_margin_math_card"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:background="#0B101E"
+                                android:padding="8dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical"
+                                    android:layout_marginBottom="3dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="📐 SHEET:"
+                                        android:textSize="9.5sp"
+                                        android:textStyle="bold"
+                                        android:textColor="#94A3B8"/>
+
+                                    <TextView
+                                        android:id="@+id/tv_margin_calc_sheet"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="6dp"
+                                        android:text="210.0 × 297.0 mm (595.4 × 841.7 pt)"
+                                        android:textSize="9.5sp"
+                                        android:textColor="#F1F5F9"
+                                        android:fontFamily="monospace"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical"
+                                    android:layout_marginBottom="3dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🖨️ PRINTABLE:"
+                                        android:textSize="9.5sp"
+                                        android:textStyle="bold"
+                                        android:textColor="#38BDF8"/>
+
+                                    <TextView
+                                        android:id="@+id/tv_margin_calc_printable"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="6dp"
+                                        android:text="186.0 × 273.0 mm (88.6% of Sheet)"
+                                        android:textSize="9.5sp"
+                                        android:textColor="#38BDF8"
+                                        android:textStyle="bold"
+                                        android:fontFamily="monospace"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:gravity="center_vertical"
+                                    android:layout_marginBottom="4dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="⚙️ HW LIMIT:"
+                                        android:textSize="9.5sp"
+                                        android:textStyle="bold"
+                                        android:textColor="#F59E0B"/>
+
+                                    <TextView
+                                        android:id="@+id/tv_margin_calc_hardware"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:layout_marginStart="6dp"
+                                        android:text="4.5 mm (12.8 pt) Drum Non-Printable Edge"
+                                        android:textSize="9.5sp"
+                                        android:textColor="#CBD5E1"
+                                        android:fontFamily="monospace"/>
+                                </LinearLayout>
+
+                                <!-- Hardware Safety Status Warning / OK -->
+                                <TextView
+                                    android:id="@+id/tv_margin_hw_status"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="#162E20"
+                                    android:paddingStart="6dp"
+                                    android:paddingTop="3dp"
+                                    android:paddingEnd="6dp"
+                                    android:paddingBottom="3dp"
+                                    android:text="✓ 100% IN PRINTABLE BOUNDARY: Margin clears laser drum 4.5 mm limit"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#4ADE80"/>
                             </LinearLayout>
                         </LinearLayout>
 
@@ -1207,8 +1433,9 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/card_bg"
-                            android:padding="14dp"
-                            android:layout_marginBottom="12dp">
+                            android:padding="10dp"
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp">
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -1404,6 +1631,18 @@
                                 android:text="@string/order_reverse"
                                 android:textSize="11sp"
                                 android:textColor="@color/text_high"/>
+
+                            <!-- Action: Queue for Print when unplugged -->
+                            <Button
+                                android:id="@+id/btn_queue_job"
+                                android:layout_width="match_parent"
+                                android:layout_height="38dp"
+                                android:layout_marginTop="10dp"
+                                android:background="@drawable/btn_secondary"
+                                android:text="📥 Queue to Offline Spool (Print Later)"
+                                android:textColor="@color/brand_primary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"/>
                         </LinearLayout>
 
                         <!-- Watermark & Official Stamp Card -->
@@ -1413,8 +1652,9 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/card_bg"
-                            android:padding="14dp"
-                            android:layout_marginBottom="12dp">
+                            android:padding="10dp"
+                            android:visibility="gone"
+                            android:layout_marginBottom="8dp">
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -1523,52 +1763,7 @@
                             </LinearLayout>
                         </LinearLayout>
 
-                        <!-- Action: Queue for Print when unplugged -->
-                        <Button
-                            android:id="@+id/btn_queue_job"
-                            android:layout_width="match_parent"
-                            android:layout_height="40dp"
-                            android:layout_marginTop="4dp"
-                            android:layout_marginBottom="10dp"
-                            android:background="@drawable/btn_secondary"
-                            android:text="📥 Queue to Offline Spool (Print Later)"
-                            android:textColor="@color/brand_primary"
-                            android:textSize="11sp"
-                            android:textStyle="bold"/>
-
-                        <!-- Inline Progress & Print Status -->
-                        <ProgressBar
-                            android:id="@+id/pb_print_progress"
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="6dp"
-                            android:visibility="gone"
-                            android:progressBackgroundTint="@color/slider_track"
-                            android:progressTint="@color/brand_primary"
-                            android:layout_marginBottom="8dp"/>
-
-                        <TextView
-                            android:id="@+id/tv_print_status"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:visibility="gone"
-                            android:text="Preparing print..."
-                            android:textColor="@color/brand_primary"
-                            android:textSize="12sp"
-                            android:layout_marginBottom="10dp"/>
-
-                        <!-- High-Impact Laser Print Action Button -->
-                        <Button
-                            android:id="@+id/btn_print_now"
-                            android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:background="@drawable/btn_primary"
-                            android:text="⚡ START LASER PRINTING"
-                            android:textSize="13sp"
-                            android:textColor="#FFFFFF"
-                            android:letterSpacing="0.04"
-                            android:textStyle="bold"/>
+                        <!-- Print progress indicator (Status displayed on persistent bottom dock) -->
                     </LinearLayout>
                 </ScrollView>
             </LinearLayout>
@@ -1586,15 +1781,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="12dp"
                 android:paddingBottom="120dp">
 
+                <!-- Header Title -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="4dp">
+                    android:layout_marginBottom="3dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -1605,17 +1801,17 @@
                         android:paddingEnd="6dp"
                         android:paddingBottom="2dp"
                         android:text="COPY SHOP SUITE"
-                        android:textSize="9sp"
+                        android:textSize="8.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/brand_primary"
                         android:letterSpacing="0.08"
-                        android:layout_marginEnd="8dp"/>
+                        android:layout_marginEnd="6dp"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="ID Card Copier"
-                        android:textSize="20sp"
+                        android:text="ID Card Duplicator"
+                        android:textSize="17sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_high"/>
                 </LinearLayout>
@@ -1623,97 +1819,534 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Copy Front + Back of any Aadhaar, License, or Student Card side-by-side onto the top half of an A4 sheet in 1 single pass."
-                    android:textSize="12sp"
+                    android:text="Multi-card layout (1 or 2 IDs) with physical mm spacing, custom scale, and live A4 preview."
+                    android:textSize="11sp"
                     android:textColor="@color/text_med"
-                    android:layout_marginBottom="16dp"/>
+                    android:layout_marginBottom="10dp"/>
 
-                <!-- Front Card Slot Card -->
+                <!-- 1. Real-Time Interactive Live A4 Sheet Preview -->
+                <LinearLayout
+                    android:id="@+id/card_id_sheet_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_bg"
+                    android:padding="10dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⚡ LIVE A4 SHEET PREVIEW"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"/>
+
+                        <TextView
+                            android:id="@+id/tv_id_preview_info"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1 ID • 20mm Gap • 100% Scale"
+                            android:textSize="9.5sp"
+                            android:fontFamily="monospace"
+                            android:textColor="@color/text_muted"/>
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:background="#070C16"
+                        android:padding="6dp">
+
+                        <ImageView
+                            android:id="@+id/iv_id_sheet_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="#FFFFFF"
+                            android:scaleType="fitCenter"
+                            android:contentDescription="Live A4 ID Preview"/>
+                    </FrameLayout>
+                </LinearLayout>
+
+                <!-- 2. ID Card Geometry & Spacing Controls Card -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/card_bg"
-                    android:padding="14dp"
+                    android:padding="10dp"
                     android:orientation="vertical"
-                    android:layout_marginBottom="14dp">
+                    android:layout_marginBottom="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1. FRONT OF ID CARD"
-                        android:textSize="12sp"
+                        android:text="📐 LAYOUT, SPACING &amp; SIZE CONTROLS"
+                        android:textSize="10.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/brand_primary"
                         android:layout_marginBottom="8dp"/>
 
-                    <ImageView
-                        android:id="@+id/iv_id_front_preview"
-                        android:layout_width="match_parent"
-                        android:layout_height="150dp"
-                        android:background="#070C16"
-                        android:scaleType="fitCenter"
-                        android:contentDescription="Front ID Preview"/>
+                    <!-- Cards on Page Selection -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IDs on Sheet (Max 2):"
+                        android:textSize="9.5sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="3dp"/>
 
-                    <Button
-                        android:id="@+id/btn_id_pick_front"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/btn_secondary"
-                        android:text="📁 Choose Front Photo"
-                        android:textColor="@color/text_high"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button
+                            android:id="@+id/btn_id_count_1"
+                            android:layout_width="0dp"
+                            android:layout_height="28dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_primary"
+                            android:text="1 ID (Front+Back)"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_count_2"
+                            android:layout_width="0dp"
+                            android:layout_height="28dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="2 IDs (Full A4 Sheet)"
+                            android:textColor="@color/text_med"
+                            android:textSize="10sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <!-- Spacing Between Front & Back -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Space Between Front &amp; Back (mm):"
+                        android:textSize="9.5sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="3dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button
+                            android:id="@+id/btn_id_space_10"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="10 mm"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_space_20"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_primary"
+                            android:text="20 mm"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_space_30"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="30 mm"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_space_40"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="40 mm"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"/>
+                    </LinearLayout>
+
+                    <!-- Card Size Scale -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Card Print Size Scale:"
+                        android:textSize="9.5sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="3dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button
+                            android:id="@+id/btn_id_scale_85"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="85% Fit"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_scale_100"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1.2"
+                            android:background="@drawable/btn_primary"
+                            android:text="100% Std"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_scale_115"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="115% Lrg"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"
+                            android:layout_marginEnd="3dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_scale_130"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="130% XL"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"/>
+                    </LinearLayout>
+
+                    <!-- Sheet Placement -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sheet Placement:"
+                        android:textSize="9.5sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="3dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btn_id_place_top"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_primary"
+                            android:text="Top Half (Save Paper)"
+                            android:textSize="9.5sp"
+                            android:textStyle="bold"
+                            android:textColor="#FFFFFF"
+                            android:layout_marginEnd="4dp"/>
+
+                        <Button
+                            android:id="@+id/btn_id_place_center"
+                            android:layout_width="0dp"
+                            android:layout_height="26dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/btn_chip"
+                            android:text="Centered on Page"
+                            android:textSize="9.5sp"
+                            android:textColor="@color/text_med"/>
+                    </LinearLayout>
                 </LinearLayout>
 
-                <!-- Back Card Slot Card -->
+                <!-- 3. Photo Capture / Select Cards -->
+                <!-- ID #1 Slot -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/card_bg"
-                    android:padding="14dp"
+                    android:padding="10dp"
                     android:orientation="vertical"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="10dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2. BACK OF ID CARD"
-                        android:textSize="12sp"
+                        android:text="🪪 ID CARD #1 (PRIMARY)"
+                        android:textSize="10.5sp"
                         android:textStyle="bold"
                         android:textColor="@color/brand_primary"
-                        android:layout_marginBottom="8dp"/>
+                        android:layout_marginBottom="6dp"/>
 
-                    <ImageView
-                        android:id="@+id/iv_id_back_preview"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="150dp"
-                        android:background="#070C16"
-                        android:scaleType="fitCenter"
-                        android:contentDescription="Back ID Preview"/>
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
 
-                    <Button
-                        android:id="@+id/btn_id_pick_back"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/btn_secondary"
-                        android:text="📁 Choose Back Photo"
-                        android:textColor="@color/text_high"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="4dp">
+
+                            <ImageView
+                                android:id="@+id/iv_id_front_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="75dp"
+                                android:background="#070C16"
+                                android:scaleType="fitCenter"
+                                android:contentDescription="ID 1 Front Preview"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="4dp">
+
+                                <Button
+                                    android:id="@+id/btn_id_scan_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="📷 Scan"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"
+                                    android:layout_marginEnd="2dp"/>
+
+                                <Button
+                                    android:id="@+id/btn_id_pick_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_secondary"
+                                    android:text="📁 Gallery"
+                                    android:textColor="@color/text_high"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:id="@+id/iv_id_back_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="75dp"
+                                android:background="#070C16"
+                                android:scaleType="fitCenter"
+                                android:contentDescription="ID 1 Back Preview"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="4dp">
+
+                                <Button
+                                    android:id="@+id/btn_id_scan_back"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="📷 Scan"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"
+                                    android:layout_marginEnd="2dp"/>
+
+                                <Button
+                                    android:id="@+id/btn_id_pick_back"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_secondary"
+                                    android:text="📁 Gallery"
+                                    android:textColor="@color/text_high"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
 
-                <!-- Print Combined ID Button -->
+                <!-- ID #2 Slot (Dynamic for 2-ID Mode) -->
+                <LinearLayout
+                    android:id="@+id/layout_id2_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_bg"
+                    android:padding="10dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="10dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🪪 ID CARD #2 (SECOND CARD - LOWER HALF)"
+                        android:textSize="10.5sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="6dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginEnd="4dp">
+
+                            <ImageView
+                                android:id="@+id/iv_id2_front_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="75dp"
+                                android:background="#070C16"
+                                android:scaleType="fitCenter"
+                                android:contentDescription="ID 2 Front Preview"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="4dp">
+
+                                <Button
+                                    android:id="@+id/btn_id2_scan_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="📷 Scan"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"
+                                    android:layout_marginEnd="2dp"/>
+
+                                <Button
+                                    android:id="@+id/btn_id2_pick_front"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_secondary"
+                                    android:text="📁 Gallery"
+                                    android:textColor="@color/text_high"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:id="@+id/iv_id2_back_preview"
+                                android:layout_width="match_parent"
+                                android:layout_height="75dp"
+                                android:background="#070C16"
+                                android:scaleType="fitCenter"
+                                android:contentDescription="ID 2 Back Preview"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="4dp">
+
+                                <Button
+                                    android:id="@+id/btn_id2_scan_back"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_primary"
+                                    android:text="📷 Scan"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"
+                                    android:layout_marginEnd="2dp"/>
+
+                                <Button
+                                    android:id="@+id/btn_id2_pick_back"
+                                    android:layout_width="0dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/btn_secondary"
+                                    android:text="📁 Gallery"
+                                    android:textColor="@color/text_high"
+                                    android:textStyle="bold"
+                                    android:textSize="9.5sp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- 4. Action Buttons -->
                 <Button
                     android:id="@+id/btn_id_print_now"
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="44dp"
                     android:background="@drawable/btn_primary"
-                    android:text="🖨️ PRINT ID CARD (A4 TOP HALF)"
+                    android:text="🖨️ PRINT ID SHEET (1-PASS DIRECT)"
                     android:textColor="#FFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="12.5sp"
                     android:letterSpacing="0.03"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp"/>
+
+                <Button
+                    android:id="@+id/btn_id_send_studio"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@drawable/btn_chip"
+                    android:text="🎨 Send to Print Studio for Halftone / Watermark"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="10.5sp"
                     android:textStyle="bold"/>
             </LinearLayout>
         </ScrollView>
@@ -1835,8 +2468,91 @@
                     android:layout_marginTop="2dp"
                     android:layout_marginBottom="20dp"/>
 
-                <!-- Support / Donate Card -->
+                <!-- Support via GitHub Stars (We Need Stars, Not Money!) -->
                 <LinearLayout
+                    android:id="@+id/card_github_stars"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_bg"
+                    android:padding="16dp"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="⭐ Star on GitHub (Not Money!)"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/brand_primary"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/badge_section_tag"
+                            android:paddingStart="8dp"
+                            android:paddingTop="2dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="2dp"
+                            android:text="100% FREE"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="9sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="DodoPress Pro is 100% free and open-source forever. No paid plans, no ads, no subscriptions. We don't want donations or money — all we ask is a ⭐ Star on GitHub to help other HP LaserJet M1005 MFP users find this project!"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_med"
+                        android:layout_marginBottom="12dp"/>
+
+                    <Button
+                        android:id="@+id/btn_star_github"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:background="@drawable/btn_primary"
+                        android:text="⭐ Leave a Star on GitHub (Takes 2 Sec)"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp"/>
+
+                    <!-- Fallback hidden UPI views to preserve backward compatibility -->
+                    <TextView
+                        android:id="@+id/tv_upi_id"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="killindodo@upi"/>
+
+                    <Button
+                        android:id="@+id/btn_copy_upi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="Copy"/>
+
+                    <Button
+                        android:id="@+id/btn_print_upi_qr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:text="QR"/>
+                </LinearLayout>
+
+                <!-- Telegram Direct DM for Feature Requests -->
+                <LinearLayout
+                    android:id="@+id/card_telegram_feedback"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/card_bg"
@@ -1847,7 +2563,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="☕ Support the Developer"
+                        android:text="💬 Feature Requests &amp; Direct DM"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_high"
@@ -1856,48 +2572,37 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="If DodoPress Pro saved your time or paper, you can support development via UPI. Every contribution keeps the project ad-free and open!"
+                        android:text="Have an idea for a feature, need driver support, or want to report a bug? Send all feature requests directly to my Telegram DM: @killindod0"
                         android:textSize="12sp"
                         android:textColor="@color/text_med"
-                        android:layout_marginBottom="14dp"/>
+                        android:layout_marginBottom="12dp"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/input_bg"
-                        android:padding="10dp">
-
-                        <TextView
-                            android:id="@+id/tv_upi_id"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="killindodo@upi"
-                            android:textColor="@color/brand_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold"/>
+                        android:orientation="horizontal">
 
                         <Button
-                            android:id="@+id/btn_copy_upi"
-                            android:layout_width="wrap_content"
-                            android:layout_height="34dp"
+                            android:id="@+id/btn_open_telegram"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1.2"
                             android:background="@drawable/btn_primary"
-                            android:text="📋 Copy"
+                            android:text="✈️ Message @killindod0"
                             android:textColor="#FFFFFF"
-                            android:textSize="11sp"
+                            android:textSize="11.5sp"
                             android:textStyle="bold"
                             android:layout_marginEnd="6dp"/>
 
                         <Button
-                            android:id="@+id/btn_print_upi_qr"
-                            android:layout_width="wrap_content"
-                            android:layout_height="34dp"
+                            android:id="@+id/btn_copy_telegram"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="0.8"
                             android:background="@drawable/btn_secondary"
-                            android:text="🏁 Print QR"
+                            android:text="📋 Copy Handle"
                             android:textColor="@color/text_high"
-                            android:textSize="11sp"
+                            android:textSize="11.5sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
                 </LinearLayout>
