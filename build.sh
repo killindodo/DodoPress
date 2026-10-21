@@ -1,12 +1,23 @@
 #!/bin/bash
 set -e
 
-PROJECT_DIR="/mnt/HDD-Storage/DodoPress"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
-SDK_DIR="/home/killindodo/Android/Sdk"
-BUILD_TOOLS="$SDK_DIR/build-tools/36.0.0"
-PLATFORM_JAR="$SDK_DIR/platforms/android-34/android.jar"
-KEYSTORE="/home/killindodo/.android/debug.keystore"
+SDK_DIR="${ANDROID_HOME:-$HOME/Android/Sdk}"
+
+# Auto-detect latest build-tools and platform
+BUILD_TOOLS_DIR=$(ls -d "$SDK_DIR/build-tools/"* 2>/dev/null | sort -V | tail -n 1)
+BUILD_TOOLS="${BUILD_TOOLS_DIR:-$SDK_DIR/build-tools/36.0.0}"
+PLATFORM_DIR=$(ls -d "$SDK_DIR/platforms/android-"* 2>/dev/null | sort -V | tail -n 1)
+PLATFORM_JAR="${PLATFORM_DIR:-$SDK_DIR/platforms/android-34}/android.jar"
+
+KEYSTORE="${DEBUG_KEYSTORE:-$HOME/.android/debug.keystore}"
+
+# Generate debug keystore if missing
+if [ ! -f "$KEYSTORE" ]; then
+    mkdir -p "$(dirname "$KEYSTORE")"
+    keytool -genkey -v -keystore "$KEYSTORE" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+fi
 
 echo "=== 1. Cleaning build directory ==="
 rm -rf "$BUILD_DIR"

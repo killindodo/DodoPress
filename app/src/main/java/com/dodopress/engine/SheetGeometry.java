@@ -4,7 +4,7 @@ import android.graphics.Rect;
 
 public class SheetGeometry {
 
-    // HP LaserJet M1005 MFP Physical Hardware Margin Limits
+    // Standard Laser Mechanical Hardware Margin Limits
     public static final float HARDWARE_MIN_MARGIN_MM = 4.5f;   // Physical minimum unprintable margin (laser drum grip limit)
     public static final float HARDWARE_LEAD_TRAIL_MM = 4.5f;  // Lead & trail mechanical edge grip limit (~12.8 pt)
     public static final float HARDWARE_SIDES_MM = 4.23f;       // Lateral mechanical margins (~12.0 pt)

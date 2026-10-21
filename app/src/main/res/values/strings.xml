@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">DodoPress</string>
     <string name="status_offline">Connect USB OTG Cable</string>
-    <string name="status_online">HP LaserJet M1005 Online</string>
+    <string name="status_online">Printer Online</string>
     <string name="btn_select_document">Choose PDF Document</string>
     <string name="ink_density_title">Toner Density (PC Match Engine)</string>
     <string name="ink_density_desc">Deep laser boldening calibrated to PC output. Anti-blackout protected.</string>
@@ -25,5 +25,5 @@
     <string name="btn_print_now">START PRINTING</string>
     <string name="shortcut_instant_copy_short">Instant Copy</string>
     <string name="shortcut_instant_copy_long">Instant Photocopy</string>
-    <string name="btn_scan_document">📷 Scan Paper Doc</string>
+    <string name="btn_scan_document">Scan Document</string>
 </resources>

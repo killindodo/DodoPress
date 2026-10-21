@@ -127,7 +127,7 @@ public class PrinterCutawayView extends View {
         RectF glassRect = new RectF(bodyLeft + 20, bodyTop - 6 * density, bodyRight - 20, bodyTop - 2 * density);
         canvas.drawRoundRect(glassRect, 2 * density, 2 * density, chamberPaint);
 
-        // 2. Main M1005 Chassis
+        // 2. Main Printer Chassis
         chassisPaint.setColor(0xFF0F172A);
         RectF chassisRect = new RectF(bodyLeft, bodyTop, bodyRight, bodyBottom);
         canvas.drawRoundRect(chassisRect, 14 * density, 14 * density, chassisPaint);

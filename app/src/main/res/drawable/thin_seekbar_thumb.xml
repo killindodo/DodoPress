@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Subtle outer glow -->
+    <item>
+        <shape android:shape="oval">
+            <size android:width="16dp" android:height="16dp" />
+            <solid android:color="#263B82F6" />
+        </shape>
+    </item>
+    <!-- Crisp Outer Rim -->
+    <item android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="oval">
+            <solid android:color="#3B82F6" />
+            <stroke android:width="1.5dp" android:color="#FFFFFF" />
+        </shape>
+    </item>
+    <!-- Inner Core Dot -->
+    <item android:left="5dp" android:top="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

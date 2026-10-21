@@ -65,9 +65,9 @@ public class DiagnosticLogManager {
 
     static {
         log("SYSTEM", "Linux dodopress 6.1.0-arm64 #1 SMP PREEMPT Laser-Kernel");
-        log("ENGINE", "DodoPress Pro 300 DPI Laser Engine Initialized");
-        log("DEVICE", "Target Hardware: HP LaserJet M1005 MFP (USB 0x03F0:0x3B17)");
-        log("RASTER", "Pipeline: Native libhplip.so (CUPS_CSPACE_K 1-bit Bitonal Streamer)");
+        log("ENGINE", "DodoPress Pro Universal Print Engine Initialized");
+        log("DEVICE", "Target Hardware: Universal USB Architecture (Class 7 & Vendor Drivers)");
+        log("RASTER", "Pipeline: Native Bitonal / Color Raster Kernel Streamer");
         log("KERNEL", "usblp0: Endpoint interface ready on /dev/usb/lp0");
         log("PRIVACY", "100% Offline Local Pipeline (Zero External Telemetry)");
     }
@@ -90,8 +90,8 @@ public class DiagnosticLogManager {
         sb.append("=== DodoPress Pro Linux Konsole Telemetry ===\n");
         sb.append("Session: root@dodopress:~ (ttyUSB0)\n");
         sb.append("Timestamp: ").append(new Date().toString()).append("\n");
-        sb.append("Printer: HP LaserJet M1005 MFP (0x03F0:0x3B17)\n");
-        sb.append("Pipeline: Native libhplip.so 1-bit Halftone Rasterizer\n");
+        sb.append("Printer: Universal Driver Architecture (Multi-Brand Ready)\n");
+        sb.append("Pipeline: Native Halftone & Document Rasterizer\n");
         sb.append("------------------------------------------------------\n");
         for (LogEntry entry : logs) {
             sb.append(entry.toString()).append("\n");
@@ -210,9 +210,9 @@ public class DiagnosticLogManager {
             SpannableStringBuilder ssb = new SpannableStringBuilder();
 
             // Terminal Boot Banner
-            String banner = "Linux dodopress 6.1.0-arm64 #1 SMP PREEMPT DodoPress-Laser-Kernel\n"
-                          + "HP LaserJet M1005 MFP Engine [USB 0x03F0:0x3B17] on /dev/usb/lp0\n"
-                          + "Pipeline: Native libhplip.so -> 300x300 DPI Bitonal CUPS-Raster\n"
+            String banner = "Linux dodopress 6.1.0-arm64 #1 SMP PREEMPT DodoPress-Universal-Kernel\n"
+                          + "Universal Printer Engine [USB Direct Stream] on /dev/usb/lp0\n"
+                          + "Pipeline: Native Multi-Protocol Filter -> Bitonal/Color Streamer\n"
                           + "----------------------------------------------------------------\n";
             int bannerStart = ssb.length();
             ssb.append(banner);
@@ -302,7 +302,7 @@ public class DiagnosticLogManager {
             SoundManager.playClick();
             log("dmesg", "usbcore: registered new interface driver usblp");
             log("dmesg", "xhci-hcd: USB 2.0 Host Controller ready");
-            log("dmesg", "usblp0: HP LaserJet M1005 claimed [0x03F0:0x3B17]");
+            log("dmesg", "usblp0: USB Printer claimed by DodoPress Driver Engine");
             log("dmesg", "cups-filter: Bitonal 300 DPI halftone streaming active");
             refreshTerminal.run();
         });

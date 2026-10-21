@@ -1,2 +1,14 @@
 build/
+bin/
+gen/
 *.idsig
+*.class
+*.dex
+*.png
+!screenshots/*.png
+!app/src/main/res/**/*.png
+scratch/
+.gradle/
+local.properties
+.idea/
+*.iml

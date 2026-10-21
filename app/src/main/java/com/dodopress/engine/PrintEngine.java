@@ -136,7 +136,7 @@ public class PrintEngine {
                     "PPD", ppdFile.getAbsolutePath(),
                     "TMPDIR", context.getCacheDir().getAbsolutePath(),
                     "HOME", context.getCacheDir().getAbsolutePath(),
-                    "DEVICE_URI", "hp:/usb/HP_LaserJet_M1005",
+                    "DEVICE_URI", "usb://printer/direct",
                     "ANDROID_ROOT", "/system",
                     "ANDROID_DATA", "/data"
                 };

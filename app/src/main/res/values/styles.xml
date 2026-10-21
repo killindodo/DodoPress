@@ -162,10 +162,25 @@
         <item name="android:letterSpacing">0.02</item>
     </style>
 
+    <!-- Dynamic Cool Telemetry & Monospace Typography (JetBrains Mono) -->
+    <style name="Typography.Telemetry" parent="Typography">
+        <item name="android:fontFamily">@font/jetbrains_mono_bold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/brand_primary</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <style name="Typography.Monospace" parent="Typography">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/text_med</item>
+    </style>
+
     <!-- TextAppearance Compatible Aliases -->
     <style name="TextAppearance.DodoPress.Title" parent="Typography.Title" />
     <style name="TextAppearance.DodoPress.SectionBadge" parent="Typography.SectionBadge" />
     <style name="TextAppearance.DodoPress.Body" parent="Typography.Body" />
     <style name="TextAppearance.DodoPress.Button" parent="Typography.Button" />
     <style name="TextAppearance.DodoPress.Caption" parent="Typography.Caption" />
+    <style name="TextAppearance.DodoPress.Telemetry" parent="Typography.Telemetry" />
 </resources>

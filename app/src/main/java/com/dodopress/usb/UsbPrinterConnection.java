@@ -48,7 +48,11 @@ public class UsbPrinterConnection {
     }
 
     public boolean isPrinterDevice(UsbDevice dev) {
+        if (dev == null) return false;
         if (dev.getVendorId() == HP_VENDOR_ID) {
+            return true;
+        }
+        if (com.dodopress.driver.DriverManager.getInstance(context).matchUsbDevice(dev) != null) {
             return true;
         }
         for (int i = 0; i < dev.getInterfaceCount(); i++) {
@@ -63,15 +67,14 @@ public class UsbPrinterConnection {
     public String getPrinterDisplayName(UsbDevice dev) {
         if (dev == null) return "No Printer Connected";
 
-        if (dev.getVendorId() == HP_VENDOR_ID && dev.getProductId() == HP_M1005_PRODUCT_ID) {
-            return "HP LaserJet M1005 MFP";
+        com.dodopress.driver.PrinterModel model = com.dodopress.driver.DriverManager.getInstance(context).matchUsbDevice(dev);
+        if (model != null) {
+            return model.getDisplayName();
         }
+
         String name = dev.getProductName();
         if (name != null && !name.trim().isEmpty()) {
             return name.trim();
-        }
-        if (dev.getVendorId() == HP_VENDOR_ID) {
-            return "HP LaserJet USB Printer";
         }
         return "USB Printer (Class 7)";
     }
@@ -128,7 +131,7 @@ public class UsbPrinterConnection {
         UsbEndpoint selectedIn = null;
 
         // Pass 1: Prioritize standard USB_CLASS_PRINTER (Class 7) interface
-        // Critical for MFPs (like HP LaserJet M1005 MFP) where Interface 0 is Scanner and Interface 1 is Printer!
+        // Critical for Multi-Function Printers (MFPs) where Interface 0 is Scanner and Interface 1 is Printer!
         for (int i = 0; i < device.getInterfaceCount(); i++) {
             UsbInterface iface = device.getInterface(i);
             Log.d("DodoPress-USB", "Inspect interface " + i + ": class=" + iface.getInterfaceClass()

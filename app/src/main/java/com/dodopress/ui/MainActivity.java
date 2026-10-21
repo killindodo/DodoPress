@@ -21,10 +21,16 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.graphics.pdf.PdfDocument;
 import android.graphics.pdf.PdfRenderer;
 import android.animation.ValueAnimator;
 import android.view.Gravity;
+import android.view.Window;
+import android.view.WindowInsetsController;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.hardware.usb.UsbDevice;
@@ -61,6 +67,9 @@ import android.widget.Toast;
 
 import com.dodopress.engine.AiAssistantEngine;
 import com.dodopress.engine.DocumentScannerEngine;
+import com.dodopress.driver.DriverManager;
+import com.dodopress.driver.PrinterModel;
+import com.dodopress.driver.PrinterProtocol;
 import com.dodopress.engine.IdCardEngine;
 import com.dodopress.engine.ImagePrintEngine;
 import com.dodopress.engine.PrintEngine;
@@ -150,6 +159,7 @@ public class MainActivity extends Activity {
     // Theming & Navigation views
     private View rootMainContainer;
     private View layoutXpTitlebar;
+    private TextView tvXpTitle;
     private View layoutModernHeader;
 
     private AnimatedLogoView viewAnimatedLogo;
@@ -159,6 +169,10 @@ public class MainActivity extends Activity {
     private LaserScanView laserScanView;
 
     private View btnThemeMenu;
+    private AuroraBackgroundView viewAuroraBg;
+    private View cardIdSheetPreview;
+    private View cardGithubStars;
+    private View cardTelegramFeedback;
 
     // Retractable Sliding Options Panel & Section Control
     public enum ControlSection {
@@ -328,12 +342,89 @@ public class MainActivity extends Activity {
     private Button btnPrintNow;
 
     // ID Copier Tab Views & Config
+    public enum IdControlSection {
+        PHOTOS,
+        LAYOUT,
+        PAPER,
+        MARGINS,
+        TONE,
+        WATERMARK,
+        COPIES
+    }
+
+    private IdControlSection currentIdControlSection = IdControlSection.PHOTOS;
+    private boolean isIdPanelCollapsed = false;
+
+    // Header & Preview Card
+    private Button btnIdClearPhotos;
+    private Button btnIdQuickPrint;
+    private TextView tvIdPreviewBadge;
+    private Button btnIdQuickOrient;
+    private Button btnIdQuickGuides;
+    private Button btnIdStageExpand;
+    private View layoutIdPreviewContainer;
+
+    // Sliding Panel & Category Fast-Switch Tabs
+    private View layoutIdSlidingPanel;
+    private TextView tvIdPanelHandle;
+    private Button btnIdTogglePanel;
+    private HorizontalScrollView scrollIdCategoryTabs;
+    private Button btnIdTabPhotos;
+    private Button btnIdTabLayout;
+    private Button btnIdTabPaper;
+    private Button btnIdTabMargins;
+    private Button btnIdTabTone;
+    private Button btnIdTabWatermark;
+    private Button btnIdTabCopies;
+    private ScrollView scrollIdOptions;
+
+    // Section Cards
+    private View cardIdPhotos;
+    private View cardIdLayout;
+    private View cardIdPaper;
+    private View cardIdMargins;
+    private View cardIdTone;
+    private View cardIdWatermark;
+    private View cardIdCopies;
+
+    // Layout & Spacing Controls
+    private Button btnIdCount1, btnIdCount2;
+    private Button btnIdPlaceTop, btnIdPlaceCenter, btnIdPlaceFull, btnIdPlaceGrid;
+    private Button btnIdToggleCutGuides;
+    private TextView tvIdSpacingVal;
+    private SeekBar seekIdSpacing;
+    private Button btnIdSpace5, btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40;
+    private TextView tvIdScaleVal;
+    private SeekBar seekIdScale;
+    private Button btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130;
+
+    // Paper & Orientation Controls
+    private Button btnIdPaperA4, btnIdPaperLetter, btnIdPaperLegal, btnIdPaperA5;
+    private Button btnIdOrientPortrait, btnIdOrientLandscape;
+
+    // Margins Controls
+    private TextView tvIdMarginVal;
+    private View layoutIdDrumWarning;
+    private SeekBar seekIdMargin;
+    private Button btnIdMarginZero, btnIdMarginHwMin, btnIdMarginNarrow, btnIdMarginNormal, btnIdMarginWide;
+
+    // Toner Density Controls
+    private TextView tvIdToneVal;
+    private SeekBar seekIdDarkness;
+    private Button btnIdToneDraft, btnIdToneNormal, btnIdToneDeep, btnIdToneUltra;
+
+    // Watermark Controls
+    private Button btnIdWmConfidential, btnIdWmCopy, btnIdWmOfficial, btnIdWmClear;
+    private EditText etIdWatermark;
+
+    // Copies Controls
+    private Button btnIdCopiesMinus, btnIdCopiesPlus;
+    private TextView tvIdCopiesCount;
+    private Button btnIdCopies1, btnIdCopies2, btnIdCopies5, btnIdCopies10;
+
+    // Photos
     private ImageView ivIdSheetPreview;
     private TextView tvIdPreviewInfo;
-    private Button btnIdCount1, btnIdCount2;
-    private Button btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40;
-    private Button btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130;
-    private Button btnIdPlaceTop, btnIdPlaceCenter;
     private ImageView ivIdFrontPreview;
     private ImageView ivIdBackPreview;
     private Button btnIdScanFront, btnIdPickFront;
@@ -362,9 +453,6 @@ public class MainActivity extends Activity {
     private Button btnStarGithub;
     private Button btnOpenTelegram;
     private Button btnCopyTelegram;
-    private TextView tvUpiId;
-    private Button btnCopyUpi;
-    private Button btnPrintUpiQr;
     private Button btnFeedbackRequest;
     private CheckBox cbSoundEffects;
     private int devAvatarTapCount = 0;
@@ -376,6 +464,17 @@ public class MainActivity extends Activity {
     private Button btnTestAiKey;
     private TextView tvAiKeyStatus;
 
+    // Universal Driver Hub (PrintShare Architecture)
+    private DriverManager driverManager;
+    private View cardDevUniversalDriver;
+    private TextView tvDriverProtocolBadge;
+    private TextView tvActivePrinterName;
+    private TextView tvActivePrinterSpecs;
+    private TextView tvActiveDriverStatus;
+    private ProgressBar pbDriverDownload;
+    private Button btnDevBrowseCatalog;
+    private Button btnDevScanUsb;
+
     private File currentPdfFile;
     private PdfRenderer pdfRenderer;
     private ParcelFileDescriptor pdfPfd;
@@ -384,7 +483,7 @@ public class MainActivity extends Activity {
     private Bitmap rawPageBitmap;
     private int copies = 1;
 
-    private ThemeManager.AppTheme currentTheme = ThemeManager.AppTheme.MATRIX_CRT;
+    private ThemeManager.AppTheme currentTheme = ThemeManager.AppTheme.PAPER_STUDIO;
 
     // Background thread for real-time darkness rendering & debounced preview rasterization
     private final ExecutorService previewExecutor = Executors.newSingleThreadExecutor();
@@ -401,10 +500,12 @@ public class MainActivity extends Activity {
         SoundManager.init(this);
         usbPrinterConnection = new UsbPrinterConnection(this);
         printEngine = new PrintEngine(this, usbPrinterConnection);
+        driverManager = DriverManager.getInstance(this);
 
         initViews();
         setupListeners();
         registerUsbHotplugReceiver();
+        refreshActivePrinterDisplay();
 
         currentTheme = ThemeManager.getTheme(this);
         applyAppTheme(currentTheme);
@@ -455,13 +556,27 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (viewAuroraBg != null && currentTheme == ThemeManager.AppTheme.AETHER_AURORA) {
+            viewAuroraBg.resumeAnimation();
+        }
         refreshPrinterStatus();
         renderSpoolQueue();
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (viewAuroraBg != null) {
+            viewAuroraBg.pauseAnimation();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (viewAuroraBg != null) {
+            viewAuroraBg.stopAnimation();
+        }
         unregisterUsbHotplugReceiver();
         closeCurrentPdf();
         if (idFrontBitmap != null && !idFrontBitmap.isRecycled()) idFrontBitmap.recycle();
@@ -474,6 +589,7 @@ public class MainActivity extends Activity {
     private void initViews() {
         rootMainContainer = findViewById(com.dodopress.R.id.root_main_container);
         layoutXpTitlebar = findViewById(com.dodopress.R.id.layout_xp_titlebar);
+        tvXpTitle = findViewById(com.dodopress.R.id.tv_xp_title);
         layoutModernHeader = findViewById(com.dodopress.R.id.layout_modern_header);
 
         // Pages
@@ -518,6 +634,9 @@ public class MainActivity extends Activity {
         layoutStatusCapsule = findViewById(com.dodopress.R.id.layout_status_capsule);
         viewBeacon = findViewById(com.dodopress.R.id.view_beacon);
         laserScanView = findViewById(com.dodopress.R.id.laser_scan_view);
+
+        // Dynamic Aurora View
+        viewAuroraBg = findViewById(com.dodopress.R.id.view_aurora_bg);
 
         // Theme Studio Menu
         btnThemeMenu = findViewById(com.dodopress.R.id.btn_theme_menu);
@@ -663,20 +782,97 @@ public class MainActivity extends Activity {
         btnPrintNow = null;
 
         // ID Card Copier
+        cardIdSheetPreview = findViewById(com.dodopress.R.id.card_id_sheet_preview);
         ivIdSheetPreview = findViewById(com.dodopress.R.id.iv_id_sheet_preview);
         tvIdPreviewInfo = findViewById(com.dodopress.R.id.tv_id_preview_info);
+        btnIdClearPhotos = findViewById(com.dodopress.R.id.btn_id_clear_photos);
+        btnIdQuickPrint = findViewById(com.dodopress.R.id.btn_id_quick_print);
+        tvIdPreviewBadge = findViewById(com.dodopress.R.id.tv_id_preview_badge);
+        btnIdQuickOrient = findViewById(com.dodopress.R.id.btn_id_quick_orient);
+        btnIdQuickGuides = findViewById(com.dodopress.R.id.btn_id_quick_guides);
+        btnIdStageExpand = findViewById(com.dodopress.R.id.btn_id_stage_expand);
+        layoutIdPreviewContainer = findViewById(com.dodopress.R.id.layout_id_preview_container);
+
+        layoutIdSlidingPanel = findViewById(com.dodopress.R.id.layout_id_sliding_panel);
+        tvIdPanelHandle = findViewById(com.dodopress.R.id.tv_id_panel_handle);
+        btnIdTogglePanel = findViewById(com.dodopress.R.id.btn_id_toggle_panel);
+        scrollIdCategoryTabs = findViewById(com.dodopress.R.id.scroll_id_category_tabs);
+        btnIdTabPhotos = findViewById(com.dodopress.R.id.btn_id_tab_photos);
+        btnIdTabLayout = findViewById(com.dodopress.R.id.btn_id_tab_layout);
+        btnIdTabPaper = findViewById(com.dodopress.R.id.btn_id_tab_paper);
+        btnIdTabMargins = findViewById(com.dodopress.R.id.btn_id_tab_margins);
+        btnIdTabTone = findViewById(com.dodopress.R.id.btn_id_tab_tone);
+        btnIdTabWatermark = findViewById(com.dodopress.R.id.btn_id_tab_watermark);
+        btnIdTabCopies = findViewById(com.dodopress.R.id.btn_id_tab_copies);
+        scrollIdOptions = findViewById(com.dodopress.R.id.scroll_id_options);
+
+        cardIdPhotos = findViewById(com.dodopress.R.id.card_id_photos);
+        cardIdLayout = findViewById(com.dodopress.R.id.card_id_layout);
+        cardIdPaper = findViewById(com.dodopress.R.id.card_id_paper);
+        cardIdMargins = findViewById(com.dodopress.R.id.card_id_margins);
+        cardIdTone = findViewById(com.dodopress.R.id.card_id_tone);
+        cardIdWatermark = findViewById(com.dodopress.R.id.card_id_watermark);
+        cardIdCopies = findViewById(com.dodopress.R.id.card_id_copies);
+
         btnIdCount1 = findViewById(com.dodopress.R.id.btn_id_count_1);
         btnIdCount2 = findViewById(com.dodopress.R.id.btn_id_count_2);
+        btnIdPlaceTop = findViewById(com.dodopress.R.id.btn_id_place_top);
+        btnIdPlaceCenter = findViewById(com.dodopress.R.id.btn_id_place_center);
+        btnIdPlaceFull = findViewById(com.dodopress.R.id.btn_id_place_full);
+        btnIdPlaceGrid = findViewById(com.dodopress.R.id.btn_id_place_grid);
+        btnIdToggleCutGuides = findViewById(com.dodopress.R.id.btn_id_toggle_cut_guides);
+
+        tvIdSpacingVal = findViewById(com.dodopress.R.id.tv_id_spacing_val);
+        seekIdSpacing = findViewById(com.dodopress.R.id.seek_id_spacing);
+        btnIdSpace5 = findViewById(com.dodopress.R.id.btn_id_space_5);
         btnIdSpace10 = findViewById(com.dodopress.R.id.btn_id_space_10);
         btnIdSpace20 = findViewById(com.dodopress.R.id.btn_id_space_20);
         btnIdSpace30 = findViewById(com.dodopress.R.id.btn_id_space_30);
         btnIdSpace40 = findViewById(com.dodopress.R.id.btn_id_space_40);
+
+        tvIdScaleVal = findViewById(com.dodopress.R.id.tv_id_scale_val);
+        seekIdScale = findViewById(com.dodopress.R.id.seek_id_scale);
         btnIdScale85 = findViewById(com.dodopress.R.id.btn_id_scale_85);
         btnIdScale100 = findViewById(com.dodopress.R.id.btn_id_scale_100);
         btnIdScale115 = findViewById(com.dodopress.R.id.btn_id_scale_115);
         btnIdScale130 = findViewById(com.dodopress.R.id.btn_id_scale_130);
-        btnIdPlaceTop = findViewById(com.dodopress.R.id.btn_id_place_top);
-        btnIdPlaceCenter = findViewById(com.dodopress.R.id.btn_id_place_center);
+
+        btnIdPaperA4 = findViewById(com.dodopress.R.id.btn_id_paper_a4);
+        btnIdPaperLetter = findViewById(com.dodopress.R.id.btn_id_paper_letter);
+        btnIdPaperLegal = findViewById(com.dodopress.R.id.btn_id_paper_legal);
+        btnIdPaperA5 = findViewById(com.dodopress.R.id.btn_id_paper_a5);
+        btnIdOrientPortrait = findViewById(com.dodopress.R.id.btn_id_orient_portrait);
+        btnIdOrientLandscape = findViewById(com.dodopress.R.id.btn_id_orient_landscape);
+
+        tvIdMarginVal = findViewById(com.dodopress.R.id.tv_id_margin_val);
+        layoutIdDrumWarning = findViewById(com.dodopress.R.id.layout_id_drum_warning);
+        seekIdMargin = findViewById(com.dodopress.R.id.seek_id_margin);
+        btnIdMarginZero = findViewById(com.dodopress.R.id.btn_id_margin_zero);
+        btnIdMarginHwMin = findViewById(com.dodopress.R.id.btn_id_margin_hw_min);
+        btnIdMarginNarrow = findViewById(com.dodopress.R.id.btn_id_margin_narrow);
+        btnIdMarginNormal = findViewById(com.dodopress.R.id.btn_id_margin_normal);
+        btnIdMarginWide = findViewById(com.dodopress.R.id.btn_id_margin_wide);
+
+        tvIdToneVal = findViewById(com.dodopress.R.id.tv_id_tone_val);
+        seekIdDarkness = findViewById(com.dodopress.R.id.seek_id_darkness);
+        btnIdToneDraft = findViewById(com.dodopress.R.id.btn_id_tone_draft);
+        btnIdToneNormal = findViewById(com.dodopress.R.id.btn_id_tone_normal);
+        btnIdToneDeep = findViewById(com.dodopress.R.id.btn_id_tone_deep);
+        btnIdToneUltra = findViewById(com.dodopress.R.id.btn_id_tone_ultra);
+
+        btnIdWmConfidential = findViewById(com.dodopress.R.id.btn_id_wm_confidential);
+        btnIdWmCopy = findViewById(com.dodopress.R.id.btn_id_wm_copy);
+        btnIdWmOfficial = findViewById(com.dodopress.R.id.btn_id_wm_official);
+        btnIdWmClear = findViewById(com.dodopress.R.id.btn_id_wm_clear);
+        etIdWatermark = findViewById(com.dodopress.R.id.et_id_watermark);
+
+        btnIdCopiesMinus = findViewById(com.dodopress.R.id.btn_id_copies_minus);
+        tvIdCopiesCount = findViewById(com.dodopress.R.id.tv_id_copies_count);
+        btnIdCopiesPlus = findViewById(com.dodopress.R.id.btn_id_copies_plus);
+        btnIdCopies1 = findViewById(com.dodopress.R.id.btn_id_copies_1);
+        btnIdCopies2 = findViewById(com.dodopress.R.id.btn_id_copies_2);
+        btnIdCopies5 = findViewById(com.dodopress.R.id.btn_id_copies_5);
+        btnIdCopies10 = findViewById(com.dodopress.R.id.btn_id_copies_10);
 
         ivIdFrontPreview = findViewById(com.dodopress.R.id.iv_id_front_preview);
         ivIdBackPreview = findViewById(com.dodopress.R.id.iv_id_back_preview);
@@ -702,14 +898,13 @@ public class MainActivity extends Activity {
         tvSpoolEmpty = findViewById(com.dodopress.R.id.tv_spool_empty);
 
         // Developer & Support Page
+        cardGithubStars = findViewById(com.dodopress.R.id.card_github_stars);
+        cardTelegramFeedback = findViewById(com.dodopress.R.id.card_telegram_feedback);
         frameDevAvatar = findViewById(com.dodopress.R.id.frame_dev_avatar);
         tvDevName = findViewById(com.dodopress.R.id.tv_dev_name);
         btnStarGithub = findViewById(com.dodopress.R.id.btn_star_github);
         btnOpenTelegram = findViewById(com.dodopress.R.id.btn_open_telegram);
         btnCopyTelegram = findViewById(com.dodopress.R.id.btn_copy_telegram);
-        tvUpiId = findViewById(com.dodopress.R.id.tv_upi_id);
-        btnCopyUpi = findViewById(com.dodopress.R.id.btn_copy_upi);
-        btnPrintUpiQr = findViewById(com.dodopress.R.id.btn_print_upi_qr);
         btnFeedbackRequest = findViewById(com.dodopress.R.id.btn_feedback_request);
         cbSoundEffects = findViewById(com.dodopress.R.id.cb_sound_effects);
 
@@ -719,6 +914,16 @@ public class MainActivity extends Activity {
         btnSaveAiKey = findViewById(com.dodopress.R.id.btn_save_ai_key);
         btnTestAiKey = findViewById(com.dodopress.R.id.btn_test_ai_key);
         tvAiKeyStatus = findViewById(com.dodopress.R.id.tv_ai_key_status);
+
+        // Universal Driver Hub Views
+        cardDevUniversalDriver = findViewById(com.dodopress.R.id.card_dev_universal_driver);
+        tvDriverProtocolBadge = findViewById(com.dodopress.R.id.tv_driver_protocol_badge);
+        tvActivePrinterName = findViewById(com.dodopress.R.id.tv_active_printer_name);
+        tvActivePrinterSpecs = findViewById(com.dodopress.R.id.tv_active_printer_specs);
+        tvActiveDriverStatus = findViewById(com.dodopress.R.id.tv_active_driver_status);
+        pbDriverDownload = findViewById(com.dodopress.R.id.pb_driver_download);
+        btnDevBrowseCatalog = findViewById(com.dodopress.R.id.btn_dev_browse_catalog);
+        btnDevScanUsb = findViewById(com.dodopress.R.id.btn_dev_scan_usb);
     }
 
     private void showPage(int index) {
@@ -732,7 +937,8 @@ public class MainActivity extends Activity {
 
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
         int activeColor = p.brandPrimaryColor;
-        int inactiveColor = Color.parseColor("#94A3B8");
+        int inactiveColor = p.tabInactiveTextColor;
+        float density = getResources().getDisplayMetrics().density;
 
         boolean isInitial = (previousPageIndex == -1);
 
@@ -744,7 +950,12 @@ public class MainActivity extends Activity {
 
             if (isActive) {
                 label.setTypeface(null, android.graphics.Typeface.BOLD);
-                pill.setBackgroundResource(com.dodopress.R.drawable.bg_nav_pill_active);
+                GradientDrawable pillBg = new GradientDrawable();
+                pillBg.setShape(GradientDrawable.RECTANGLE);
+                pillBg.setCornerRadius(16 * density);
+                pillBg.setColor(Color.argb(38, Color.red(p.tabActiveBgColor), Color.green(p.tabActiveBgColor), Color.blue(p.tabActiveBgColor)));
+                pillBg.setStroke((int) (1.5f * density), p.tabActiveBgColor);
+                pill.setBackground(pillBg);
 
                 // Apply elastic bounce scale animation to the active tab pill/icon
                 pill.animate().cancel();
@@ -823,8 +1034,12 @@ public class MainActivity extends Activity {
 
         previousPageIndex = index;
 
-        if (index == 1) {
+        if (index == 0) {
+            updatePageSummary();
+            if (dockBtnPrint != null) dockBtnPrint.setText("⚡ PRINT NOW");
+        } else if (index == 1) {
             renderIdCardPreview();
+            updateIdCardSummary();
         } else if (index == 2) {
             renderSpoolQueue();
         } else if (index == 3) {
@@ -1180,22 +1395,145 @@ public class MainActivity extends Activity {
             btnPrintNow.setOnClickListener(v -> startPrinting());
         }
 
-        // ID Card Copier Layout Controls
+        // ID Card Copier Category Fast-Switch Tabs
+        if (btnIdTabPhotos != null) btnIdTabPhotos.setOnClickListener(v -> showIdControlSection(IdControlSection.PHOTOS));
+        if (btnIdTabLayout != null) btnIdTabLayout.setOnClickListener(v -> showIdControlSection(IdControlSection.LAYOUT));
+        if (btnIdTabPaper != null) btnIdTabPaper.setOnClickListener(v -> showIdControlSection(IdControlSection.PAPER));
+        if (btnIdTabMargins != null) btnIdTabMargins.setOnClickListener(v -> showIdControlSection(IdControlSection.MARGINS));
+        if (btnIdTabTone != null) btnIdTabTone.setOnClickListener(v -> showIdControlSection(IdControlSection.TONE));
+        if (btnIdTabWatermark != null) btnIdTabWatermark.setOnClickListener(v -> showIdControlSection(IdControlSection.WATERMARK));
+        if (btnIdTabCopies != null) btnIdTabCopies.setOnClickListener(v -> showIdControlSection(IdControlSection.COPIES));
+
+        // Panel toggle & Stage expand
+        if (btnIdTogglePanel != null) btnIdTogglePanel.setOnClickListener(v -> toggleIdOptionsPanel());
+        if (tvIdPanelHandle != null) tvIdPanelHandle.setOnClickListener(v -> toggleIdOptionsPanel());
+        if (btnIdStageExpand != null) btnIdStageExpand.setOnClickListener(v -> toggleIdOptionsPanel());
+
+        // Header & Quick Preview Actions
+        if (btnIdClearPhotos != null) btnIdClearPhotos.setOnClickListener(v -> clearIdPhotos());
+        if (btnIdQuickPrint != null) btnIdQuickPrint.setOnClickListener(v -> printIdCardDirect());
+        if (btnIdQuickOrient != null) btnIdQuickOrient.setOnClickListener(v -> toggleIdOrientation());
+        if (btnIdQuickGuides != null) btnIdQuickGuides.setOnClickListener(v -> toggleIdCutGuides());
+
+        // ID Count & Placements
         if (btnIdCount1 != null) btnIdCount1.setOnClickListener(v -> updateIdCount(1));
         if (btnIdCount2 != null) btnIdCount2.setOnClickListener(v -> updateIdCount(2));
+        if (btnIdPlaceTop != null) btnIdPlaceTop.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.TOP_HALF));
+        if (btnIdPlaceCenter != null) btnIdPlaceCenter.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.CENTERED));
+        if (btnIdPlaceFull != null) btnIdPlaceFull.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.TOP_AND_BOTTOM));
+        if (btnIdPlaceGrid != null) btnIdPlaceGrid.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.FOUR_UP));
+        if (btnIdToggleCutGuides != null) btnIdToggleCutGuides.setOnClickListener(v -> toggleIdCutGuides());
 
+        // Spacing Slider & Preset Chips
+        if (seekIdSpacing != null) {
+            seekIdSpacing.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    updateIdSpacing(progress);
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                    seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
+            });
+        }
+        if (btnIdSpace5 != null) btnIdSpace5.setOnClickListener(v -> updateIdSpacing(5));
         if (btnIdSpace10 != null) btnIdSpace10.setOnClickListener(v -> updateIdSpacing(10));
         if (btnIdSpace20 != null) btnIdSpace20.setOnClickListener(v -> updateIdSpacing(20));
         if (btnIdSpace30 != null) btnIdSpace30.setOnClickListener(v -> updateIdSpacing(30));
         if (btnIdSpace40 != null) btnIdSpace40.setOnClickListener(v -> updateIdSpacing(40));
 
+        // Scale Slider & Preset Chips
+        if (seekIdScale != null) {
+            seekIdScale.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    float scale = (70 + progress) / 100.0f;
+                    updateIdScale(scale);
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                    seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
+            });
+        }
         if (btnIdScale85 != null) btnIdScale85.setOnClickListener(v -> updateIdScale(0.85f));
         if (btnIdScale100 != null) btnIdScale100.setOnClickListener(v -> updateIdScale(1.0f));
         if (btnIdScale115 != null) btnIdScale115.setOnClickListener(v -> updateIdScale(1.15f));
         if (btnIdScale130 != null) btnIdScale130.setOnClickListener(v -> updateIdScale(1.30f));
 
-        if (btnIdPlaceTop != null) btnIdPlaceTop.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.TOP_HALF));
-        if (btnIdPlaceCenter != null) btnIdPlaceCenter.setOnClickListener(v -> updateIdPlacement(IdCardEngine.IdPlacement.CENTERED));
+        // Paper Sizing & Orientation
+        if (btnIdPaperA4 != null) btnIdPaperA4.setOnClickListener(v -> updateIdPaperSize(SheetGeometry.PaperSize.A4));
+        if (btnIdPaperLetter != null) btnIdPaperLetter.setOnClickListener(v -> updateIdPaperSize(SheetGeometry.PaperSize.LETTER));
+        if (btnIdPaperLegal != null) btnIdPaperLegal.setOnClickListener(v -> updateIdPaperSize(SheetGeometry.PaperSize.LEGAL));
+        if (btnIdPaperA5 != null) btnIdPaperA5.setOnClickListener(v -> updateIdPaperSize(SheetGeometry.PaperSize.A5));
+        if (btnIdOrientPortrait != null) btnIdOrientPortrait.setOnClickListener(v -> updateIdOrientation(SheetGeometry.Orientation.PORTRAIT));
+        if (btnIdOrientLandscape != null) btnIdOrientLandscape.setOnClickListener(v -> updateIdOrientation(SheetGeometry.Orientation.LANDSCAPE));
+
+        // Print Margins Slider & Presets
+        if (seekIdMargin != null) {
+            seekIdMargin.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    updateIdMargin(progress);
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                    seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
+            });
+        }
+        if (btnIdMarginZero != null) btnIdMarginZero.setOnClickListener(v -> updateIdMargin(0f));
+        if (btnIdMarginHwMin != null) btnIdMarginHwMin.setOnClickListener(v -> updateIdMargin(SheetGeometry.HARDWARE_MIN_MARGIN_MM));
+        if (btnIdMarginNarrow != null) btnIdMarginNarrow.setOnClickListener(v -> updateIdMargin(8f));
+        if (btnIdMarginNormal != null) btnIdMarginNormal.setOnClickListener(v -> updateIdMargin(12f));
+        if (btnIdMarginWide != null) btnIdMarginWide.setOnClickListener(v -> updateIdMargin(20f));
+
+        // Toner Density Slider & Presets
+        if (seekIdDarkness != null) {
+            seekIdDarkness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    updateIdDarkness(progress);
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                    seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK);
+                }
+            });
+        }
+        if (btnIdToneDraft != null) btnIdToneDraft.setOnClickListener(v -> updateIdDarkness(ToneEngine.PRESET_DRAFT));
+        if (btnIdToneNormal != null) btnIdToneNormal.setOnClickListener(v -> updateIdDarkness(ToneEngine.PRESET_NORMAL));
+        if (btnIdToneDeep != null) btnIdToneDeep.setOnClickListener(v -> updateIdDarkness(ToneEngine.PRESET_DEEP));
+        if (btnIdToneUltra != null) btnIdToneUltra.setOnClickListener(v -> updateIdDarkness(ToneEngine.PRESET_ULTRA));
+
+        // Watermark Presets & Live Text Watcher
+        if (btnIdWmConfidential != null) btnIdWmConfidential.setOnClickListener(v -> updateIdWatermark("CONFIDENTIAL"));
+        if (btnIdWmCopy != null) btnIdWmCopy.setOnClickListener(v -> updateIdWatermark("COPY ONLY"));
+        if (btnIdWmOfficial != null) btnIdWmOfficial.setOnClickListener(v -> updateIdWatermark("OFFICIAL"));
+        if (btnIdWmClear != null) btnIdWmClear.setOnClickListener(v -> updateIdWatermark(""));
+        if (etIdWatermark != null) {
+            etIdWatermark.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void afterTextChanged(Editable s) {
+                    idConfig.watermarkText = s.toString();
+                    scheduleIdPreviewRender();
+                }
+            });
+        }
+
+        // Copies Controls
+        if (btnIdCopiesMinus != null) btnIdCopiesMinus.setOnClickListener(v -> {
+            if (idConfig.copies > 1) updateIdCopies(idConfig.copies - 1);
+        });
+        if (btnIdCopiesPlus != null) btnIdCopiesPlus.setOnClickListener(v -> {
+            if (idConfig.copies < 99) updateIdCopies(idConfig.copies + 1);
+        });
+        if (btnIdCopies1 != null) btnIdCopies1.setOnClickListener(v -> updateIdCopies(1));
+        if (btnIdCopies2 != null) btnIdCopies2.setOnClickListener(v -> updateIdCopies(2));
+        if (btnIdCopies5 != null) btnIdCopies5.setOnClickListener(v -> updateIdCopies(5));
+        if (btnIdCopies10 != null) btnIdCopies10.setOnClickListener(v -> updateIdCopies(10));
 
         // ID #1 Scan & Pick
         if (btnIdScanFront != null) btnIdScanFront.setOnClickListener(v -> launchCameraScanner(false, REQUEST_SCAN_ID_FRONT));
@@ -1256,22 +1594,6 @@ public class MainActivity extends Activity {
             });
         }
 
-        if (btnCopyUpi != null) {
-            btnCopyUpi.setOnClickListener(v -> {
-                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("UPI ID", "killindodo@upi");
-                if (cm != null) cm.setPrimaryClip(clip);
-                Toast.makeText(this, "UPI ID copied!", Toast.LENGTH_SHORT).show();
-            });
-        }
-
-        if (btnPrintUpiQr != null) {
-            btnPrintUpiQr.setOnClickListener(v -> {
-                SoundManager.playClick();
-                generateAndLoadUpiQr();
-            });
-        }
-
         if (btnSaveAiKey != null) {
             btnSaveAiKey.setOnClickListener(v -> {
                 SoundManager.playClick();
@@ -1296,6 +1618,21 @@ public class MainActivity extends Activity {
                 } catch (Exception e) {
                     Toast.makeText(this, "No email client installed.", Toast.LENGTH_SHORT).show();
                 }
+            });
+        }
+
+        // Universal Driver Hub Listeners
+        if (btnDevBrowseCatalog != null) {
+            btnDevBrowseCatalog.setOnClickListener(v -> {
+                SoundManager.playClick();
+                showPrinterCatalogDialog();
+            });
+        }
+
+        if (btnDevScanUsb != null) {
+            btnDevScanUsb.setOnClickListener(v -> {
+                SoundManager.playClick();
+                autoDetectUsbPrinter();
             });
         }
 
@@ -1339,12 +1676,261 @@ public class MainActivity extends Activity {
             btnTile1Up, btnTile2Up, btnTile4Up,
             btnPlaceFull, btnPlaceTopHalf, btnPlaceBottomHalf, btnPlaceLeftHalf, btnPlaceRightHalf, btnPlaceQuadTl,
             btnMarginZero, btnMarginNarrow, btnMarginNormal, btnMarginWide,
-            btnIdCount1, btnIdCount2, btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40,
-            btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130, btnIdPlaceTop, btnIdPlaceCenter,
+            btnIdClearPhotos, btnIdQuickPrint, btnIdQuickOrient, btnIdQuickGuides, btnIdStageExpand, btnIdTogglePanel,
+            btnIdTabPhotos, btnIdTabLayout, btnIdTabPaper, btnIdTabMargins, btnIdTabTone, btnIdTabWatermark, btnIdTabCopies,
+            btnIdCount1, btnIdCount2, btnIdPlaceTop, btnIdPlaceCenter, btnIdPlaceFull, btnIdPlaceGrid,
+            btnIdSpace5, btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40,
+            btnIdScale85, btnIdScale100, btnIdScale115, btnIdScale130,
+            btnIdPaperA4, btnIdPaperLetter, btnIdPaperLegal, btnIdPaperA5, btnIdOrientPortrait, btnIdOrientLandscape,
+            btnIdMarginZero, btnIdMarginHwMin, btnIdMarginNarrow, btnIdMarginNormal, btnIdMarginWide,
+            btnIdToneDraft, btnIdToneNormal, btnIdToneDeep, btnIdToneUltra,
+            btnIdWmConfidential, btnIdWmCopy, btnIdWmOfficial, btnIdWmClear,
+            btnIdCopiesMinus, btnIdCopiesPlus, btnIdCopies1, btnIdCopies2, btnIdCopies5, btnIdCopies10,
             btnIdScanFront, btnIdPickFront, btnIdScanBack, btnIdPickBack,
             btnId2ScanFront, btnId2PickFront, btnId2ScanBack, btnId2PickBack,
-            btnIdPrintNow, btnIdSendStudio, btnStarGithub, btnOpenTelegram, btnCopyTelegram
+            btnIdPrintNow, btnIdSendStudio, btnStarGithub, btnOpenTelegram, btnCopyTelegram,
+            btnDevBrowseCatalog, btnDevScanUsb
         );
+    }
+
+    private void toggleIdOptionsPanel() {
+        SoundManager.playClick();
+        if (scrollIdOptions == null || btnIdTogglePanel == null) return;
+        isIdPanelCollapsed = !isIdPanelCollapsed;
+        float density = getResources().getDisplayMetrics().density;
+        if (isIdPanelCollapsed) {
+            scrollIdOptions.setVisibility(View.GONE);
+            btnIdTogglePanel.setText("▲ EXPAND");
+            if (btnIdStageExpand != null) btnIdStageExpand.setText("⛶ Fit");
+            if (layoutIdSlidingPanel != null) {
+                LinearLayout.LayoutParams panelLp = (LinearLayout.LayoutParams) layoutIdSlidingPanel.getLayoutParams();
+                panelLp.height = LinearLayout.LayoutParams.WRAP_CONTENT;
+                panelLp.weight = 0f;
+                layoutIdSlidingPanel.setLayoutParams(panelLp);
+            }
+            if (cardIdSheetPreview != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardIdSheetPreview.getLayoutParams();
+                lp.height = 0;
+                lp.weight = 1.0f;
+                cardIdSheetPreview.setLayoutParams(lp);
+            }
+        } else {
+            scrollIdOptions.setVisibility(View.VISIBLE);
+            btnIdTogglePanel.setText("▼ RETRACT");
+            if (btnIdStageExpand != null) btnIdStageExpand.setText("⛶ Max");
+            if (cardIdSheetPreview != null) {
+                LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardIdSheetPreview.getLayoutParams();
+                lp.height = (int) (235 * density);
+                lp.weight = 0f;
+                cardIdSheetPreview.setLayoutParams(lp);
+            }
+            if (layoutIdSlidingPanel != null) {
+                LinearLayout.LayoutParams panelLp = (LinearLayout.LayoutParams) layoutIdSlidingPanel.getLayoutParams();
+                panelLp.height = 0;
+                panelLp.weight = 1.0f;
+                layoutIdSlidingPanel.setLayoutParams(panelLp);
+            }
+        }
+    }
+
+    private void showIdControlSection(IdControlSection section) {
+        SoundManager.playClick();
+        currentIdControlSection = section;
+
+        if (isIdPanelCollapsed) {
+            toggleIdOptionsPanel();
+        }
+
+        if (cardIdPhotos != null) cardIdPhotos.setVisibility(section == IdControlSection.PHOTOS ? View.VISIBLE : View.GONE);
+        if (cardIdLayout != null) cardIdLayout.setVisibility(section == IdControlSection.LAYOUT ? View.VISIBLE : View.GONE);
+        if (cardIdPaper != null) cardIdPaper.setVisibility(section == IdControlSection.PAPER ? View.VISIBLE : View.GONE);
+        if (cardIdMargins != null) cardIdMargins.setVisibility(section == IdControlSection.MARGINS ? View.VISIBLE : View.GONE);
+        if (cardIdTone != null) cardIdTone.setVisibility(section == IdControlSection.TONE ? View.VISIBLE : View.GONE);
+        if (cardIdWatermark != null) cardIdWatermark.setVisibility(section == IdControlSection.WATERMARK ? View.VISIBLE : View.GONE);
+        if (cardIdCopies != null) cardIdCopies.setVisibility(section == IdControlSection.COPIES ? View.VISIBLE : View.GONE);
+
+        if (scrollIdOptions != null) {
+            scrollIdOptions.scrollTo(0, 0);
+        }
+
+        if (tvIdPanelHandle != null) {
+            String title;
+            switch (section) {
+                case PHOTOS: title = "CARD PHOTOS & SCANS"; break;
+                case LAYOUT: title = "LAYOUT, SPACING & SCALE"; break;
+                case PAPER: title = "PAPER SIZE & ORIENTATION"; break;
+                case MARGINS: title = "PRINT MARGINS (0-24mm)"; break;
+                case TONE: title = "TONER DENSITY & HALFTONE"; break;
+                case WATERMARK: title = "WATERMARK STAMP"; break;
+                case COPIES: title = "COPIES COUNT"; break;
+                default: title = "ID SETTINGS"; break;
+            }
+            tvIdPanelHandle.setText("── 🪪 " + title + " ──");
+        }
+
+        updateIdTabHighlight(section);
+    }
+
+    private void updateIdTabHighlight(IdControlSection section) {
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        Button[] tabs = {btnIdTabPhotos, btnIdTabLayout, btnIdTabPaper, btnIdTabMargins, btnIdTabTone, btnIdTabWatermark, btnIdTabCopies};
+        IdControlSection[] sections = {
+            IdControlSection.PHOTOS,
+            IdControlSection.LAYOUT,
+            IdControlSection.PAPER,
+            IdControlSection.MARGINS,
+            IdControlSection.TONE,
+            IdControlSection.WATERMARK,
+            IdControlSection.COPIES
+        };
+
+        Button activeTab = null;
+        for (int i = 0; i < tabs.length; i++) {
+            Button b = tabs[i];
+            if (b == null) continue;
+            boolean isActive = (sections[i] == section);
+            b.setBackground(ThemeManager.createChipButtonDrawable(p, isActive, this));
+            b.setTextColor(isActive ? p.primaryButtonTextColor : p.chipTextColor);
+            b.setTypeface(null, isActive ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+            if (isActive) activeTab = b;
+        }
+
+        if (activeTab != null && scrollIdCategoryTabs != null) {
+            final Button target = activeTab;
+            scrollIdCategoryTabs.post(() -> {
+                int scrollX = (target.getLeft() - (scrollIdCategoryTabs.getWidth() / 2)) + (target.getWidth() / 2);
+                scrollIdCategoryTabs.smoothScrollTo(Math.max(0, scrollX), 0);
+            });
+        }
+    }
+
+    private void updateIdControlsHighlight() {
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+
+        if (btnIdCount1 != null) {
+            boolean active = (idConfig.idCount == 1);
+            btnIdCount1.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdCount1.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdCount2 != null) {
+            boolean active = (idConfig.idCount == 2);
+            btnIdCount2.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdCount2.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+
+        if (btnIdPlaceTop != null) {
+            boolean active = (idConfig.placement == IdCardEngine.IdPlacement.TOP_HALF);
+            btnIdPlaceTop.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPlaceTop.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPlaceCenter != null) {
+            boolean active = (idConfig.placement == IdCardEngine.IdPlacement.CENTERED);
+            btnIdPlaceCenter.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPlaceCenter.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPlaceFull != null) {
+            boolean active = (idConfig.placement == IdCardEngine.IdPlacement.TOP_AND_BOTTOM);
+            btnIdPlaceFull.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPlaceFull.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPlaceGrid != null) {
+            boolean active = (idConfig.placement == IdCardEngine.IdPlacement.FOUR_UP);
+            btnIdPlaceGrid.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPlaceGrid.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+
+        Button[] spaceChips = {btnIdSpace5, btnIdSpace10, btnIdSpace20, btnIdSpace30, btnIdSpace40};
+        int[] spaceVals = {5, 10, 20, 30, 40};
+        for (int i = 0; i < spaceChips.length; i++) {
+            if (spaceChips[i] != null) {
+                boolean active = (idConfig.spacingMm == spaceVals[i]);
+                spaceChips[i].setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+                spaceChips[i].setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+            }
+        }
+
+        if (btnIdScale85 != null) {
+            boolean active = Math.abs(idConfig.scale - 0.85f) < 0.02f;
+            btnIdScale85.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdScale85.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdScale100 != null) {
+            boolean active = Math.abs(idConfig.scale - 1.0f) < 0.02f;
+            btnIdScale100.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdScale100.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdScale115 != null) {
+            boolean active = Math.abs(idConfig.scale - 1.15f) < 0.02f;
+            btnIdScale115.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdScale115.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdScale130 != null) {
+            boolean active = Math.abs(idConfig.scale - 1.30f) < 0.02f;
+            btnIdScale130.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdScale130.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+
+        if (btnIdPaperA4 != null) {
+            boolean active = (idConfig.paperSize == SheetGeometry.PaperSize.A4);
+            btnIdPaperA4.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPaperA4.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPaperLetter != null) {
+            boolean active = (idConfig.paperSize == SheetGeometry.PaperSize.LETTER);
+            btnIdPaperLetter.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPaperLetter.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPaperLegal != null) {
+            boolean active = (idConfig.paperSize == SheetGeometry.PaperSize.LEGAL);
+            btnIdPaperLegal.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPaperLegal.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdPaperA5 != null) {
+            boolean active = (idConfig.paperSize == SheetGeometry.PaperSize.A5);
+            btnIdPaperA5.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdPaperA5.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+
+        if (btnIdOrientPortrait != null) {
+            boolean active = (idConfig.orientation == SheetGeometry.Orientation.PORTRAIT);
+            btnIdOrientPortrait.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdOrientPortrait.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnIdOrientLandscape != null) {
+            boolean active = (idConfig.orientation == SheetGeometry.Orientation.LANDSCAPE);
+            btnIdOrientLandscape.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnIdOrientLandscape.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+
+        Button[] marginChips = {btnIdMarginZero, btnIdMarginHwMin, btnIdMarginNarrow, btnIdMarginNormal, btnIdMarginWide};
+        float[] marginVals = {0f, SheetGeometry.HARDWARE_MIN_MARGIN_MM, 8f, 12f, 20f};
+        for (int i = 0; i < marginChips.length; i++) {
+            if (marginChips[i] != null) {
+                boolean active = Math.abs(idConfig.marginMm - marginVals[i]) < 0.2f;
+                marginChips[i].setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+                marginChips[i].setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+            }
+        }
+
+        Button[] toneChips = {btnIdToneDraft, btnIdToneNormal, btnIdToneDeep, btnIdToneUltra};
+        int[] toneVals = {ToneEngine.PRESET_DRAFT, ToneEngine.PRESET_NORMAL, ToneEngine.PRESET_DEEP, ToneEngine.PRESET_ULTRA};
+        for (int i = 0; i < toneChips.length; i++) {
+            if (toneChips[i] != null) {
+                boolean active = (idConfig.darkness == toneVals[i]);
+                toneChips[i].setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+                toneChips[i].setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+            }
+        }
+
+        Button[] copyChips = {btnIdCopies1, btnIdCopies2, btnIdCopies5, btnIdCopies10};
+        int[] copyVals = {1, 2, 5, 10};
+        for (int i = 0; i < copyChips.length; i++) {
+            if (copyChips[i] != null) {
+                boolean active = (idConfig.copies == copyVals[i]);
+                copyChips[i].setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+                copyChips[i].setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+            }
+        }
     }
 
     private void updateIdCount(int count) {
@@ -1353,70 +1939,204 @@ public class MainActivity extends Activity {
         if (layoutId2Container != null) {
             layoutId2Container.setVisibility(count == 2 ? View.VISIBLE : View.GONE);
         }
-        updateButtonSelection(btnIdCount1, count == 1);
-        updateButtonSelection(btnIdCount2, count == 2);
-        renderIdCardPreview();
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
     }
 
     private void updateIdSpacing(int spacingMm) {
-        SoundManager.playClick();
         idConfig.spacingMm = spacingMm;
-        updateButtonSelection(btnIdSpace10, spacingMm == 10);
-        updateButtonSelection(btnIdSpace20, spacingMm == 20);
-        updateButtonSelection(btnIdSpace30, spacingMm == 30);
-        updateButtonSelection(btnIdSpace40, spacingMm == 40);
-        renderIdCardPreview();
+        if (tvIdSpacingVal != null) {
+            tvIdSpacingVal.setText(spacingMm + " mm");
+        }
+        if (seekIdSpacing != null && seekIdSpacing.getProgress() != spacingMm) {
+            seekIdSpacing.setProgress(spacingMm);
+        }
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
     }
 
     private void updateIdScale(float scale) {
-        SoundManager.playClick();
         idConfig.scale = scale;
-        updateButtonSelection(btnIdScale85, Math.abs(scale - 0.85f) < 0.01f);
-        updateButtonSelection(btnIdScale100, Math.abs(scale - 1.0f) < 0.01f);
-        updateButtonSelection(btnIdScale115, Math.abs(scale - 1.15f) < 0.01f);
-        updateButtonSelection(btnIdScale130, Math.abs(scale - 1.30f) < 0.01f);
-        renderIdCardPreview();
+        int pct = Math.round(scale * 100);
+        if (tvIdScaleVal != null) {
+            tvIdScaleVal.setText(pct + "%" + (pct == 100 ? " (Std 85.6×54mm)" : ""));
+        }
+        int progress = Math.max(0, Math.min(80, pct - 70));
+        if (seekIdScale != null && seekIdScale.getProgress() != progress) {
+            seekIdScale.setProgress(progress);
+        }
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
     }
 
     private void updateIdPlacement(IdCardEngine.IdPlacement placement) {
         SoundManager.playClick();
         idConfig.placement = placement;
-        updateButtonSelection(btnIdPlaceTop, placement == IdCardEngine.IdPlacement.TOP_HALF);
-        updateButtonSelection(btnIdPlaceCenter, placement == IdCardEngine.IdPlacement.CENTERED);
-        renderIdCardPreview();
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
     }
 
-    private void updateButtonSelection(Button btn, boolean selected) {
-        if (btn == null) return;
-        if (selected) {
-            btn.setBackgroundResource(com.dodopress.R.drawable.btn_primary);
-            btn.setTextColor(Color.WHITE);
-            btn.setTypeface(null, android.graphics.Typeface.BOLD);
-        } else {
-            btn.setBackgroundResource(com.dodopress.R.drawable.btn_chip);
-            btn.setTextColor(Color.parseColor("#94A3B8"));
-            btn.setTypeface(null, android.graphics.Typeface.NORMAL);
+    private void updateIdPaperSize(SheetGeometry.PaperSize size) {
+        SoundManager.playClick();
+        idConfig.paperSize = size;
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
+    }
+
+    private void updateIdOrientation(SheetGeometry.Orientation orient) {
+        SoundManager.playClick();
+        idConfig.orientation = orient;
+        if (btnIdQuickOrient != null) {
+            btnIdQuickOrient.setText(orient == SheetGeometry.Orientation.PORTRAIT ? "PORTRAIT" : "LANDSCAPE");
+        }
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
+    }
+
+    private void toggleIdOrientation() {
+        SheetGeometry.Orientation newOrient = (idConfig.orientation == SheetGeometry.Orientation.PORTRAIT)
+            ? SheetGeometry.Orientation.LANDSCAPE
+            : SheetGeometry.Orientation.PORTRAIT;
+        updateIdOrientation(newOrient);
+    }
+
+    private void toggleIdCutGuides() {
+        SoundManager.playClick();
+        idConfig.showCutGuides = !idConfig.showCutGuides;
+        if (btnIdQuickGuides != null) {
+            btnIdQuickGuides.setText(idConfig.showCutGuides ? "✂ Guides: ON" : "✂ Guides: OFF");
+        }
+        if (btnIdToggleCutGuides != null) {
+            btnIdToggleCutGuides.setText(idConfig.showCutGuides ? "✂ Cut Guides: ON" : "✂ Cut Guides: OFF");
+        }
+        scheduleIdPreviewRender();
+    }
+
+    private void updateIdMargin(float marginMm) {
+        idConfig.marginMm = marginMm;
+        if (tvIdMarginVal != null) {
+            tvIdMarginVal.setText(String.format(Locale.US, "%.1f mm", marginMm) + (marginMm == 0 ? " (Edge)" : (marginMm <= 4.5f ? " (Drum Clip)" : "")));
+        }
+        if (layoutIdDrumWarning != null) {
+            layoutIdDrumWarning.setVisibility(marginMm < SheetGeometry.HARDWARE_MIN_MARGIN_MM ? View.VISIBLE : View.GONE);
+        }
+        if (seekIdMargin != null && Math.round(marginMm) != seekIdMargin.getProgress()) {
+            seekIdMargin.setProgress(Math.round(marginMm));
+        }
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
+    }
+
+    private void updateIdDarkness(int darkness) {
+        idConfig.darkness = darkness;
+        if (tvIdToneVal != null) {
+            String label = (darkness <= 25) ? "Draft 25%" : (darkness <= 50) ? "Normal 50%" : (darkness <= 75) ? "Deep 75%" : "Ultra 100%";
+            tvIdToneVal.setText(darkness + "% (" + label + ")");
+        }
+        if (seekIdDarkness != null && seekIdDarkness.getProgress() != darkness) {
+            seekIdDarkness.setProgress(darkness);
+        }
+        updateIdControlsHighlight();
+        scheduleIdPreviewRender();
+    }
+
+    private void updateIdWatermark(String text) {
+        SoundManager.playClick();
+        idConfig.watermarkText = text;
+        if (etIdWatermark != null && !etIdWatermark.getText().toString().equals(text)) {
+            etIdWatermark.setText(text);
+        }
+        scheduleIdPreviewRender();
+    }
+
+    private void updateIdCopies(int copies) {
+        SoundManager.playClick();
+        idConfig.copies = Math.max(1, Math.min(99, copies));
+        if (tvIdCopiesCount != null) {
+            tvIdCopiesCount.setText(String.valueOf(idConfig.copies));
+        }
+        updateIdControlsHighlight();
+        updateIdCardSummary();
+    }
+
+    private void clearIdPhotos() {
+        SoundManager.playClick();
+        if (idFrontBitmap != null && !idFrontBitmap.isRecycled()) { idFrontBitmap.recycle(); idFrontBitmap = null; }
+        if (idBackBitmap != null && !idBackBitmap.isRecycled()) { idBackBitmap.recycle(); idBackBitmap = null; }
+        if (id2FrontBitmap != null && !id2FrontBitmap.isRecycled()) { id2FrontBitmap.recycle(); id2FrontBitmap = null; }
+        if (id2BackBitmap != null && !id2BackBitmap.isRecycled()) { id2BackBitmap.recycle(); id2BackBitmap = null; }
+        if (ivIdFrontPreview != null) ivIdFrontPreview.setImageDrawable(null);
+        if (ivIdBackPreview != null) ivIdBackPreview.setImageDrawable(null);
+        if (ivId2FrontPreview != null) ivId2FrontPreview.setImageDrawable(null);
+        if (ivId2BackPreview != null) ivId2BackPreview.setImageDrawable(null);
+        scheduleIdPreviewRender();
+        Toast.makeText(this, "ID Card photos cleared.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateIdCardSummary() {
+        if (activePageIndex != 1) return;
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        if (tvPageSummary != null) {
+            tvPageSummary.setTextColor(p.brandPrimaryColor);
+            String summary = "🪪 ID Sheet • " + idConfig.paperSize.name() + " " + idConfig.orientation.title
+                + " • " + idConfig.idCount + " ID" + (idConfig.idCount > 1 ? "s" : "")
+                + " • " + idConfig.copies + (idConfig.copies > 1 ? " copies" : " copy");
+            tvPageSummary.setText(summary);
+        }
+        if (dockTvStatus != null) {
+            UsbDevice printer = usbPrinterConnection.findPrinter();
+            if (printer != null) {
+                dockTvStatus.setText(usbPrinterConnection.getPrinterDisplayName(printer) + " (Ready)");
+            } else {
+                PrinterModel active = (driverManager != null) ? driverManager.getActivePrinter() : null;
+                dockTvStatus.setText(active != null ? active.getDisplayName() : "Universal Printer");
+            }
+        }
+        if (dockBtnPrint != null) {
+            dockBtnPrint.setText("⚡ PRINT ID SHEET");
         }
     }
 
+    private final Runnable idPreviewRunnable = this::renderIdCardPreviewSync;
+
+    private void scheduleIdPreviewRender() {
+        mainHandler.removeCallbacks(idPreviewRunnable);
+        mainHandler.postDelayed(idPreviewRunnable, 60);
+    }
+
     private void renderIdCardPreview() {
+        scheduleIdPreviewRender();
+    }
+
+    private void renderIdCardPreviewSync() {
         if (ivIdSheetPreview == null) return;
         new Thread(() -> {
             try {
+                float widthMm = idConfig.paperSize.getWidthMm(idConfig.orientation);
+                float heightMm = idConfig.paperSize.getHeightMm(idConfig.orientation);
+                float aspectRatio = widthMm / Math.max(1f, heightMm);
+
+                int previewW = 600;
+                int previewH = Math.round(previewW / aspectRatio);
+
                 Bitmap previewBm = IdCardEngine.composeIdCardSheet(
                     idFrontBitmap, idBackBitmap,
                     id2FrontBitmap, id2BackBitmap,
-                    idConfig, 595, 842
+                    idConfig, previewW, previewH,
+                    widthMm, heightMm
                 );
+
                 runOnUiThread(() -> {
                     ivIdSheetPreview.setImageBitmap(previewBm);
                     if (tvIdPreviewInfo != null) {
-                        String info = idConfig.idCount + " ID" + (idConfig.idCount > 1 ? "s" : "")
+                        String info = idConfig.paperSize.name() + " " + idConfig.orientation.title
+                            + " • " + idConfig.idCount + " ID" + (idConfig.idCount > 1 ? "s" : "")
                             + " • " + idConfig.spacingMm + "mm Gap • "
                             + Math.round(idConfig.scale * 100) + "% Scale • "
-                            + (idConfig.placement == IdCardEngine.IdPlacement.TOP_HALF ? "Top Half" : "Centered");
+                            + String.format(Locale.US, "%.1fmm Margin", idConfig.marginMm);
                         tvIdPreviewInfo.setText(info);
                     }
+                    updateIdCardSummary();
                 });
             } catch (Exception e) {
                 DiagnosticLogManager.log("ID_CARD", "Preview error: " + e.getMessage());
@@ -1439,19 +2159,26 @@ public class MainActivity extends Activity {
         }
 
         try {
-            // Compose onto A4 sheet at 300 DPI (2480 x 3508 px)
+            float widthMm = idConfig.paperSize.getWidthMm(idConfig.orientation);
+            float heightMm = idConfig.paperSize.getHeightMm(idConfig.orientation);
+            int sheetW = Math.round((widthMm / 25.4f) * 300f);
+            int sheetH = Math.round((heightMm / 25.4f) * 300f);
+
             Bitmap composedSheet = IdCardEngine.composeIdCardSheet(
                 idFrontBitmap, idBackBitmap,
                 id2FrontBitmap, id2BackBitmap,
-                idConfig, 2480, 3508
+                idConfig, sheetW, sheetH,
+                widthMm, heightMm
             );
-            File idCardPdf = new File(getCacheDir(), "id_card_" + System.currentTimeMillis() + ".pdf");
 
+            File idCardPdf = new File(getCacheDir(), "id_card_" + System.currentTimeMillis() + ".pdf");
             PdfDocument document = new PdfDocument();
-            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+            int pagePtW = Math.round(widthMm * 72f / 25.4f);
+            int pagePtH = Math.round(heightMm * 72f / 25.4f);
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pagePtW, pagePtH, 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
             Canvas canvas = page.getCanvas();
-            Rect dest = new Rect(0, 0, 595, 842);
+            Rect dest = new Rect(0, 0, pagePtW, pagePtH);
             canvas.drawBitmap(composedSheet, null, dest, null);
             document.finishPage(page);
 
@@ -1461,12 +2188,19 @@ public class MainActivity extends Activity {
             document.close();
             composedSheet.recycle();
 
+            // Sync main print state with ID configuration
+            currentPaperSize = idConfig.paperSize;
+            currentOrientation = idConfig.orientation;
+            currentMarginMm = idConfig.marginMm;
+            copies = idConfig.copies;
+            if (seekDarkness != null) seekDarkness.setProgress(idConfig.darkness);
+
             showPage(0);
             loadPdfFromUri(Uri.fromFile(idCardPdf));
 
             UsbDevice printer = usbPrinterConnection.findPrinter();
             if (printer != null) {
-                Toast.makeText(this, "ID Card ready! Starting 1-pass direct print...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "ID Card ready! Starting direct print...", Toast.LENGTH_SHORT).show();
                 mainHandler.postDelayed(this::startPrinting, 500);
             } else {
                 Toast.makeText(this, "ID Card loaded! Connect USB printer to print.", Toast.LENGTH_LONG).show();
@@ -1484,22 +2218,34 @@ public class MainActivity extends Activity {
             return;
         }
         try {
+            float widthMm = idConfig.paperSize.getWidthMm(idConfig.orientation);
+            float heightMm = idConfig.paperSize.getHeightMm(idConfig.orientation);
+            int sheetW = Math.round((widthMm / 25.4f) * 300f);
+            int sheetH = Math.round((heightMm / 25.4f) * 300f);
+
             Bitmap composedSheet = IdCardEngine.composeIdCardSheet(
                 idFrontBitmap, idBackBitmap,
                 id2FrontBitmap, id2BackBitmap,
-                idConfig, 2480, 3508
+                idConfig, sheetW, sheetH,
+                widthMm, heightMm
             );
             File idCardPdf = new File(getCacheDir(), "id_studio_" + System.currentTimeMillis() + ".pdf");
             PdfDocument document = new PdfDocument();
-            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(595, 842, 1).create();
+            int pagePtW = Math.round(widthMm * 72f / 25.4f);
+            int pagePtH = Math.round(heightMm * 72f / 25.4f);
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pagePtW, pagePtH, 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
-            page.getCanvas().drawBitmap(composedSheet, null, new Rect(0, 0, 595, 842), null);
+            page.getCanvas().drawBitmap(composedSheet, null, new Rect(0, 0, pagePtW, pagePtH), null);
             document.finishPage(page);
             try (FileOutputStream fos = new FileOutputStream(idCardPdf)) {
                 document.writeTo(fos);
             }
             document.close();
             composedSheet.recycle();
+
+            currentPaperSize = idConfig.paperSize;
+            currentOrientation = idConfig.orientation;
+            copies = idConfig.copies;
 
             showPage(0);
             loadPdfFromUri(Uri.fromFile(idCardPdf));
@@ -1642,7 +2388,7 @@ public class MainActivity extends Activity {
             tvOrientLabel.setText(currentOrientation.title + (isPortrait ? " (Vertical)" : " (Horizontal)"));
         }
         if (btnQuickOrient != null) {
-            btnQuickOrient.setText(isPortrait ? "📄 Portrait" : "📑 Landscape");
+            btnQuickOrient.setText(isPortrait ? "PORTRAIT" : "LANDSCAPE");
         }
     }
 
@@ -1687,20 +2433,22 @@ public class MainActivity extends Activity {
     }
 
     private void updateTilingHighlight(SheetGeometry.TilingMode mode) {
-        int activeBg = com.dodopress.R.drawable.btn_primary;
-        int normalBg = com.dodopress.R.drawable.btn_chip;
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
 
         if (btnTile1Up != null) {
-            btnTile1Up.setBackgroundResource(mode == SheetGeometry.TilingMode.ONE_UP ? activeBg : normalBg);
-            btnTile1Up.setTextColor(mode == SheetGeometry.TilingMode.ONE_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+            boolean active = (mode == SheetGeometry.TilingMode.ONE_UP);
+            btnTile1Up.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnTile1Up.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnTile2Up != null) {
-            btnTile2Up.setBackgroundResource(mode == SheetGeometry.TilingMode.TWO_UP ? activeBg : normalBg);
-            btnTile2Up.setTextColor(mode == SheetGeometry.TilingMode.TWO_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+            boolean active = (mode == SheetGeometry.TilingMode.TWO_UP);
+            btnTile2Up.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnTile2Up.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnTile4Up != null) {
-            btnTile4Up.setBackgroundResource(mode == SheetGeometry.TilingMode.FOUR_UP ? activeBg : normalBg);
-            btnTile4Up.setTextColor(mode == SheetGeometry.TilingMode.FOUR_UP ? Color.WHITE : Color.parseColor("#94A3B8"));
+            boolean active = (mode == SheetGeometry.TilingMode.FOUR_UP);
+            btnTile4Up.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnTile4Up.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
     }
 
@@ -1777,12 +2525,55 @@ public class MainActivity extends Activity {
         currentTheme = theme;
         ThemeManager.saveTheme(this, theme);
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(theme);
+        float density = getResources().getDisplayMetrics().density;
 
         // 1. Root background
         if (rootMainContainer != null) {
             rootMainContainer.setBackgroundColor(p.bgColor);
         }
 
+        // 2. System Bar & Edge-to-Edge Theme Integration
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Window window = getWindow();
+            if (window != null) {
+                WindowInsetsController controller = window.getInsetsController();
+                if (controller != null) {
+                    int statusAppearance = p.isLightStatusBar ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0;
+                    int navAppearance = p.isLightStatusBar ? WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS : 0;
+                    controller.setSystemBarsAppearance(statusAppearance, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                    controller.setSystemBarsAppearance(navAppearance, WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                }
+                window.setStatusBarColor(p.bgColor);
+                window.setNavigationBarColor(p.surfaceColor);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Window window = getWindow();
+            if (window != null) {
+                View decor = window.getDecorView();
+                int flags = decor.getSystemUiVisibility();
+                if (p.isLightStatusBar) {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    }
+                } else {
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    }
+                }
+                decor.setSystemUiVisibility(flags);
+                window.setStatusBarColor(p.bgColor);
+                window.setNavigationBarColor(p.surfaceColor);
+            }
+        }
+
+        // 3. Dynamic Aurora Canvas for Aether Aurora
+        if (viewAuroraBg != null) {
+            viewAuroraBg.setActive(p.isDynamicAurora);
+        }
+
+        // 4. Motion & Diagnostics Views
         if (laserScanView != null) {
             laserScanView.setLaserColor(p.laserColor);
         }
@@ -1796,7 +2587,26 @@ public class MainActivity extends Activity {
             viewBeacon.setBeaconColor(p.beaconColor);
         }
 
-        // Cards background
+        // 5. Document Stage Background
+        if (layoutPreviewContainer != null) {
+            layoutPreviewContainer.setBackgroundColor(p.previewStageBgColor);
+        }
+
+        // 6. Navigation Bar Container & Floating Action Dock
+        View bottomBar = findViewById(com.dodopress.R.id.layout_bottom_bar_container);
+        if (bottomBar != null) {
+            bottomBar.setBackgroundColor(p.surfaceColor);
+        }
+        if (floatingActionDock != null) {
+            GradientDrawable dockBg = new GradientDrawable();
+            dockBg.setShape(GradientDrawable.RECTANGLE);
+            dockBg.setColor(p.surfaceColor);
+            dockBg.setCornerRadius(18 * density);
+            dockBg.setStroke((int) (1 * density), p.cardBorderColor);
+            floatingActionDock.setBackground(dockBg);
+        }
+
+        // 7. Cards across all tabs
         if (cardDocPreview != null) cardDocPreview.setBackgroundResource(p.cardDrawableRes);
         if (cardTonerDensity != null) cardTonerDensity.setBackgroundResource(p.cardDrawableRes);
         if (cardGeometry != null) cardGeometry.setBackgroundResource(p.cardDrawableRes);
@@ -1804,70 +2614,184 @@ public class MainActivity extends Activity {
         if (cardPageConfig != null) cardPageConfig.setBackgroundResource(p.cardDrawableRes);
         if (cardWatermark != null) cardWatermark.setBackgroundResource(p.cardDrawableRes);
         if (cardRecents != null) cardRecents.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdSheetPreview != null) cardIdSheetPreview.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdPhotos != null) cardIdPhotos.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdLayout != null) cardIdLayout.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdPaper != null) cardIdPaper.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdMargins != null) cardIdMargins.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdTone != null) cardIdTone.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdWatermark != null) cardIdWatermark.setBackgroundResource(p.cardDrawableRes);
+        if (cardIdCopies != null) cardIdCopies.setBackgroundResource(p.cardDrawableRes);
+        if (cardGithubStars != null) cardGithubStars.setBackgroundResource(p.cardDrawableRes);
+        if (cardTelegramFeedback != null) cardTelegramFeedback.setBackgroundResource(p.cardDrawableRes);
+        if (cardAiByok != null) cardAiByok.setBackgroundResource(p.cardDrawableRes);
 
-        // Primary Buttons
-        int primaryBg = com.dodopress.R.drawable.btn_primary;
-        int secondaryBg = com.dodopress.R.drawable.btn_secondary;
-        int chipBg = com.dodopress.R.drawable.btn_chip;
-
+        // 8. Primary Buttons
         if (btnPickFile != null) {
-            btnPickFile.setBackgroundResource(primaryBg);
-            btnPickFile.setTextColor(Color.WHITE);
-        }
-        if (btnScanDocument != null) {
-            btnScanDocument.setBackgroundResource(secondaryBg);
-            btnScanDocument.setTextColor(p.textHighColor);
-        }
-        if (btnQrLabel != null) {
-            btnQrLabel.setBackgroundResource(secondaryBg);
-            btnQrLabel.setTextColor(p.textHighColor);
-        }
-        if (btnAiAssistant != null) {
-            btnAiAssistant.setBackgroundResource(secondaryBg);
-            btnAiAssistant.setTextColor(p.textHighColor);
+            btnPickFile.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnPickFile.setTextColor(p.primaryButtonTextColor);
         }
         if (btnPrintNow != null) {
-            btnPrintNow.setBackgroundResource(primaryBg);
-            btnPrintNow.setTextColor(Color.WHITE);
+            btnPrintNow.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnPrintNow.setTextColor(p.primaryButtonTextColor);
         }
         if (dockBtnPrint != null) {
-            dockBtnPrint.setBackgroundResource(primaryBg);
-            dockBtnPrint.setTextColor(Color.WHITE);
+            dockBtnPrint.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            dockBtnPrint.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnIdPrintNow != null) {
+            btnIdPrintNow.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnIdPrintNow.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnIdQuickPrint != null) {
+            btnIdQuickPrint.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnIdQuickPrint.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnIdScanFront != null) {
+            btnIdScanFront.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnIdScanFront.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnIdScanBack != null) {
+            btnIdScanBack.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnIdScanBack.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnId2ScanFront != null) {
+            btnId2ScanFront.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnId2ScanFront.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnId2ScanBack != null) {
+            btnId2ScanBack.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnId2ScanBack.setTextColor(p.primaryButtonTextColor);
+        }
+        if (btnStarGithub != null) {
+            btnStarGithub.setBackground(ThemeManager.createPrimaryButtonDrawable(p, this));
+            btnStarGithub.setTextColor(p.primaryButtonTextColor);
+        }
+
+        // 9. Secondary Buttons
+        if (btnScanDocument != null) {
+            btnScanDocument.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnScanDocument.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnQrLabel != null) {
+            btnQrLabel.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnQrLabel.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnAiAssistant != null) {
+            btnAiAssistant.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnAiAssistant.setTextColor(p.secondaryButtonTextColor);
         }
         if (btnCopiesMinus != null) {
-            btnCopiesMinus.setBackgroundResource(secondaryBg);
-            btnCopiesMinus.setTextColor(p.textHighColor);
+            btnCopiesMinus.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnCopiesMinus.setTextColor(p.secondaryButtonTextColor);
         }
         if (btnCopiesPlus != null) {
-            btnCopiesPlus.setBackgroundResource(secondaryBg);
-            btnCopiesPlus.setTextColor(p.textHighColor);
+            btnCopiesPlus.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnCopiesPlus.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnIdCopiesMinus != null) {
+            btnIdCopiesMinus.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnIdCopiesMinus.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnIdCopiesPlus != null) {
+            btnIdCopiesPlus.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnIdCopiesPlus.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnIdPickFront != null) {
+            btnIdPickFront.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnIdPickFront.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnIdPickBack != null) {
+            btnIdPickBack.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnIdPickBack.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnId2PickFront != null) {
+            btnId2PickFront.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnId2PickFront.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnId2PickBack != null) {
+            btnId2PickBack.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnId2PickBack.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnIdClearPhotos != null) {
+            btnIdClearPhotos.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnIdClearPhotos.setTextColor(p.chipTextColor);
         }
         if (btnPrevPage != null) {
-            btnPrevPage.setBackgroundResource(secondaryBg);
-            btnPrevPage.setTextColor(p.textHighColor);
+            btnPrevPage.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnPrevPage.setTextColor(p.secondaryButtonTextColor);
         }
         if (btnNextPage != null) {
-            btnNextPage.setBackgroundResource(secondaryBg);
-            btnNextPage.setTextColor(p.textHighColor);
+            btnNextPage.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnNextPage.setTextColor(p.secondaryButtonTextColor);
         }
+        if (btnIdSendStudio != null) {
+            btnIdSendStudio.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnIdSendStudio.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnOpenTelegram != null) {
+            btnOpenTelegram.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnOpenTelegram.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnCopyTelegram != null) {
+            btnCopyTelegram.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnCopyTelegram.setTextColor(p.secondaryButtonTextColor);
+        }
+        if (btnFeedbackRequest != null) {
+            btnFeedbackRequest.setBackground(ThemeManager.createSecondaryButtonDrawable(p, this));
+            btnFeedbackRequest.setTextColor(p.secondaryButtonTextColor);
+        }
+
+        // 10. Chip & Toggle Buttons
         if (btnTogglePreviewMode != null) {
-            btnTogglePreviewMode.setBackgroundResource(chipBg);
-            btnTogglePreviewMode.setTextColor(p.textHighColor);
+            btnTogglePreviewMode.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnTogglePreviewMode.setTextColor(p.chipTextColor);
         }
         if (btnRotatePage != null) {
-            btnRotatePage.setBackgroundResource(chipBg);
-            btnRotatePage.setTextColor(p.textHighColor);
+            btnRotatePage.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnRotatePage.setTextColor(p.chipTextColor);
         }
         if (btnQuickZoom != null) {
-            btnQuickZoom.setBackgroundResource(chipBg);
+            btnQuickZoom.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
             btnQuickZoom.setTextColor(p.brandPrimaryColor);
         }
         if (btnStageExpand != null) {
-            btnStageExpand.setBackgroundResource(chipBg);
+            btnStageExpand.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
             btnStageExpand.setTextColor(p.brandPrimaryColor);
         }
+        if (btnTogglePanel != null) {
+            btnTogglePanel.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnTogglePanel.setTextColor(p.brandPrimaryColor);
+        }
+        if (btnIdQuickOrient != null) {
+            btnIdQuickOrient.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnIdQuickOrient.setTextColor(p.chipTextColor);
+        }
+        if (btnIdQuickGuides != null) {
+            btnIdQuickGuides.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnIdQuickGuides.setTextColor(p.brandPrimaryColor);
+        }
+        if (btnIdStageExpand != null) {
+            btnIdStageExpand.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnIdStageExpand.setTextColor(p.brandPrimaryColor);
+        }
+        if (btnIdTogglePanel != null) {
+            btnIdTogglePanel.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnIdTogglePanel.setTextColor(p.brandPrimaryColor);
+        }
+        if (btnThemeMenu != null) {
+            btnThemeMenu.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+        }
+        if (btnClearRecents != null) {
+            btnClearRecents.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnClearRecents.setTextColor(p.chipTextColor);
+        }
+        if (btnQueueJob != null) {
+            btnQueueJob.setBackground(ThemeManager.createChipButtonDrawable(p, false, this));
+            btnQueueJob.setTextColor(p.brandPrimaryColor);
+        }
 
-        // Text Colors
+        // 11. Text Colors
         if (tvAppTitle != null) tvAppTitle.setTextColor(p.textHighColor);
         if (tvDensityTitle != null) tvDensityTitle.setTextColor(p.textHighColor);
         if (tvDensityDesc != null) tvDensityDesc.setTextColor(p.textMedColor);
@@ -1877,6 +2801,15 @@ public class MainActivity extends Activity {
         if (tvMarginDesc != null) tvMarginDesc.setTextColor(p.textMedColor);
         if (tvCopiesTitle != null) tvCopiesTitle.setTextColor(p.textHighColor);
         if (tvPagesTitle != null) tvPagesTitle.setTextColor(p.textHighColor);
+        if (tvPanelHandle != null) tvPanelHandle.setTextColor(p.textMedColor);
+        if (tvIdPreviewBadge != null) tvIdPreviewBadge.setTextColor(p.brandPrimaryColor);
+        if (tvIdSpacingVal != null) tvIdSpacingVal.setTextColor(p.brandPrimaryColor);
+        if (tvIdScaleVal != null) tvIdScaleVal.setTextColor(p.brandPrimaryColor);
+        if (tvIdMarginVal != null) tvIdMarginVal.setTextColor(p.brandPrimaryColor);
+        if (tvIdToneVal != null) tvIdToneVal.setTextColor(p.brandPrimaryColor);
+        if (tvIdCopiesCount != null) tvIdCopiesCount.setTextColor(p.brandPrimaryColor);
+        if (tvIdPreviewInfo != null) tvIdPreviewInfo.setTextColor(p.textMedColor);
+        if (tvIdPanelHandle != null) tvIdPanelHandle.setTextColor(p.textMedColor);
 
         if (rbPagesAll != null) rbPagesAll.setTextColor(p.textHighColor);
         if (rbPagesCurrent != null) rbPagesCurrent.setTextColor(p.textHighColor);
@@ -1886,6 +2819,7 @@ public class MainActivity extends Activity {
         if (cbCollate != null) cbCollate.setTextColor(p.textMedColor);
         if (cbReverseOrder != null) cbReverseOrder.setTextColor(p.textHighColor);
         if (cbInvertDark != null) cbInvertDark.setTextColor(p.textHighColor);
+        if (dockTvStatus != null) dockTvStatus.setTextColor(p.textHighColor);
 
         // Highlight active sub-controls
         updatePaperSizeHighlight(currentPaperSize);
@@ -1899,6 +2833,12 @@ public class MainActivity extends Activity {
         updateMarginMathematicalReadout(currentMarginMm);
         updateTabHighlight(currentControlSection);
         updatePageSummary();
+
+        // Highlight ID Copier sub-controls
+        updateIdTabHighlight(currentIdControlSection);
+        updateIdControlsHighlight();
+        updateIdCardSummary();
+
         showPage(activePageIndex);
         refreshPrinterStatus();
     }
@@ -1934,7 +2874,7 @@ public class MainActivity extends Activity {
             }
             if (cardDocPreview != null) {
                 LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) cardDocPreview.getLayoutParams();
-                lp.height = (int) (385 * density);
+                lp.height = (int) (235 * density);
                 lp.weight = 0f;
                 cardDocPreview.setLayoutParams(lp);
             }
@@ -2021,9 +2961,9 @@ public class MainActivity extends Activity {
             if (b == null) continue;
             boolean isAct = (sections[i] == section);
             if (isAct) activeTab = b;
-            b.setTextColor(isAct ? Color.WHITE : Color.parseColor("#94A3B8"));
+            b.setTextColor(isAct ? p.primaryButtonTextColor : p.chipTextColor);
             b.setTypeface(null, isAct ? Typeface.BOLD : Typeface.NORMAL);
-            b.setBackgroundResource(isAct ? p.primaryButtonDrawableRes : p.chipButtonDrawableRes);
+            b.setBackground(ThemeManager.createChipButtonDrawable(p, isAct, this));
         }
 
         if (scrollCategoryTabs != null && activeTab != null) {
@@ -2046,145 +2986,212 @@ public class MainActivity extends Activity {
 
     private void showThemeSelectionDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        float density = getResources().getDisplayMetrics().density;
+        ThemeManager.ThemePalette currentPalette = ThemeManager.ThemePalette.forTheme(currentTheme);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.parseColor("#080D1A"));
-        int pad = (int) (18 * getResources().getDisplayMetrics().density);
-        root.setPadding(pad, pad, pad, pad);
+        root.setBackgroundColor(currentPalette.surfaceColor);
+        int pad = (int) (18 * density);
+        root.setPadding(pad, pad, pad, (int) (24 * density));
 
+        // Header Title
         TextView tvTitle = new TextView(this);
         tvTitle.setText("🎨 HARDWARE THEME STUDIO");
         tvTitle.setTextSize(16);
         tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
-        tvTitle.setTextColor(Color.WHITE);
+        tvTitle.setTextColor(currentPalette.textHighColor);
         root.addView(tvTitle);
 
+        // Subtitle
         TextView tvSub = new TextView(this);
-        tvSub.setText("Select high-contrast phosphor or precision engineering palette");
+        tvSub.setText("Select from 5 purpose-built, distinct visual identities designed for offline printing.");
         tvSub.setTextSize(11);
-        tvSub.setTextColor(Color.parseColor("#94A3B8"));
-        tvSub.setPadding(0, 4, 0, (int) (14 * getResources().getDisplayMetrics().density));
+        tvSub.setTextColor(currentPalette.textMedColor);
+        tvSub.setPadding(0, (int) (4 * density), 0, (int) (14 * density));
         root.addView(tvSub);
 
-        final android.app.AlertDialog dialog = builder.setView(root).create();
+        scroll.addView(root);
+        final android.app.AlertDialog dialog = builder.setView(scroll).create();
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
         for (final ThemeManager.AppTheme t : ThemeManager.AppTheme.values()) {
             final boolean isActive = (t == currentTheme);
+            final ThemeManager.ThemePalette tp = ThemeManager.ThemePalette.forTheme(t);
 
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            int rowPadH = (int) (12 * getResources().getDisplayMetrics().density);
-            int rowPadV = (int) (10 * getResources().getDisplayMetrics().density);
-            row.setPadding(rowPadH, rowPadV, rowPadH, rowPadV);
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            int cardPad = (int) (12 * density);
+            card.setPadding(cardPad, cardPad, cardPad, cardPad);
 
-            android.graphics.drawable.GradientDrawable rowBg = new android.graphics.drawable.GradientDrawable();
-            rowBg.setCornerRadius(10 * getResources().getDisplayMetrics().density);
+            GradientDrawable cardBg = new GradientDrawable();
+            cardBg.setCornerRadius(tp.cardCornerRadiusDp * density);
+            cardBg.setColor(tp.cardBgColor);
             if (isActive) {
-                rowBg.setColor(Color.parseColor("#172554"));
-                rowBg.setStroke((int) (1.5f * getResources().getDisplayMetrics().density), Color.parseColor(t.previewAccentHex));
+                cardBg.setStroke((int) (2f * density), tp.brandPrimaryColor);
             } else {
-                rowBg.setColor(Color.parseColor("#0F172A"));
-                rowBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#1E293B"));
+                cardBg.setStroke((int) (1f * density), tp.cardBorderColor);
             }
-            row.setBackground(rowBg);
+            card.setBackground(cardBg);
 
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.bottomMargin = (int) (8 * getResources().getDisplayMetrics().density);
-            row.setLayoutParams(lp);
+            lp.bottomMargin = (int) (12 * density);
+            card.setLayoutParams(lp);
 
-            View swatch = new View(this);
-            int swatchSize = (int) (22 * getResources().getDisplayMetrics().density);
-            LinearLayout.LayoutParams swatchLp = new LinearLayout.LayoutParams(swatchSize, swatchSize);
-            swatchLp.rightMargin = (int) (12 * getResources().getDisplayMetrics().density);
-            swatch.setLayoutParams(swatchLp);
-            android.graphics.drawable.GradientDrawable swatchBg = new android.graphics.drawable.GradientDrawable();
-            swatchBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
-            swatchBg.setColor(Color.parseColor(t.previewAccentHex));
-            swatch.setBackground(swatchBg);
-            row.addView(swatch);
+            // Row 1: Header (Title, Subtitle, and Active Badge)
+            LinearLayout headerRow = new LinearLayout(this);
+            headerRow.setOrientation(LinearLayout.HORIZONTAL);
+            headerRow.setGravity(Gravity.CENTER_VERTICAL);
 
-            LinearLayout textCol = new LinearLayout(this);
-            textCol.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout titleCol = new LinearLayout(this);
+            titleCol.setOrientation(LinearLayout.VERTICAL);
             LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-            textCol.setLayoutParams(colLp);
+            titleCol.setLayoutParams(colLp);
 
             TextView tvItemTitle = new TextView(this);
             tvItemTitle.setText(t.title);
-            tvItemTitle.setTextSize(13);
+            tvItemTitle.setTextSize(14);
             tvItemTitle.setTypeface(null, android.graphics.Typeface.BOLD);
-            tvItemTitle.setTextColor(isActive ? Color.parseColor(t.previewAccentHex) : Color.WHITE);
-            textCol.addView(tvItemTitle);
+            tvItemTitle.setTextColor(tp.textHighColor);
+            titleCol.addView(tvItemTitle);
 
             TextView tvItemSub = new TextView(this);
             tvItemSub.setText(t.subtitle);
             tvItemSub.setTextSize(10);
-            tvItemSub.setTextColor(Color.parseColor("#94A3B8"));
-            textCol.addView(tvItemSub);
-            row.addView(textCol);
+            tvItemSub.setTextColor(tp.textMedColor);
+            titleCol.addView(tvItemSub);
+            headerRow.addView(titleCol);
 
             if (isActive) {
                 TextView activeBadge = new TextView(this);
-                activeBadge.setText("ACTIVE");
-                activeBadge.setTextSize(9);
+                activeBadge.setText("✓ ACTIVE");
+                activeBadge.setTextSize(10);
                 activeBadge.setTypeface(null, android.graphics.Typeface.BOLD);
-                activeBadge.setTextColor(Color.parseColor(t.previewAccentHex));
-                activeBadge.setPadding((int) (8 * getResources().getDisplayMetrics().density),
-                    (int) (3 * getResources().getDisplayMetrics().density),
-                    (int) (8 * getResources().getDisplayMetrics().density),
-                    (int) (3 * getResources().getDisplayMetrics().density));
-                android.graphics.drawable.GradientDrawable badgeBg = new android.graphics.drawable.GradientDrawable();
-                badgeBg.setCornerRadius(6 * getResources().getDisplayMetrics().density);
-                badgeBg.setColor(Color.parseColor("#0F172A"));
-                badgeBg.setStroke(1, Color.parseColor(t.previewAccentHex));
+                activeBadge.setTextColor(tp.primaryButtonTextColor);
+                activeBadge.setPadding((int) (10 * density), (int) (4 * density), (int) (10 * density), (int) (4 * density));
+                GradientDrawable badgeBg = new GradientDrawable();
+                badgeBg.setCornerRadius(8 * density);
+                badgeBg.setColor(tp.brandPrimaryColor);
                 activeBadge.setBackground(badgeBg);
-                row.addView(activeBadge);
+                headerRow.addView(activeBadge);
+            } else if (t == ThemeManager.AppTheme.AETHER_AURORA) {
+                TextView auroraTag = new TextView(this);
+                auroraTag.setText("✨ AURORA");
+                auroraTag.setTextSize(9);
+                auroraTag.setTypeface(null, android.graphics.Typeface.BOLD);
+                auroraTag.setTextColor(tp.brandPrimaryColor);
+                auroraTag.setPadding((int) (8 * density), (int) (3 * density), (int) (8 * density), (int) (3 * density));
+                GradientDrawable auroraBg = new GradientDrawable();
+                auroraBg.setCornerRadius(6 * density);
+                auroraBg.setColor(Color.argb(40, 154, 124, 255));
+                auroraBg.setStroke((int) (1 * density), tp.brandPrimaryColor);
+                auroraTag.setBackground(auroraBg);
+                headerRow.addView(auroraTag);
+            }
+            card.addView(headerRow);
+
+            // Row 2: Visual Palette Swatches & Mini Component Preview
+            LinearLayout previewRow = new LinearLayout(this);
+            previewRow.setOrientation(LinearLayout.HORIZONTAL);
+            previewRow.setGravity(Gravity.CENTER_VERTICAL);
+            previewRow.setPadding(0, (int) (10 * density), 0, 0);
+
+            // 4 color chips showing Palette Tokens
+            int swatchSize = (int) (16 * density);
+            int[] swatches = {tp.bgColor, tp.surfaceColor, tp.brandPrimaryColor, tp.accentColor};
+            for (int swColor : swatches) {
+                View sw = new View(this);
+                LinearLayout.LayoutParams swLp = new LinearLayout.LayoutParams(swatchSize, swatchSize);
+                swLp.rightMargin = (int) (6 * density);
+                sw.setLayoutParams(swLp);
+                GradientDrawable swBg = new GradientDrawable();
+                swBg.setShape(GradientDrawable.OVAL);
+                swBg.setColor(swColor);
+                swBg.setStroke(1, Color.argb(60, 150, 150, 150));
+                sw.setBackground(swBg);
+                previewRow.addView(sw);
             }
 
-            row.setOnClickListener(v -> {
+            View spacer = new View(this);
+            LinearLayout.LayoutParams spacerLp = new LinearLayout.LayoutParams(0, 0, 1.0f);
+            spacer.setLayoutParams(spacerLp);
+            previewRow.addView(spacer);
+
+            // Representative Component: Primary Button sample
+            TextView btnSample = new TextView(this);
+            btnSample.setText(isActive ? "Selected" : "Select Theme");
+            btnSample.setTextSize(11);
+            btnSample.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnSample.setTextColor(tp.primaryButtonTextColor);
+            btnSample.setPadding((int) (14 * density), (int) (6 * density), (int) (14 * density), (int) (6 * density));
+            btnSample.setBackground(ThemeManager.createPrimaryButtonDrawable(tp, this));
+            previewRow.addView(btnSample);
+
+            card.addView(previewRow);
+
+            card.setOnClickListener(v -> {
                 SoundManager.playClick();
-                row.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                card.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 applyAppTheme(t);
                 dialog.dismiss();
-                Toast.makeText(MainActivity.this, "Theme activated: " + t.title, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "🎨 Activated: " + t.title, Toast.LENGTH_SHORT).show();
             });
 
-            root.addView(row);
+            root.addView(card);
         }
 
         dialog.show();
     }
 
     private void updatePaperSizeHighlight(SheetGeometry.PaperSize size) {
-        btnPaperA4.setBackgroundResource(size == SheetGeometry.PaperSize.A4 ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPaperLetter.setBackgroundResource(size == SheetGeometry.PaperSize.LETTER ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPaperLegal.setBackgroundResource(size == SheetGeometry.PaperSize.LEGAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPaperA5.setBackgroundResource(size == SheetGeometry.PaperSize.A5 ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-
-        btnPaperA4.setTextColor(size == SheetGeometry.PaperSize.A4 ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPaperLetter.setTextColor(size == SheetGeometry.PaperSize.LETTER ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPaperLegal.setTextColor(size == SheetGeometry.PaperSize.LEGAL ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPaperA5.setTextColor(size == SheetGeometry.PaperSize.A5 ? Color.WHITE : Color.parseColor("#94A3B8"));
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        if (btnPaperA4 != null) {
+            boolean active = (size == SheetGeometry.PaperSize.A4);
+            btnPaperA4.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPaperA4.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnPaperLetter != null) {
+            boolean active = (size == SheetGeometry.PaperSize.LETTER);
+            btnPaperLetter.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPaperLetter.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnPaperLegal != null) {
+            boolean active = (size == SheetGeometry.PaperSize.LEGAL);
+            btnPaperLegal.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPaperLegal.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
+        if (btnPaperA5 != null) {
+            boolean active = (size == SheetGeometry.PaperSize.A5);
+            btnPaperA5.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPaperA5.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
     }
 
     private void updatePlacementPresetHighlight(SheetGeometry.PlacementRegion region) {
-        btnPlaceFull.setBackgroundResource(region == SheetGeometry.PlacementRegion.FULL_PAGE ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPlaceTopHalf.setBackgroundResource(region == SheetGeometry.PlacementRegion.TOP_HALF ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPlaceBottomHalf.setBackgroundResource(region == SheetGeometry.PlacementRegion.BOTTOM_HALF ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPlaceLeftHalf.setBackgroundResource(region == SheetGeometry.PlacementRegion.LEFT_HALF ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPlaceRightHalf.setBackgroundResource(region == SheetGeometry.PlacementRegion.RIGHT_HALF ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-        btnPlaceQuadTl.setBackgroundResource(region == SheetGeometry.PlacementRegion.QUAD_TOP_LEFT ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
+        ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
+        Button[] btns = {btnPlaceFull, btnPlaceTopHalf, btnPlaceBottomHalf, btnPlaceLeftHalf, btnPlaceRightHalf, btnPlaceQuadTl};
+        SheetGeometry.PlacementRegion[] regions = {
+            SheetGeometry.PlacementRegion.FULL_PAGE,
+            SheetGeometry.PlacementRegion.TOP_HALF,
+            SheetGeometry.PlacementRegion.BOTTOM_HALF,
+            SheetGeometry.PlacementRegion.LEFT_HALF,
+            SheetGeometry.PlacementRegion.RIGHT_HALF,
+            SheetGeometry.PlacementRegion.QUAD_TOP_LEFT
+        };
 
-        btnPlaceFull.setTextColor(region == SheetGeometry.PlacementRegion.FULL_PAGE ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPlaceTopHalf.setTextColor(region == SheetGeometry.PlacementRegion.TOP_HALF ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPlaceBottomHalf.setTextColor(region == SheetGeometry.PlacementRegion.BOTTOM_HALF ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPlaceLeftHalf.setTextColor(region == SheetGeometry.PlacementRegion.LEFT_HALF ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPlaceRightHalf.setTextColor(region == SheetGeometry.PlacementRegion.RIGHT_HALF ? Color.WHITE : Color.parseColor("#94A3B8"));
-        btnPlaceQuadTl.setTextColor(region == SheetGeometry.PlacementRegion.QUAD_TOP_LEFT ? Color.WHITE : Color.parseColor("#94A3B8"));
+        for (int i = 0; i < btns.length; i++) {
+            Button b = btns[i];
+            if (b == null) continue;
+            boolean active = (region == regions[i]);
+            b.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            b.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
+        }
     }
 
     private void setMarginPreset(float mm) {
@@ -2254,35 +3261,31 @@ public class MainActivity extends Activity {
 
     private void updateMarginButtonsHighlight(float mm) {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
-        int activeBg = com.dodopress.R.drawable.btn_primary;
-        int normalBg = com.dodopress.R.drawable.btn_chip;
-        int activeText = Color.WHITE;
-        int normalText = p.textMedColor;
 
         if (btnMarginZero != null) {
             boolean active = (mm == 0f);
-            btnMarginZero.setBackgroundResource(active ? activeBg : normalBg);
-            btnMarginZero.setTextColor(active ? activeText : normalText);
+            btnMarginZero.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnMarginZero.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnMarginHwMin != null) {
             boolean active = Math.abs(mm - SheetGeometry.HARDWARE_MIN_MARGIN_MM) < 0.1f;
-            btnMarginHwMin.setBackgroundResource(active ? activeBg : normalBg);
-            btnMarginHwMin.setTextColor(active ? activeText : normalText);
+            btnMarginHwMin.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnMarginHwMin.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnMarginNarrow != null) {
             boolean active = Math.abs(mm - 8.0f) < 0.1f;
-            btnMarginNarrow.setBackgroundResource(active ? activeBg : normalBg);
-            btnMarginNarrow.setTextColor(active ? activeText : normalText);
+            btnMarginNarrow.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnMarginNarrow.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnMarginNormal != null) {
             boolean active = Math.abs(mm - 12.0f) < 0.1f;
-            btnMarginNormal.setBackgroundResource(active ? activeBg : normalBg);
-            btnMarginNormal.setTextColor(active ? activeText : normalText);
+            btnMarginNormal.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnMarginNormal.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnMarginWide != null) {
             boolean active = Math.abs(mm - 20.0f) < 0.1f;
-            btnMarginWide.setBackgroundResource(active ? activeBg : normalBg);
-            btnMarginWide.setTextColor(active ? activeText : normalText);
+            btnMarginWide.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnMarginWide.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
     }
 
@@ -2294,20 +3297,24 @@ public class MainActivity extends Activity {
     private void updatePresetChipHighlight(int progress) {
         ThemeManager.ThemePalette p = ThemeManager.ThemePalette.forTheme(currentTheme);
         if (btnPresetDraft != null) {
-            btnPresetDraft.setBackgroundResource(progress == ToneEngine.PRESET_DRAFT ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetDraft.setTextColor(progress == ToneEngine.PRESET_DRAFT ? Color.WHITE : p.textMedColor);
+            boolean active = (progress == ToneEngine.PRESET_DRAFT);
+            btnPresetDraft.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPresetDraft.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnPresetNormal != null) {
-            btnPresetNormal.setBackgroundResource(progress == ToneEngine.PRESET_NORMAL ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetNormal.setTextColor(progress == ToneEngine.PRESET_NORMAL ? Color.WHITE : p.textMedColor);
+            boolean active = (progress == ToneEngine.PRESET_NORMAL);
+            btnPresetNormal.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPresetNormal.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnPresetDeep != null) {
-            btnPresetDeep.setBackgroundResource(progress == ToneEngine.PRESET_DEEP ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetDeep.setTextColor(progress == ToneEngine.PRESET_DEEP ? Color.WHITE : p.textMedColor);
+            boolean active = (progress == ToneEngine.PRESET_DEEP);
+            btnPresetDeep.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPresetDeep.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
         if (btnPresetUltra != null) {
-            btnPresetUltra.setBackgroundResource(progress == ToneEngine.PRESET_ULTRA ? com.dodopress.R.drawable.btn_primary : com.dodopress.R.drawable.btn_chip);
-            btnPresetUltra.setTextColor(progress == ToneEngine.PRESET_ULTRA ? Color.WHITE : p.textMedColor);
+            boolean active = (progress == ToneEngine.PRESET_ULTRA);
+            btnPresetUltra.setBackground(ThemeManager.createChipButtonDrawable(p, active, this));
+            btnPresetUltra.setTextColor(active ? p.primaryButtonTextColor : p.chipTextColor);
         }
     }
 
@@ -2411,7 +3418,7 @@ public class MainActivity extends Activity {
             // Prompt if offline queue has items waiting
             List<SpoolManager.SpoolJob> queued = SpoolManager.getQueuedJobs(this);
             if (!queued.isEmpty()) {
-                Toast.makeText(this, "HP LaserJet connected: " + queued.size() + " queued job(s) waiting in Queue tab!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, displayName + " connected: " + queued.size() + " queued job(s) waiting in Queue tab!", Toast.LENGTH_LONG).show();
             }
         } else {
             currentPrinterCutawayState = PrinterCutawayView.PrinterState.OFFLINE;
@@ -2427,7 +3434,8 @@ public class MainActivity extends Activity {
                 layoutStatusCapsule.setBackgroundResource(com.dodopress.R.drawable.badge_status_offline);
             }
             if (dockTvStatus != null) {
-                dockTvStatus.setText("Printer Offline (OTG Cable Needed)");
+                PrinterModel active = (driverManager != null) ? driverManager.getActivePrinter() : null;
+                dockTvStatus.setText((active != null ? active.getDisplayName() : "Universal Printer") + " (Connect OTG)");
             }
             if (dockBtnPrint != null) {
                 dockBtnPrint.setBackgroundResource(com.dodopress.R.drawable.btn_offline_dock);
@@ -2440,14 +3448,380 @@ public class MainActivity extends Activity {
 
     private void showOfflinePrinterDialog() {
         SoundManager.playAlert();
+        PrinterModel active = (driverManager != null) ? driverManager.getActivePrinter() : null;
+        String pName = (active != null) ? active.getDisplayName() : "Universal USB Printer";
         new AlertDialog.Builder(this)
             .setTitle("🔌 Connect USB OTG Cable")
-            .setMessage("HP LaserJet M1005 MFP requires a physical USB OTG cable connection.\n\n1. Connect USB OTG adapter to your phone\n2. Plug in the HP LaserJet USB cable\n3. Turn ON printer power\n4. Accept the Android USB permission prompt\n\nDodoPress will automatically detect the printer and illuminate green!")
+            .setMessage(pName + " requires a physical USB OTG cable connection.\n\n1. Connect USB OTG adapter to your phone\n2. Plug in the printer USB cable\n3. Turn ON printer power\n4. Accept the Android USB permission prompt\n\nDodoPress will automatically detect the printer and illuminate green!")
             .setPositiveButton("Open Diagnostics ⚡", (dialog, which) -> {
                 DiagnosticLogManager.showDiagnosticDialog(this, getCurrentPrinterCutawayState());
             })
             .setNegativeButton("OK", null)
             .show();
+    }
+
+    private void refreshActivePrinterDisplay() {
+        if (driverManager == null) return;
+        PrinterModel active = driverManager.getActivePrinter();
+        if (active == null) return;
+
+        if (tvXpTitle != null) {
+            tvXpTitle.setText("Print - " + active.getDisplayName());
+        }
+
+        if (tvActivePrinterName != null) {
+            tvActivePrinterName.setText(active.getDisplayName());
+        }
+        if (tvDriverProtocolBadge != null) {
+            tvDriverProtocolBadge.setText(active.protocol.name());
+        }
+        if (tvActivePrinterSpecs != null) {
+            tvActivePrinterSpecs.setText(active.hardwareSpecs);
+        }
+        if (tvActiveDriverStatus != null) {
+            boolean installed = driverManager.isDriverInstalled(active);
+            if (active.isBuiltIn) {
+                tvActiveDriverStatus.setText("Status: Built-in Native Filter");
+                tvActiveDriverStatus.setTextColor(0xFF38BDF8);
+            } else if (installed) {
+                tvActiveDriverStatus.setText("Status: Installed (Offline Cached)");
+                tvActiveDriverStatus.setTextColor(0xFF4ADE80);
+            } else {
+                tvActiveDriverStatus.setText("Status: Download Required (" + active.downloadSizeKb + " KB)");
+                tvActiveDriverStatus.setTextColor(0xFFFACC15);
+            }
+        }
+
+        // Keep bottom dock informed if offline
+        if (dockTvStatus != null && usbPrinterConnection != null && usbPrinterConnection.getDevice() == null) {
+            dockTvStatus.setText(active.getDisplayName() + " (Connect OTG)");
+        }
+    }
+
+    private void autoDetectUsbPrinter() {
+        UsbDevice dev = usbPrinterConnection.findPrinter();
+        if (dev != null) {
+            PrinterModel matched = driverManager.matchUsbDevice(dev);
+            if (matched != null) {
+                driverManager.setActivePrinter(matched);
+                refreshActivePrinterDisplay();
+                SoundManager.playXpPrintChime();
+                Toast.makeText(this, "Auto-detected & Selected: " + matched.getDisplayName(), Toast.LENGTH_LONG).show();
+            } else {
+                String devName = usbPrinterConnection.getPrinterDisplayName(dev);
+                Toast.makeText(this, "Connected USB printer: " + devName + "\n(Generic Class 7 Protocol)", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(this, "No USB printer detected.\nConnect your printer via OTG adapter.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showPrinterCatalogDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        float density = getResources().getDisplayMetrics().density;
+        ThemeManager.ThemePalette currentPalette = ThemeManager.ThemePalette.forTheme(currentTheme);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(currentPalette.surfaceColor);
+        int pad = (int) (16 * density);
+        root.setPadding(pad, pad, pad, (int) (24 * density));
+
+        // Title row with icon
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+        titleRow.setPadding(0, 0, 0, (int) (4 * density));
+
+        ImageView iconView = new ImageView(this);
+        iconView.setImageResource(com.dodopress.R.drawable.ic_btn_driver_chip);
+        int iconSize = (int) (22 * density);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(iconSize, iconSize);
+        iconLp.rightMargin = (int) (8 * density);
+        iconView.setLayoutParams(iconLp);
+        titleRow.addView(iconView);
+
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText("UNIVERSAL DRIVER HUB");
+        tvTitle.setTextSize(15);
+        tvTitle.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+        tvTitle.setTextColor(currentPalette.textHighColor);
+        titleRow.addView(tvTitle);
+        root.addView(titleRow);
+
+        TextView tvSub = new TextView(this);
+        tvSub.setText("Select your printer model to install driver packs for 100% offline printing.");
+        tvSub.setTextSize(11);
+        tvSub.setTextColor(currentPalette.textMedColor);
+        tvSub.setPadding(0, 0, 0, (int) (10 * density));
+        root.addView(tvSub);
+
+        // Search Input Box
+        EditText etSearch = new EditText(this);
+        etSearch.setHint("Filter model (e.g. 2900, 1020, L3150)...");
+        etSearch.setHintTextColor(currentPalette.textMutedColor);
+        etSearch.setTextColor(currentPalette.textHighColor);
+        etSearch.setTextSize(12);
+        etSearch.setBackgroundResource(com.dodopress.R.drawable.input_bg);
+        int searchPad = (int) (10 * density);
+        etSearch.setPadding(searchPad, searchPad, searchPad, searchPad);
+        LinearLayout.LayoutParams searchLp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, (int) (40 * density));
+        searchLp.bottomMargin = (int) (10 * density);
+        etSearch.setLayoutParams(searchLp);
+        root.addView(etSearch);
+
+        // Brand Filter Chips Strip
+        HorizontalScrollView chipScroll = new HorizontalScrollView(this);
+        chipScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout chipRow = new LinearLayout(this);
+        chipRow.setOrientation(LinearLayout.HORIZONTAL);
+
+        String[] brands = new String[]{"ALL", "HP", "CANON", "EPSON", "BROTHER", "SAMSUNG", "PANTUM"};
+        final String[] selectedBrand = new String[]{"ALL"};
+        final Button[] brandButtons = new Button[brands.length];
+
+        LinearLayout printerListContainer = new LinearLayout(this);
+        printerListContainer.setOrientation(LinearLayout.VERTICAL);
+
+        AlertDialog dialog = builder.setView(scroll).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        Runnable refreshList = () -> {
+            printerListContainer.removeAllViews();
+            String query = etSearch.getText().toString().trim().toLowerCase(Locale.ROOT);
+            String bFilter = selectedBrand[0];
+            PrinterModel activeModel = driverManager.getActivePrinter();
+
+            List<PrinterModel> all = driverManager.getAllPrinters();
+            int count = 0;
+            for (final PrinterModel model : all) {
+                if (!bFilter.equals("ALL") && !model.brand.equalsIgnoreCase(bFilter)) {
+                    continue;
+                }
+                if (!query.isEmpty()) {
+                    boolean match = model.getDisplayName().toLowerCase(Locale.ROOT).contains(query)
+                        || model.hardwareSpecs.toLowerCase(Locale.ROOT).contains(query)
+                        || model.protocol.name().toLowerCase(Locale.ROOT).contains(query);
+                    if (!match) continue;
+                }
+                count++;
+
+                final boolean isActive = (activeModel != null && activeModel.id.equals(model.id));
+                final boolean isInstalled = driverManager.isDriverInstalled(model);
+
+                LinearLayout card = new LinearLayout(this);
+                card.setOrientation(LinearLayout.VERTICAL);
+                int cPad = (int) (10 * density);
+                card.setPadding(cPad, cPad, cPad, cPad);
+
+                GradientDrawable cBg = new GradientDrawable();
+                cBg.setCornerRadius(8 * density);
+                cBg.setColor(isActive ? currentPalette.cardBgColor : 0xFF111827);
+                if (isActive) {
+                    cBg.setStroke((int) (2 * density), currentPalette.brandPrimaryColor);
+                } else {
+                    cBg.setStroke((int) (1 * density), 0xFF1F2937);
+                }
+                card.setBackground(cBg);
+
+                LinearLayout.LayoutParams cLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                cLp.bottomMargin = (int) (8 * density);
+                card.setLayoutParams(cLp);
+
+                // Row 1: Brand pill + Model Name + Active Badge
+                LinearLayout row1 = new LinearLayout(this);
+                row1.setOrientation(LinearLayout.HORIZONTAL);
+                row1.setGravity(Gravity.CENTER_VERTICAL);
+
+                TextView tvBrandPill = new TextView(this);
+                tvBrandPill.setText(model.brand.toUpperCase(Locale.ROOT));
+                tvBrandPill.setTextSize(9);
+                tvBrandPill.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+                tvBrandPill.setTextColor(0xFF38BDF8);
+                tvBrandPill.setBackgroundResource(com.dodopress.R.drawable.badge_section_tag);
+                int bp = (int) (4 * density);
+                tvBrandPill.setPadding(bp, (int) (1 * density), bp, (int) (1 * density));
+                LinearLayout.LayoutParams bpLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                bpLp.rightMargin = (int) (6 * density);
+                tvBrandPill.setLayoutParams(bpLp);
+                row1.addView(tvBrandPill);
+
+                TextView tvModelName = new TextView(this);
+                tvModelName.setText(model.modelName);
+                tvModelName.setTextSize(12.5f);
+                tvModelName.setTypeface(null, Typeface.BOLD);
+                tvModelName.setTextColor(currentPalette.textHighColor);
+                LinearLayout.LayoutParams nameLp = new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+                tvModelName.setLayoutParams(nameLp);
+                row1.addView(tvModelName);
+
+                if (isActive) {
+                    TextView tvActive = new TextView(this);
+                    tvActive.setText("● ACTIVE");
+                    tvActive.setTextSize(9);
+                    tvActive.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+                    tvActive.setTextColor(0xFF34D399);
+                    row1.addView(tvActive);
+                }
+                card.addView(row1);
+
+                // Row 2: Specs & Protocol
+                TextView tvSpecs = new TextView(this);
+                tvSpecs.setText(model.protocol.name() + " • " + model.hardwareSpecs);
+                tvSpecs.setTextSize(10);
+                tvSpecs.setTextColor(currentPalette.textMedColor);
+                tvSpecs.setPadding(0, (int) (3 * density), 0, (int) (5 * density));
+                card.addView(tvSpecs);
+
+                // Row 3: Driver status action indicator
+                TextView tvAction = new TextView(this);
+                if (model.isBuiltIn) {
+                    tvAction.setText("⚡ Built-in Driver (Ready)");
+                    tvAction.setTextColor(0xFF38BDF8);
+                } else if (isInstalled) {
+                    tvAction.setText("✓ Driver Cached Offline (Ready)");
+                    tvAction.setTextColor(0xFF4ADE80);
+                } else {
+                    tvAction.setText("⬇ Download Driver Pack (" + model.downloadSizeKb + " KB)");
+                    tvAction.setTextColor(0xFFFACC15);
+                }
+                tvAction.setTextSize(10);
+                tvAction.setTypeface(Typeface.create("monospace", Typeface.NORMAL));
+                card.addView(tvAction);
+
+                // Card Click Listener
+                card.setOnClickListener(v -> {
+                    SoundManager.playClick();
+                    if (model.isBuiltIn || driverManager.isDriverInstalled(model)) {
+                        driverManager.setActivePrinter(model);
+                        refreshActivePrinterDisplay();
+                        Toast.makeText(this, "Selected: " + model.getDisplayName(), Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    } else {
+                        downloadAndActivateDriver(model, dialog);
+                    }
+                });
+
+                printerListContainer.addView(card);
+            }
+
+            if (count == 0) {
+                TextView empty = new TextView(this);
+                empty.setText("No printers matching \"" + query + "\"");
+                empty.setTextSize(12);
+                empty.setTextColor(currentPalette.textMutedColor);
+                empty.setGravity(Gravity.CENTER);
+                empty.setPadding(0, (int) (20 * density), 0, (int) (20 * density));
+                printerListContainer.addView(empty);
+            }
+        };
+
+        // Populate Brand chips
+        for (int i = 0; i < brands.length; i++) {
+            final String brand = brands[i];
+            Button chip = new Button(this);
+            chip.setText(brand);
+            chip.setTextSize(10);
+            chip.setTypeface(Typeface.create("monospace", Typeface.BOLD));
+            chip.setPadding((int) (8 * density), 0, (int) (8 * density), 0);
+            chip.setMinWidth(0);
+            chip.setMinHeight(0);
+
+            LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, (int) (26 * density));
+            chipLp.rightMargin = (int) (4 * density);
+            chip.setLayoutParams(chipLp);
+
+            final int idx = i;
+            brandButtons[idx] = chip;
+
+            chip.setOnClickListener(v -> {
+                SoundManager.playClick();
+                selectedBrand[0] = brand;
+                for (int j = 0; j < brands.length; j++) {
+                    boolean sel = brands[j].equals(brand);
+                    brandButtons[j].setBackgroundResource(sel ? com.dodopress.R.drawable.btn_theme_chip_active : com.dodopress.R.drawable.btn_chip);
+                    brandButtons[j].setTextColor(sel ? Color.WHITE : currentPalette.textMedColor);
+                }
+                refreshList.run();
+            });
+
+            chipRow.addView(chip);
+        }
+        chipScroll.addView(chipRow);
+        LinearLayout.LayoutParams csLp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        csLp.bottomMargin = (int) (12 * density);
+        chipScroll.setLayoutParams(csLp);
+        root.addView(chipScroll);
+
+        root.addView(printerListContainer);
+        scroll.addView(root);
+
+        brandButtons[0].setBackgroundResource(com.dodopress.R.drawable.btn_theme_chip_active);
+        brandButtons[0].setTextColor(Color.WHITE);
+        for (int j = 1; j < brands.length; j++) {
+            brandButtons[j].setBackgroundResource(com.dodopress.R.drawable.btn_chip);
+            brandButtons[j].setTextColor(currentPalette.textMedColor);
+        }
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                refreshList.run();
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+
+        refreshList.run();
+        dialog.show();
+    }
+
+    private void downloadAndActivateDriver(PrinterModel model, AlertDialog parentDialog) {
+        ProgressDialog progress = new ProgressDialog(this);
+        progress.setTitle("Downloading Driver Pack");
+        progress.setMessage("Connecting to repository for " + model.getDisplayName() + "...");
+        progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progress.setMax(100);
+        progress.setCancelable(false);
+        progress.show();
+
+        driverManager.downloadDriver(model, new DriverManager.DownloadCallback() {
+            @Override
+            public void onProgress(int percent, long bytesDownloaded, long totalBytes) {
+                progress.setProgress(percent);
+                long dlKb = bytesDownloaded / 1024;
+                long totKb = totalBytes > 0 ? totalBytes / 1024 : model.downloadSizeKb;
+                progress.setMessage("Downloading " + model.getDisplayName() + ":\n" + dlKb + " KB / " + totKb + " KB (" + percent + "%)");
+            }
+
+            @Override
+            public void onSuccess(File driverFile) {
+                progress.dismiss();
+                driverManager.setActivePrinter(model);
+                refreshActivePrinterDisplay();
+                SoundManager.playXpPrintChime();
+                Toast.makeText(MainActivity.this, "Driver installed! Switched to " + model.getDisplayName(), Toast.LENGTH_LONG).show();
+                if (parentDialog != null && parentDialog.isShowing()) {
+                    parentDialog.dismiss();
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                progress.dismiss();
+                Toast.makeText(MainActivity.this, "Download error: " + message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private PrinterCutawayView.PrinterState getCurrentPrinterCutawayState() {
@@ -2838,20 +4212,6 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             DiagnosticLogManager.logError("PDF", "Failed to load document", e);
             Toast.makeText(this, "Failed to read PDF: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void generateAndLoadUpiQr() {
-        try {
-            String upiString = QrPrintEngine.formatUpi("killindodo@upi", "killindodo", null, "Support DodoPress Developer");
-            File qrPdf = QrPrintEngine.renderQrToPdfFile(this, upiString, "☕ SUPPORT THE DEVELOPER",
-                                                        "UPI ID: killindodo@upi • Offline Printing Champion",
-                                                        currentPaperSize, QrPrintEngine.LabelLayout.SINGLE_CARD);
-            showPage(0);
-            loadPdfFromFile(qrPdf, "Support_killindodo_UPI.pdf");
-            Toast.makeText(this, "UPI QR placard ready to print!", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Failed to generate UPI QR: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -3610,7 +4970,7 @@ public class MainActivity extends Activity {
 
         UsbDevice printer = usbPrinterConnection.findPrinter();
         if (printer == null) {
-            DiagnosticLogManager.log("USB", "Cannot print: HP LaserJet M1005 not found.");
+            DiagnosticLogManager.log("USB", "Cannot print: USB printer not detected.");
             Toast.makeText(this, "Printer not detected. Connect USB OTG cable, or tap 'Queue to Offline Spool'.", Toast.LENGTH_LONG).show();
             return;
         }
