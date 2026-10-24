@@ -7,6 +7,8 @@ gen/
 *.png
 !screenshots/*.png
 !app/src/main/res/**/*.png
+!assets/*.png
+!app/src/main/assets/*.png
 scratch/
 .gradle/
 local.properties

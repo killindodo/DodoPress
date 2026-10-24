@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="DodoPress Icon" />
+</p>
+
 # DodoPress 🖨️
 
 > **Offline USB OTG Direct Printing Station for Android**  
