@@ -7,6 +7,9 @@ import android.graphics.Rect;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 import com.dodopress.cups.CupsRasterWriter;
+import com.dodopress.driver.DriverManager;
+import com.dodopress.driver.PrinterModel;
+import com.dodopress.driver.PrinterProtocol;
 import com.dodopress.usb.UsbPrinterConnection;
 import com.dynamixsoftware.drv.DrvRuntime;
 import java.io.BufferedOutputStream;
@@ -92,7 +95,7 @@ public class PrintEngine {
         new Thread(() -> {
             ParcelFileDescriptor pfd = null;
             PdfRenderer renderer = null;
-            DrvRuntime.libhplip drv = null;
+            DrvRuntime drv = null;
             long procHandle = 0;
             ParcelFileDescriptor stdinPfd = null;
             ParcelFileDescriptor stdoutPfd = null;
@@ -111,16 +114,37 @@ public class PrintEngine {
                 usbConnection.open();
                 OutputStream usbOut = usbConnection.getOutputStream();
 
-                // 2. Prepare PPD asset
-                File ppdFile = preparePpdAsset();
+                // Determine active driver profile & protocol
+                DriverManager dm = DriverManager.getInstance(context);
+                PrinterModel activeModel = null;
+                if (usbConnection.getDevice() != null) {
+                    activeModel = dm.matchUsbDevice(usbConnection.getDevice());
+                }
+                if (activeModel == null) {
+                    activeModel = dm.getActivePrinter();
+                }
 
-                // 3. Locate or extract libhplip.so
-                File libFile = prepareNativeLibrary();
+                boolean isPantum = (activeModel != null && activeModel.protocol == PrinterProtocol.PANTUM_ZJS);
+                String libName = isPantum ? "libpantum.so" : "libhplip.so";
+                String ppdName = isPantum ? "pantum-m6500.ppd" : "hp-laserjet_m1005.ppd";
+                String logTag = isPantum ? "DodoPress-pantum" : "DodoPress-hpcups";
+
+                // 2. Prepare PPD asset
+                File ppdFile = preparePpdAsset(ppdName);
+
+                // 3. Locate or extract native filter library
+                File libFile = prepareNativeLibrary(libName);
 
                 if (listener != null) listener.onProgress(0, 0, "Starting hardware rasterization pipeline...");
 
                 // 4. Set up JNI pipes and execute filter
-                drv = new DrvRuntime.libhplip();
+                if (isPantum) {
+                    DrvRuntime.libpantum.ensureLoaded(libFile.getAbsolutePath());
+                    drv = new DrvRuntime.libpantum();
+                } else {
+                    drv = new DrvRuntime.libhplip();
+                }
+
                 int[] pipes = new int[3];
                 String paperArg = (paperSize != null) ? paperSize.name() : "A4";
                 String[] args = new String[] {
@@ -163,7 +187,7 @@ public class PrintEngine {
                         while ((r = fErr.read(buf)) != -1) {
                             String msg = new String(buf, 0, r, java.nio.charset.StandardCharsets.UTF_8).trim();
                             if (!msg.isEmpty()) {
-                                Log.d("DodoPress-hpcups", msg);
+                                Log.d(logTag, msg);
                             }
                         }
                     } catch (Exception ignored) {}
@@ -478,16 +502,16 @@ public class PrintEngine {
         return finalBitmap;
     }
 
-    private File prepareNativeLibrary() throws IOException {
+    private File prepareNativeLibrary(String libName) throws IOException {
         String nativeDir = context.getApplicationInfo().nativeLibraryDir;
-        File libFile = new File(nativeDir, "libhplip.so");
+        File libFile = new File(nativeDir, libName);
         if (libFile.exists() && libFile.canRead()) {
             return libFile;
         }
 
-        File internalLib = new File(context.getFilesDir(), "libhplip.so");
+        File internalLib = new File(context.getFilesDir(), libName);
         if (!internalLib.exists() || internalLib.length() == 0) {
-            try (InputStream in = context.getAssets().open("libhplip.so");
+            try (InputStream in = context.getAssets().open(libName);
                  FileOutputStream out = new FileOutputStream(internalLib)) {
                 byte[] buf = new byte[8192];
                 int len;
@@ -505,10 +529,10 @@ public class PrintEngine {
         return internalLib.exists() ? internalLib : libFile;
     }
 
-    private File preparePpdAsset() throws IOException {
-        File ppdFile = new File(context.getFilesDir(), "hp-laserjet_m1005.ppd");
+    private File preparePpdAsset(String ppdName) throws IOException {
+        File ppdFile = new File(context.getFilesDir(), ppdName);
         if (!ppdFile.exists() || ppdFile.length() == 0) {
-            try (InputStream in = context.getAssets().open("hp-laserjet_m1005.ppd");
+            try (InputStream in = context.getAssets().open(ppdName);
                  FileOutputStream out = new FileOutputStream(ppdFile)) {
                 byte[] buf = new byte[4096];
                 int len;

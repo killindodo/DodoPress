@@ -198,10 +198,17 @@ public class DriverManager {
         ));
 
         catalog.add(new PrinterModel(
-            "pantum_p2500w", "Pantum", "P2500W Series",
-            PrinterProtocol.GENERIC_PWG, 0x232B, new int[]{0x0001},
-            "pantum_pwg.bin", null, 0,
-            "Compact Laser • Standard PWG Raster Protocol", true
+            "pantum_m6500", "Pantum", "M6500 / M6518 MFP Series",
+            PrinterProtocol.PANTUM_ZJS, 0x232B, new int[]{0xA421, 0xA422, 0xA423, 0xA424, 0xA425, 0x0005},
+            "pantum-m6500.ppd", null, 0,
+            "Multi-Function Laser • 600 DPI • Pantum ZjStream", true
+        ));
+
+        catalog.add(new PrinterModel(
+            "pantum_p2500w", "Pantum", "P2500 / P2500W Series",
+            PrinterProtocol.PANTUM_ZJS, 0x232B, new int[]{0x0001, 0x0002, 0x0003, 0x0004},
+            "pantum-m6500.ppd", null, 0,
+            "Compact Desktop Laser • 600 DPI • Pantum ZjStream", true
         ));
     }
 
@@ -247,6 +254,19 @@ public class DriverManager {
                 return m;
             }
         }
+
+        // Fallback: match by Pantum Vendor ID (0x232B) or product name string
+        if (vid == 0x232B) {
+            String name = device.getProductName();
+            if (name != null) {
+                String lower = name.toLowerCase(java.util.Locale.US);
+                if (lower.contains("p2500") || lower.contains("2500")) {
+                    return findById("pantum_p2500w");
+                }
+            }
+            return findById("pantum_m6500");
+        }
+
         return null;
     }
 

@@ -1,0 +1,38 @@
+*PPD-Adobe: "4.3"
+*%%%% PPD file for Pantum M6500 / M6518 Series with CUPS.
+*FormatVersion: "4.3"
+*FileVersion: "1.0"
+*LanguageVersion: English
+*LanguageEncoding: ISOLatin1
+*PCFileName: "pantum-m6500.ppd"
+*Product: "(Pantum M6500 / M6518 Series MFP)"
+*Manufacturer: "Pantum"
+*ModelName: "Pantum M6500 / M6518 Series"
+*ShortNickName: "Pantum M6500 Series"
+*NickName: "Pantum M6500 / M6518 Series, libpantum"
+*PSVersion: "(3010.000) 0"
+*LanguageLevel: "3"
+*ColorDevice: False
+*DefaultColorSpace: Gray
+*FileSystem: False
+*Throughput: "22"
+*LandscapeOrientation: Plus90
+*TTRasterizer: Type42
+*cupsVersion: 2.3
+*cupsModelNumber: 0
+*cupsManualCopies: True
+*cupsFilter: "application/vnd.cups-raster 0 libpantum.so"
+*cupsLanguages: "en"
+*OpenUI *PageSize/Media Size: PickOne
+*OrderDependency: 10 AnySetup *PageSize
+*DefaultPageSize: A4
+*PageSize Letter/Letter 8.5x11in: "<</cupsInteger0 1/PageSize[612 792]/ImagingBBox null>>setpagedevice"
+*PageSize A4/A4 210x297mm: "<</cupsInteger0 9/PageSize[595.44 841.68]/ImagingBBox null>>setpagedevice"
+*PageSize Legal/Legal 8.5x14in: "<</cupsInteger0 5/PageSize[612 1008]/ImagingBBox null>>setpagedevice"
+*PageSize A5/A5 148x210mm: "<</cupsInteger0 11/PageSize[419.76 595.44]/ImagingBBox null>>setpagedevice"
+*PageSize B5/B5 176x250mm: "<</cupsInteger0 13/PageSize[498.96 708.48]/ImagingBBox null>>setpagedevice"
+*CloseUI: *PageSize
+*OpenUI *Resolution/Resolution: PickOne
+*DefaultResolution: 600dpi
+*Resolution 600dpi/600 DPI: "<</HWResolution[600 600]/cupsInteger1 600>>setpagedevice"
+*CloseUI: *Resolution

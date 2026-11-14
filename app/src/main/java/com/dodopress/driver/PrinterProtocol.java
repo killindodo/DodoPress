@@ -4,6 +4,7 @@ package com.dodopress.driver;
  * Supported hardware printer protocol standards in DodoPress Universal Driver Hub.
  */
 public enum PrinterProtocol {
+    PANTUM_ZJS("Pantum ZjStream / GDI", "Pantum M6500, M6518, P2500 Series", true),
     HPLIP_ZJS("HP ZjStream / foo2zjs", "HP Host-Based Laser (M1005, 1020, P1108)", true),
     CANON_CAPT("Canon CAPT Architecture", "Canon Advanced Printing (LBP 2900B, 3000)", false),
     EPSON_ESC_PR("Epson ESC/P-R Raster", "Epson EcoTank & Inkjet (L3150, L3250)", true),

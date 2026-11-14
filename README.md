@@ -5,7 +5,7 @@
 # DodoPress 🖨️
 
 > **Offline USB OTG Direct Printing Station for Android**  
-> Direct hardware communication with GDI, CAPT, ZjStream, ESC/P-R, PCL6, and SPL printers over USB OTG — no cloud, no print spooler daemons, no bloat.
+> Direct hardware communication with GDI, CAPT, ZjStream, Pantum ZjStream, ESC/P-R, PCL6, and SPL printers over USB OTG — no cloud, no print spooler daemons, no bloat.
 
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B%20(API%2024%2B)-brightgreen.svg)](https://developer.android.com)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -46,6 +46,7 @@ Most Android printing solutions rely on cloud print relays, vendor-locked plugin
 
 ### 2. Universal Protocol & Driver Hub
 DodoPress includes a modular driver registry supporting multiple printer command architectures:
+- **Pantum ZjStream (`PANTUM_ZJS`)**: Native Platform M / `JZJZ` wire protocol filter with JBIG1 compression, dynamic 14-parameter page header, and toner calibration records for Pantum M6500, M6500N, M6500W, M6502, M6503, M6507, M6508, M6518, and P2500-series monochrome laser printers.
 - **HP ZjStream (`HPLIP_ZJS`)**: Zenographics ZjStream protocol for HP LaserJet P1005, P1006, P1007, P1008, P1505, M1005 MFP, and M1120.
 - **Canon CAPT (`CANON_CAPT`)**: Canon Advanced Printing Technology GDI protocol for LBP2900, LBP3000, LBP6000, and related desktop laser models.
 - **Epson ESC/P-R (`EPSON_ESC_PR`)**: Compressed raster stream protocol for Epson EcoTank, WorkForce, and Stylus inkjets.
@@ -104,7 +105,7 @@ DodoPress includes a modular driver registry supporting multiple printer command
   |                                                  v               |
   |   +----------------------------------------------------------+   |
   |   |                    Driver Hub Protocol                   |   |
-  |   |  [ZjStream]  [Canon CAPT]  [ESC/P-R]  [PCL6]  [SPL]      |   |
+  |   | [Pantum ZJS] [HP ZjStream] [Canon CAPT] [ESC/P-R] [PCL6] [SPL]|   |
   |   +----------------------------------------------------------+   |
   +---------------------------------+--------------------------------+
                                     |
@@ -169,6 +170,7 @@ The output APK is generated at `./DodoPress.apk` (~2.6 MB).
 
 | Protocol Family | Representative Models | Status |
 |:---|:---|:---:|
+| **Pantum ZjStream** | Pantum M6500, M6500W, M6518, P2500, P2500W series (USB ID 232B:A421/0005) | Verified |
 | **HP ZjStream** | HP LaserJet P1005, P1006, P1007, P1008, M1005 MFP, M1120 | Verified |
 | **Canon CAPT** | Canon LBP2900, LBP2900B, LBP3000, LBP6000 | Verified |
 | **Epson ESC/P-R** | Epson L3110, L3150, L3210, EcoTank Series | Active |
